@@ -488,7 +488,7 @@
     <div class="l3-row"><span>Sem nota</span><span class="l3-dot" style="background:#1a3060"></span></div>
   </div>
   <p class="city-tip" id="city-tip" style="display:none">Toque num bloco · Arraste para girar · Grid ordenado por CR</p>
-  <button id="btn-fps" onclick="enterFPSMode()" style="display:none;position:absolute;bottom:24px;right:16px;z-index:30;background:rgba(6,14,31,.88);border:1px solid rgba(80,110,180,.45);color:#f0f4ff;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)">🚶 1ª Pessoa</button>
+  <button id="btn-fps" style="display:none;position:absolute;bottom:24px;right:16px;z-index:30;background:rgba(6,14,31,.88);border:1px solid rgba(80,110,180,.45);color:#f0f4ff;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)">🚶 1ª Pessoa</button>
   <!-- FPS overlay -->
   <div id="fps-ui" style="display:none;position:fixed;inset:0;z-index:100;pointer-events:none">
     <div id="fps-joy" style="position:absolute;bottom:90px;left:40px;width:112px;height:112px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.28);pointer-events:all;touch-action:none;display:flex;align-items:center;justify-content:center">
@@ -496,7 +496,7 @@
     </div>
     <div id="fps-look" style="position:absolute;right:0;top:0;width:55%;height:100%;pointer-events:all;touch-action:none"></div>
     <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.5);font-size:20px;line-height:1;pointer-events:none">·</div>
-    <button onclick="exitFPSMode()" style="position:absolute;top:70px;right:16px;pointer-events:all;background:rgba(6,14,31,.9);border:1px solid rgba(80,110,180,.4);color:#f0f4ff;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer">✕ Sair</button>
+    <button id="btn-fps-exit" style="position:absolute;top:70px;right:16px;pointer-events:all;background:rgba(6,14,31,.9);border:1px solid rgba(80,110,180,.4);color:#f0f4ff;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer">✕ Sair</button>
     <div style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.35);font-size:11px;pointer-events:none;white-space:nowrap">Joystick: mover · Lado direito: olhar</div>
   </div>
   <div id="city-inspect" style="display:none">
@@ -1550,6 +1550,8 @@ function exitFPSMode(){
   document.getElementById('fps-ui').style.display='none';
   if(T3?.cityMode) document.getElementById('btn-fps').style.display='';
 }
+document.getElementById('btn-fps').onclick=enterFPSMode;
+document.getElementById('btn-fps-exit').onclick=exitFPSMode;
 
 (function initFPSTouch(){
   const joy=document.getElementById('fps-joy');
