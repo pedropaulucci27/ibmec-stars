@@ -54,7 +54,7 @@
     /* LOGIN */
     #s-login{align-items:center;justify-content:center;padding:24px}
     .login-card{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:48px 32px 40px;max-width:360px;width:100%;text-align:center;backdrop-filter:var(--glass);box-shadow:var(--shadow)}
-    .login-star{font-size:52px;line-height:1;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+    .login-star{display:block;margin:0 auto 24px;animation:float 3s ease-in-out infinite}
     @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
     .login-card h1{font-size:26px;font-weight:900;color:var(--gold);margin-bottom:8px;letter-spacing:-.5px}
     .login-card .sub{font-size:13px;color:var(--text2);margin-bottom:36px;line-height:1.7}
@@ -410,7 +410,7 @@
 
 <div id="s-login" class="screen">
   <div class="login-card" id="login-card">
-    <img src="icon-512.png" class="login-star" style="width:80px;height:80px;border-radius:20px" alt="logo">
+    <img src="icon-512.png" class="login-star" style="width:108px;height:108px" alt="logo">
     <h1>Education Stars</h1>
     <p class="sub">Lance suas notas ao longo do semestre e veja o que precisa tirar para o Ibmec Stars — e para passar</p>
     <button class="btn btn-google" id="btn-google-login">
