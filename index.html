@@ -320,6 +320,51 @@
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     @media(max-width:390px){main{padding:10px 10px 32px;gap:12px}.summary-cr{font-size:44px}}
     svg{flex-shrink:0}
+
+    /* GRADE LABEL SUBTITLE */
+    .g-label-sub{font-size:7.5px;font-weight:600;letter-spacing:.3px;color:rgba(122,144,192,.45);text-transform:none;display:block;margin-top:1px;text-align:center}
+
+    /* EMPTY STATE VISUAL */
+    .empty-visual{display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 16px 20px;text-align:center}
+    .empty-visual-icon{font-size:38px;line-height:1;opacity:.7}
+    .empty-visual-title{font-size:14px;font-weight:700;color:var(--text1)}
+    .empty-visual-sub{font-size:12px;color:var(--text2);line-height:1.6;max-width:240px}
+    .empty-visual-arrow{font-size:22px;color:var(--gold);animation:bounceDown .9s ease-in-out infinite}
+    @keyframes bounceDown{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+    /* ONBOARDING MODAL */
+    #onboard-modal{position:fixed;inset:0;z-index:400;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .3s}
+    #onboard-modal.open{opacity:1;pointer-events:all}
+    #onboard-sheet{background:var(--bg1);border:1px solid rgba(245,166,35,.2);border-top:2px solid rgba(245,166,35,.35);border-radius:28px 28px 0 0;width:100%;max-width:560px;padding:0 0 32px;overflow:hidden;transform:translateY(60px);transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+    #onboard-modal.open #onboard-sheet{transform:translateY(0)}
+    .onboard-track{display:flex;width:300%;transition:transform .38s cubic-bezier(.25,.46,.45,.94)}
+    .onboard-slide{width:33.333%;padding:28px 28px 0;flex-shrink:0}
+    .onboard-emoji{font-size:44px;line-height:1;margin-bottom:16px;display:block}
+    .onboard-title{font-size:20px;font-weight:900;color:var(--gold);margin-bottom:8px;letter-spacing:-.3px}
+    .onboard-sub{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:16px}
+    .onboard-steps{display:flex;flex-direction:column;gap:10px}
+    .onboard-step{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(10,18,38,.6);border:1px solid var(--border);border-radius:12px}
+    .onboard-step-num{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .onboard-step-text{flex:1}
+    .onboard-step-label{font-size:13px;font-weight:700;color:var(--text1);margin-bottom:2px}
+    .onboard-step-desc{font-size:11px;color:var(--text2);line-height:1.5}
+    .onboard-grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+    .onboard-grade-item{background:rgba(10,18,38,.7);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center}
+    .onboard-grade-abbr{font-size:17px;font-weight:900;color:var(--gold);margin-bottom:4px}
+    .onboard-grade-name{font-size:10px;color:var(--text2);line-height:1.4}
+    .onboard-grade-max{font-size:11px;font-weight:700;color:var(--text1);margin-top:4px}
+    .onboard-criteria{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+    .onboard-criterion{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(10,18,38,.6);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text1)}
+    .onboard-criterion span:first-child{font-size:18px;flex-shrink:0}
+    .onboard-dots{display:flex;justify-content:center;gap:7px;margin:20px 0 16px}
+    .od{width:7px;height:7px;border-radius:50%;background:rgba(245,166,35,.25);transition:all .3s}
+    .od.active{background:var(--gold);width:20px;border-radius:4px}
+    .onboard-actions{padding:0 28px;display:flex;flex-direction:column;gap:8px}
+    .onboard-skip{background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;padding:6px;text-decoration:underline;text-underline-offset:3px;align-self:center}
+
+    /* HELP BTN */
+    #btn-help{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);color:var(--gold);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;transition:all .2s}
+    #btn-help:hover{background:rgba(245,166,35,.22);transform:scale(1.1)}
   </style>
 </head>
 <body>
@@ -374,6 +419,7 @@
       <img id="u-avatar" class="avatar" src="" alt="" style="display:none">
       <span id="u-name" class="uname"></span>
       <button class="btn btn-ghost btn-sm" id="btn-3d" style="display:none">🗺 3D</button>
+      <button id="btn-help" title="Como usar">?</button>
       <button class="btn btn-ghost btn-sm" id="btn-ranking" title="Ranking">🏆</button>
       <button class="btn btn-ghost btn-sm" id="btn-notif" title="Ativar notificações" style="display:none">🔔</button>
       <button class="btn btn-ghost btn-sm" id="btn-logout">Sair</button>
@@ -400,7 +446,12 @@
     </div>
 
     <div class="card" id="no-sem-card" style="display:none">
-      <div class="empty-msg">Nenhum semestre criado.<br>Crie um para começar.</div>
+      <div class="empty-visual" style="padding:20px 16px 12px">
+        <div class="empty-visual-icon">🗓️</div>
+        <div class="empty-visual-title">Nenhum semestre ainda</div>
+        <div class="empty-visual-sub">Toque em "+ Novo" acima para criar seu primeiro semestre</div>
+        <div class="empty-visual-arrow">↑</div>
+      </div>
     </div>
 
     <div id="sem-content" style="display:none;flex-direction:column;gap:14px">
@@ -562,6 +613,94 @@
         <div class="lb-loading"><div class="loading-ring" style="width:28px;height:28px"></div><span>Carregando…</span></div>
       </div>
       <div class="lb-pos" id="lb-pos"></div>
+    </div>
+  </div>
+</div>
+
+<div id="onboard-modal">
+  <div id="onboard-sheet">
+    <div class="onboard-track" id="onboard-track">
+
+      <!-- Slide 1: Como funciona -->
+      <div class="onboard-slide">
+        <span class="onboard-emoji">🏆</span>
+        <div class="onboard-title">Bem-vindo ao Education Stars!</div>
+        <div class="onboard-sub">Acompanhe suas notas, calcule seu CR e veja o que precisa tirar para alcançar os Ibmec Stars.</div>
+        <div class="onboard-steps">
+          <div class="onboard-step">
+            <div class="onboard-step-num">1</div>
+            <div class="onboard-step-text">
+              <div class="onboard-step-label">Crie um semestre</div>
+              <div class="onboard-step-desc">Ex: 25.1 — representa o período letivo atual</div>
+            </div>
+          </div>
+          <div class="onboard-step">
+            <div class="onboard-step-num">2</div>
+            <div class="onboard-step-text">
+              <div class="onboard-step-label">Adicione suas disciplinas</div>
+              <div class="onboard-step-desc">Cadastre cada matéria com o nome que quiser</div>
+            </div>
+          </div>
+          <div class="onboard-step">
+            <div class="onboard-step-num">3</div>
+            <div class="onboard-step-text">
+              <div class="onboard-step-label">Lance as notas</div>
+              <div class="onboard-step-desc">O app calcula seu CR e mostra o que falta para passar ou tirar estrela</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Sistema de notas -->
+      <div class="onboard-slide">
+        <span class="onboard-emoji">📝</span>
+        <div class="onboard-title">Sistema de notas do Ibmec</div>
+        <div class="onboard-sub">Cada disciplina tem 3 avaliações. A nota final vai de 0 a 100.</div>
+        <div class="onboard-grade-grid">
+          <div class="onboard-grade-item">
+            <div class="onboard-grade-abbr">AC</div>
+            <div class="onboard-grade-name">Avaliação Continuada</div>
+            <div class="onboard-grade-max">Máx. 20 pts</div>
+          </div>
+          <div class="onboard-grade-item">
+            <div class="onboard-grade-abbr">AP1</div>
+            <div class="onboard-grade-name">1ª Avaliação Parcial</div>
+            <div class="onboard-grade-max">Máx. 10 pts</div>
+          </div>
+          <div class="onboard-grade-item">
+            <div class="onboard-grade-abbr">AP2</div>
+            <div class="onboard-grade-name">2ª Avaliação Parcial</div>
+            <div class="onboard-grade-max">Máx. 10 pts</div>
+          </div>
+        </div>
+        <div class="onboard-sub" style="margin-top:14px;font-size:12px">
+          <strong style="color:var(--text1)">Nota final = AC + AP1×4 + AP2×4</strong><br>
+          Aprovado com nota ≥ 70. Ibmec Stars com nota ≥ 90.
+        </div>
+      </div>
+
+      <!-- Slide 3: Ibmec Stars -->
+      <div class="onboard-slide">
+        <span class="onboard-emoji">⭐</span>
+        <div class="onboard-title">O que são os Ibmec Stars?</div>
+        <div class="onboard-sub">A distinção máxima do semestre. Para conquistar, você precisa de:</div>
+        <div class="onboard-criteria">
+          <div class="onboard-criterion"><span>📚</span><span>4 ou mais disciplinas no semestre</span></div>
+          <div class="onboard-criterion"><span>🎯</span><span>CR (Coeficiente de Rendimento) ≥ 9,0</span></div>
+          <div class="onboard-criterion"><span>✅</span><span>Nenhuma dependência (AS ou Sub)</span></div>
+        </div>
+        <div class="onboard-sub" style="margin-top:14px;font-size:12px">
+          O CR é a média ponderada das notas finais de todas as disciplinas do semestre.
+        </div>
+      </div>
+    </div>
+
+    <div class="onboard-dots" id="onboard-dots">
+      <span class="od active"></span><span class="od"></span><span class="od"></span>
+    </div>
+    <div class="onboard-actions">
+      <button class="btn btn-primary" id="onboard-next" style="width:100%;padding:14px">Próximo</button>
+      <button class="onboard-skip" id="onboard-skip">Pular tutorial</button>
     </div>
   </div>
 </div>
@@ -880,7 +1019,7 @@ function animateCR(target){
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
-const SLOTS={ac:{label:'AC',inputMax:20,weight:1,pts:20},ap1:{label:'AP1',inputMax:10,weight:4,pts:40},ap2:{label:'AP2',inputMax:10,weight:4,pts:40}};
+const SLOTS={ac:{label:'AC',fullName:'Cont.',inputMax:20,weight:1,pts:20},ap1:{label:'AP1',fullName:'1ª Prova',inputMax:10,weight:4,pts:40},ap2:{label:'AP2',fullName:'2ª Prova',inputMax:10,weight:4,pts:40}};
 const TARGET_STARS=90,TARGET_PASS=70;
 let user=null,semId=null,sems={},saveTimer=null,wasApto=false;
 let lbPrefs={optin:false,named:false,displayName:''};
@@ -936,8 +1075,34 @@ onAuthStateChanged(auth,async u=>{
     });
     await loadData();show('s-app');
     initOneSignalUser();
+    if(!localStorage.getItem('edu-onboarded')) openOnboard();
   }else{user=null;sems={};semId=null;show('s-login')}
 });
+
+// ─── ONBOARDING ──────────────────────────────────────────────────────────────
+let _onboardSlide=0;
+function openOnboard(){
+  _onboardSlide=0;
+  _onboardUpdateUI();
+  document.getElementById('onboard-modal').classList.add('open');
+}
+function closeOnboard(){
+  document.getElementById('onboard-modal').classList.remove('open');
+  localStorage.setItem('edu-onboarded','1');
+}
+function _onboardUpdateUI(){
+  document.getElementById('onboard-track').style.transform=`translateX(-${_onboardSlide*33.333}%)`;
+  document.querySelectorAll('.od').forEach((d,i)=>d.classList.toggle('active',i===_onboardSlide));
+  const isLast=_onboardSlide===2;
+  document.getElementById('onboard-next').textContent=isLast?'Começar agora':'Próximo';
+}
+document.getElementById('onboard-next').onclick=()=>{
+  if(_onboardSlide<2){_onboardSlide++;_onboardUpdateUI();}
+  else closeOnboard();
+};
+document.getElementById('onboard-skip').onclick=closeOnboard;
+document.getElementById('onboard-modal').addEventListener('click',e=>{if(e.target===document.getElementById('onboard-modal'))closeOnboard();});
+document.getElementById('btn-help').onclick=openOnboard;
 
 // ─── FIRESTORE ───────────────────────────────────────────────────────────────
 async function loadData(){
@@ -1176,13 +1341,13 @@ function buildSlotHTML(field,id,d,a){
       hint=`${sp}${sp&&pp?'<span class="h-sep">·</span>':''}${pp}`;
     }
   }
-  return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="—" value="${filled?val:''}"><div class="g-hint">${hint}</div></div>`;
+  return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><span class="g-label-sub">${s.fullName}</span><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="0–${s.inputMax}" value="${filled?val:''}"><div class="g-hint">${hint}</div></div>`;
 }
 function renderDiscs(){
   if(!semId)return;
   const discs=sems[semId]?.discs??{},list=document.getElementById('subj-list');
   const entries=Object.entries(discs);
-  if(!entries.length){list.innerHTML='<div class="empty-msg">Nenhuma disciplina adicionada</div>';return}
+  if(!entries.length){list.innerHTML='<div class="empty-visual"><div class="empty-visual-icon">📚</div><div class="empty-visual-title">Nenhuma disciplina ainda</div><div class="empty-visual-sub">Toque em "+ Adicionar disciplina" abaixo para começar a lançar suas notas</div><div class="empty-visual-arrow">↓</div></div>';return}
   const focusedId=document.activeElement?.id;
   list.innerHTML='';
   entries.forEach(([id,d],i)=>{
@@ -1199,7 +1364,7 @@ function renderDiscs(){
       <div class="subj-progress"><div class="subj-progress-fill ${pfCls}" style="width:${pct}%"></div></div>
       <div class="subj-head">
         <span class="subj-num">${String(i+1).padStart(2,'0')}</span>
-        <input type="text" class="name-input" id="n_${id}" placeholder="Nome da disciplina" value="${esc(d.nome??'')}" autocomplete="off" spellcheck="false">
+        <input type="text" class="name-input" id="n_${id}" placeholder="Ex: Cálculo I, Direito Civil…" value="${esc(d.nome??'')}" autocomplete="off" spellcheck="false">
         ${tpPts>0?`<span class="tp-badge">🔬</span>`:''}
         <button class="icon-btn" title="Remover"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
