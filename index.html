@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ibmec Education Stars</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Edu Stars">
+  <meta name="theme-color" content="#060e1f">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-v2.png">
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <style>
+    :root {
+      --bg0:#060e1f;--bg1:#0a1628;--bg2:rgba(16,26,52,0.75);--bg3:rgba(28,42,74,0.8);
+      --border:rgba(80,110,180,0.2);
+      --text1:#f0f4ff;--text2:#7a90c0;
+      --gold:#f5a623;--gold-lt:#ffc653;--gold-glow:rgba(245,166,35,0.35);
+      --green:#4ade80;--green-bg:rgba(74,222,128,0.1);
+      --red:#f87171;--red-bg:rgba(248,113,113,0.1);
+      --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.1);
+      --blue:#38bdf8;--blue-bg:rgba(56,189,248,0.1);
+      --purple:#c084fc;--purple-bg:rgba(192,132,252,0.1);
+      --radius:16px;--glass:blur(20px) saturate(180%);
+      --shadow:0 8px 32px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.2);
+      --shadow-gold:0 0 40px rgba(245,166,35,0.3),0 8px 32px rgba(0,0,0,0.4);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg0);color:var(--text1);min-height:100dvh;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 80% 60% at 15% 15%,rgba(245,166,35,.07) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 80% at 85% 85%,rgba(56,189,248,.05) 0%,transparent 60%),
+        radial-gradient(ellipse 100% 100% at 50% 50%,rgba(192,132,252,.03) 0%,transparent 70%);
+      animation:bgDrift 12s ease-in-out infinite alternate}
+    @keyframes bgDrift{0%{transform:scale(1) translate(0,0)}50%{transform:scale(1.05) translate(-1%,1%)}100%{transform:scale(1.02) translate(1%,-1%)}}
+    #bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+    #particle-canvas{position:fixed;inset:0;pointer-events:none;z-index:1000}
+    .screen{display:none;min-height:100dvh;position:relative;z-index:1}
+    .screen.active{display:flex;flex-direction:column}
+
+    /* LOADING */
+    #s-loading{align-items:center;justify-content:center;gap:20px}
+    .loading-ring{width:60px;height:60px;position:relative}
+    .loading-ring::before,.loading-ring::after{content:'';position:absolute;inset:0;border-radius:50%}
+    .loading-ring::before{border:3px solid rgba(245,166,35,.15)}
+    .loading-ring::after{border:3px solid transparent;border-top-color:var(--gold);animation:spin .8s cubic-bezier(.68,-.55,.27,1.55) infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{color:var(--text2);font-size:13px;animation:pulse 1.5s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+    /* LOGIN */
+    #s-login{align-items:center;justify-content:center;padding:24px}
+    .login-card{background:var(--bg2);border:1px solid var(--border);border-radius:24px;padding:48px 32px 40px;max-width:360px;width:100%;text-align:center;backdrop-filter:var(--glass);box-shadow:var(--shadow)}
+    .login-star{font-size:52px;line-height:1;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .login-card h1{font-size:26px;font-weight:900;color:var(--gold);margin-bottom:8px;letter-spacing:-.5px}
+    .login-card .sub{font-size:13px;color:var(--text2);margin-bottom:36px;line-height:1.7}
+
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;line-height:1;position:relative;overflow:hidden}
+    .btn:active{transform:scale(.95)}
+    .btn-google{background:#fff;color:#333;width:100%;border:1px solid #ddd;font-size:15px;padding:14px;border-radius:14px}
+    .btn-google:hover{background:#f7f7f7;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.2)}
+    .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-weight:700;box-shadow:0 4px 20px var(--gold-glow)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--gold-glow)}
+    .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+    .btn-ghost:hover{background:var(--bg3);color:var(--text1);border-color:rgba(245,166,35,.3)}
+    .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(248,113,113,.3)}
+    .btn-danger:hover{background:var(--red-bg);border-color:var(--red)}
+    .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+    .icon-btn{background:transparent;border:none;cursor:pointer;color:var(--text2);padding:7px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+    .icon-btn:hover{background:var(--red-bg);color:var(--red)}
+
+    /* HEADER */
+    header{background:rgba(6,14,31,.85);border-bottom:1px solid var(--border);padding:12px 16px;position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:10px;backdrop-filter:blur(24px)}
+    .header-left{display:flex;align-items:center;gap:10px}
+    .header-left h1{font-size:15px;font-weight:900;color:var(--gold);letter-spacing:.3px}
+    .header-right{display:flex;align-items:center;gap:8px}
+    .avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,166,35,.5)}
+    .uname{font-size:12px;color:var(--text2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* COURSE BAR */
+    .course-bar{padding:7px 14px;border-bottom:1px solid var(--border);background:rgba(6,14,31,.7);backdrop-filter:blur(24px);position:sticky;top:54px;z-index:19;display:flex;align-items:center;gap:10px}
+    .course-bar-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);white-space:nowrap;flex-shrink:0}
+    .course-scroll{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .course-scroll::-webkit-scrollbar{display:none}
+    .course-chip{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+
+    main{flex:1;padding:16px 14px 48px;max-width:560px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+    /* CARD */
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;backdrop-filter:var(--glass);box-shadow:var(--shadow);transition:border-color .3s,box-shadow .3s}
+    .card-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:14px}
+
+    /* SEMESTER */
+    .sem-row{display:flex;align-items:center;gap:8px}
+    .sem-scroll{display:flex;gap:7px;flex:1;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .sem-scroll::-webkit-scrollbar{display:none}
+    .sem-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .25s;display:flex;align-items:center;gap:5px}
+    .sem-chip.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;border-color:transparent;font-weight:800;box-shadow:0 4px 16px var(--gold-glow)}
+    .sem-chip:not(.active):hover{border-color:rgba(245,166,35,.4);color:var(--gold)}
+    .chip-del{width:15px;height:15px;border-radius:50%;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:11px;display:none;align-items:center;justify-content:center;color:inherit;line-height:1;padding:0}
+    .sem-chip.active .chip-del{display:inline-flex}
+    .sem-add-form{display:flex;gap:8px;margin-top:12px}
+    .sem-add-form input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:14px;padding:9px 13px;transition:border-color .2s}
+    .sem-add-form input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
+
+    /* SUMMARY */
+    .summary-card{border-radius:20px;padding:24px 20px 20px;border:1px solid var(--border);background:var(--bg2);backdrop-filter:var(--glass);box-shadow:var(--shadow);transition:border-color .5s,box-shadow .5s;position:relative;overflow:hidden}
+    .summary-card::before{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at 50% 0%,rgba(245,166,35,.15) 0%,transparent 70%);transition:opacity .5s;pointer-events:none}
+    .summary-card.apto{border-color:rgba(245,166,35,.5);box-shadow:var(--shadow-gold)}
+    .summary-card.apto::before{opacity:1}
+    .summary-card.inapto{border-color:rgba(248,113,113,.4);box-shadow:0 0 30px rgba(248,113,113,.15),var(--shadow)}
+    .summary-card.progress{border-color:rgba(56,189,248,.3)}
+    .summary-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .summary-cr-block{flex:1}
+    .summary-cr-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:4px}
+    .summary-cr{font-size:56px;font-weight:900;letter-spacing:-3px;line-height:1;color:var(--text2);transition:color .5s,text-shadow .5s;font-variant-numeric:tabular-nums}
+    .summary-cr.apto{color:var(--gold);text-shadow:0 0 40px rgba(245,166,35,.5),0 0 80px rgba(245,166,35,.2)}
+    .summary-cr.inapto{color:var(--red);text-shadow:0 0 30px rgba(248,113,113,.3)}
+    .summary-cr.progress{color:var(--blue);text-shadow:0 0 30px rgba(56,189,248,.3)}
+    .summary-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(255,255,255,.05);color:var(--text2);white-space:nowrap;align-self:flex-start;margin-top:6px;border:1px solid var(--border);transition:all .4s}
+    .summary-badge.apto{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.3)}
+    .summary-badge.inapto{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.3)}
+    .summary-badge.progress{background:var(--blue-bg);color:var(--blue);border-color:rgba(56,189,248,.3)}
+    .summary-msg{font-size:13px;color:var(--text2);line-height:1.7}
+    .summary-msg strong{color:var(--text1)}
+    .proj-row{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+    .proj-label{font-size:11px;color:var(--text2);flex:1}
+    .proj-cr{font-size:20px;font-weight:800;color:var(--text2);transition:color .3s}
+    .proj-cr.ok{color:var(--green)}.proj-cr.bad{color:var(--red)}
+
+    /* CHECKLIST → chips compactos no summary card */
+    .chk-chips{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .chk-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);background:rgba(10,18,38,.5);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px;transition:border-color .3s,background .3s}
+    .chk-chip:has(.chk-icon.ok){border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.05)}
+    .chk-chip:has(.chk-icon.fail){border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)}
+    .chk-icon{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border);transition:all .3s}
+    .chk-icon.ok{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.4)}
+    .chk-icon.fail{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.4)}
+    .share-wpp-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:12px;padding:10px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:12px;color:#25d366;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+    .share-wpp-btn:hover{background:rgba(37,211,102,.18);border-color:rgba(37,211,102,.5);transform:translateY(-1px)}
+    .share-wpp-btn:active{transform:scale(.97)}
+
+    /* TP */
+    .tp-card{border-color:rgba(192,132,252,.25);background:rgba(192,132,252,.04)}
+    .tp-card .card-label{color:var(--purple)}
+    .tp-body{display:flex;flex-direction:column;gap:12px}
+    .tp-row{display:flex;align-items:center;gap:12px}
+    .tp-label{font-size:13px;color:var(--text2);flex:1}
+    .tp-input{background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:16px;font-weight:700;padding:9px 10px;width:74px;text-align:center;transition:all .2s}
+    .tp-input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-bg)}
+    .tp-select{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:13px;padding:9px 32px 9px 12px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%237a90c0' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:all .2s}
+    .tp-select:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-bg)}
+    .tp-hint{font-size:11px;color:var(--text2);line-height:1.6}
+    .tp-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--purple-bg);color:var(--purple);border:1px solid rgba(192,132,252,.3);white-space:nowrap}
+
+    /* SUBJECT CARD */
+    .subj-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;backdrop-filter:var(--glass);box-shadow:0 4px 16px rgba(0,0,0,.2);transition:border-color .35s,box-shadow .35s}
+    .subj-card.s-ok{border-color:rgba(74,222,128,.3);box-shadow:0 0 20px rgba(74,222,128,.08),0 4px 16px rgba(0,0,0,.2)}
+    .subj-card.s-warn{border-color:rgba(251,191,36,.3)}
+    .subj-card.s-bad,.subj-card.s-disq{border-color:rgba(248,113,113,.3)}
+    .subj-head{display:flex;align-items:center;gap:8px;padding:13px 14px 0}
+    .subj-num{font-size:10px;font-weight:800;color:rgba(122,144,192,.45);min-width:18px;letter-spacing:.5px}
+    .name-input{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text1);font-size:14px;font-weight:700;padding:3px 0;min-width:0;transition:border-color .2s}
+    .name-input:focus{outline:none;border-bottom-color:var(--gold)}
+    .name-input::placeholder{color:rgba(122,144,192,.3);font-weight:400}
+
+    /* GRADE GRID */
+    .grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);margin-top:13px}
+    .grade-grid.has-tp{grid-template-columns:repeat(4,1fr)}
+    .g-slot{background:rgba(10,18,38,.7);display:flex;flex-direction:column;align-items:center;padding:11px 6px 8px;gap:2px;position:relative;transition:background .2s}
+    .g-slot:focus-within{background:rgba(245,166,35,.05)}
+    .g-slot.tp-slot{background:rgba(192,132,252,.06)}
+    .g-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);display:flex;align-items:center;gap:2px}
+    .g-label em{font-style:normal;font-size:8px;opacity:.45;font-weight:600}
+    .g-label.tp-lbl{color:var(--purple)}
+    .g-input{background:transparent;border:none;color:var(--text1);font-size:26px;font-weight:900;text-align:center;width:100%;padding:2px 0;transition:color .2s}
+    .g-input:focus{outline:none;color:var(--gold)}
+    .g-input::placeholder{color:rgba(80,110,180,.28);font-size:20px;font-weight:400}
+    .g-input.has-val{color:var(--text1)}
+    .g-val{font-size:26px;font-weight:900;color:var(--purple);line-height:1.1;padding:2px 0}
+    .g-hint{font-size:9px;font-weight:700;text-align:center;line-height:1.2;min-height:13px;width:100%;padding:0 2px;display:flex;justify-content:center;align-items:center;gap:3px;flex-wrap:wrap}
+    .h-stars{color:var(--amber)}.h-stars.ok{color:var(--green)}.h-stars.bad{color:var(--red)}
+    .h-pass{color:var(--blue)}.h-pass.ok{color:var(--green)}.h-pass.bad{color:var(--red)}
+    .h-sep{color:rgba(80,110,180,.3);font-size:8px}
+    .g-slot::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;background:var(--gold);border-radius:1px;transform:scaleX(0);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+    .g-slot:focus-within::after{transform:scaleX(1)}
+    .g-slot.tp-slot::after{background:var(--purple)}
+
+    /* SUBJECT FOOTER */
+    .subj-foot{display:flex;align-items:center;gap:8px;padding:9px 14px 11px;flex-wrap:wrap}
+    .f-label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+    .f-input{background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text1);font-size:13px;font-weight:700;padding:3px 7px;width:50px;text-align:center;transition:all .2s}
+    .f-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-glow)}
+    .flags{display:flex;gap:5px}
+    .flag-btn{padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
+    .flag-btn.on{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.4)}
+    .grade-pill{margin-left:auto;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid}
+    .grade-pill.ok{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.3)}
+    .grade-pill.pass{background:var(--blue-bg);color:var(--blue);border-color:rgba(56,189,248,.3)}
+    .grade-pill.bad{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.3)}
+    .grade-pill.partial{background:rgba(120,140,180,.1);color:var(--text2);border-color:rgba(120,140,180,.3);border-style:dashed;letter-spacing:.5px}
+
+    /* LEADERBOARD */
+    .lb-modal{position:fixed;inset:0;z-index:250;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0);pointer-events:none;transition:background .3s}
+    .lb-modal.open{background:rgba(0,0,0,.65);pointer-events:all}
+    .lb-sheet{background:var(--bg1);border:1px solid var(--border);border-top:1px solid rgba(245,166,35,.15);border-radius:24px 24px 0 0;width:100%;max-width:560px;max-height:88dvh;overflow-y:auto;padding:8px 16px 48px;transform:translateY(100%);transition:transform .42s cubic-bezier(.34,1.56,.64,1);display:flex;flex-direction:column;gap:14px}
+    .lb-modal.open .lb-sheet{transform:translateY(0)}
+    .lb-drag{width:40px;height:4px;background:rgba(255,255,255,.13);border-radius:2px;margin:10px auto 2px;flex-shrink:0}
+    .lb-header{display:flex;align-items:center;justify-content:space-between}
+    .lb-title{font-size:16px;font-weight:900;color:var(--gold)}
+    .lb-close{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);color:var(--text2);width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0}
+    .lb-close:hover{background:rgba(255,255,255,.14);color:var(--text1)}
+    .lb-section{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+    .lb-section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:12px}
+    .lb-toggle-row{display:flex;align-items:center;gap:12px}
+    .lb-toggle-info{flex:1}
+    .lb-toggle-label{font-size:13px;font-weight:600;color:var(--text1)}
+    .lb-toggle-sub{font-size:11px;color:var(--text2);margin-top:2px}
+    .lb-divider{height:1px;background:var(--border);margin:12px 0}
+    .toggle{width:44px;height:26px;background:rgba(80,110,180,.2);border:1px solid var(--border);border-radius:13px;position:relative;cursor:pointer;transition:all .25s;flex-shrink:0}
+    .toggle.on{background:var(--gold);border-color:var(--gold)}
+    .toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+    .toggle.on::after{transform:translateX(18px)}
+    .lb-name-row{display:flex;gap:8px;margin-top:10px}
+    .lb-name-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:14px;padding:9px 13px;transition:border-color .2s}
+    .lb-name-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
+    .lb-entries{display:flex;flex-direction:column;gap:6px}
+    .lb-entry{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(10,18,38,.5);transition:border-color .3s}
+    .lb-entry.me{border-color:rgba(245,166,35,.45);background:rgba(245,166,35,.05);box-shadow:0 0 16px rgba(245,166,35,.06)}
+    .lb-rank{font-size:17px;font-weight:900;color:var(--text2);min-width:28px;text-align:center;flex-shrink:0}
+    .lb-entry-info{flex:1;min-width:0}
+    .lb-ename{font-size:13px;font-weight:700;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+    .lb-esem{font-size:10px;color:var(--text2);margin-top:2px}
+    .lb-ecr{text-align:right;flex-shrink:0}
+    .lb-ecr-val{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+    .lb-ecr-val.ok{color:var(--gold)}.lb-ecr-val.prog{color:var(--blue)}.lb-ecr-val.low{color:var(--text2)}
+    .lb-ecr-sub{font-size:10px;color:var(--text2);margin-top:2px}
+    .lb-you{font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(245,166,35,.15);color:var(--gold);border:1px solid rgba(245,166,35,.3);white-space:nowrap;flex-shrink:0}
+    .lb-empty{text-align:center;padding:28px 12px;color:var(--text2);font-size:13px;line-height:1.8}
+    .lb-pos{text-align:center;font-size:12px;color:var(--text2);padding:10px 0 0}
+    .lb-pos strong{color:var(--text1)}
+    .lb-filter-tabs{display:flex;gap:5px;background:rgba(10,18,38,.6);border:1px solid var(--border);border-radius:12px;padding:3px}
+    .lb-filter-tab{flex:1;padding:6px 12px;border-radius:9px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .lb-filter-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628}
+    .lb-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--text2);font-size:13px}
+
+    /* ADD BTN */
+    .add-btn{width:100%;padding:13px;margin-top:4px;border:1.5px dashed rgba(80,110,180,.3);background:transparent;color:var(--text2);font-size:13px;font-weight:600;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s}
+    .add-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(245,166,35,.04);transform:translateY(-1px)}
+
+    .empty-msg{text-align:center;padding:32px 16px;color:var(--text2);font-size:13px}
+    .danger-area{display:flex;justify-content:center}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:rgba(16,26,52,.95);border:1px solid var(--border);border-radius:12px;padding:11px 22px;font-size:13px;color:var(--text1);z-index:99;transition:transform .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 8px 32px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap;backdrop-filter:blur(20px)}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+
+    /* CURSOR GLOW */
+    .cursor-glow{position:fixed;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.07) 0%,transparent 70%);pointer-events:none;z-index:0;transform:translate(-50%,-50%);will-change:transform;opacity:0;transition:opacity .4s}
+
+    /* PWA BANNER */
+    .pwa-banner{position:fixed;bottom:0;left:0;right:0;z-index:200;padding:12px 14px 24px;transform:translateY(110%);transition:transform .55s cubic-bezier(.34,1.56,.64,1)}
+    .pwa-banner.show{transform:translateY(0)}
+    .pwa-inner{background:rgba(6,14,31,.97);border:1px solid rgba(245,166,35,.3);border-radius:20px;padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 -8px 40px rgba(0,0,0,.6),0 0 0 1px rgba(245,166,35,.08);backdrop-filter:blur(28px)}
+    .pwa-icon{font-size:34px;flex-shrink:0;animation:float 3s ease-in-out infinite}
+    .pwa-text{flex:1}
+    .pwa-text strong{display:block;color:var(--gold);font-size:14px;font-weight:800;margin-bottom:4px}
+    .pwa-text small{font-size:12px;color:var(--text2);line-height:1.7}
+    .pwa-text .pwa-hl{color:var(--blue);font-weight:700}
+    .pwa-close{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);color:var(--text2);width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;transition:all .2s}
+    .pwa-close:hover{background:rgba(255,255,255,.14);color:var(--text1)}
+    .pwa-steps{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+    .pwa-step{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2)}
+    .pwa-step-num{width:18px;height:18px;border-radius:50%;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);color:var(--gold);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+    /* SUBJECT PROGRESS BAR */
+    .subj-progress{height:3px;background:rgba(80,110,180,.1);overflow:hidden;flex-shrink:0}
+    .subj-progress-fill{height:100%;width:0%;transition:width .8s cubic-bezier(.34,1.56,.64,1),background .5s;background:var(--blue)}
+    .subj-progress-fill.pf-ok{background:var(--green)}.subj-progress-fill.pf-warn{background:var(--amber)}.subj-progress-fill.pf-prog{background:var(--blue)}.subj-progress-fill.pf-bad{background:var(--red)}
+
+    /* RIPPLE BUTTON */
+    .btn{overflow:hidden}
+    .ripple{position:absolute;border-radius:50%;transform:scale(0);animation:rippleAnim .55s linear;background:rgba(255,255,255,.18);pointer-events:none}
+    @keyframes rippleAnim{to{transform:scale(4);opacity:0}}
+
+    /* CARD SHIMMER */
+    .subj-card.s-ok{animation:shimmerPulse 3s ease-in-out infinite}
+    @keyframes shimmerPulse{0%,100%{box-shadow:0 0 20px rgba(74,222,128,.08),0 4px 16px rgba(0,0,0,.2)}50%{box-shadow:0 0 28px rgba(74,222,128,.15),0 4px 16px rgba(0,0,0,.2)}}
+
+    /* ── 3D VIEW ─────────────────────────────────────────────────────────── */
+    #s-3d{background:#060e1f;overflow:hidden;position:fixed;inset:0;z-index:200}
+    #three-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+    .back3d{position:absolute;top:16px;left:16px;z-index:30}
+    .legend3d{position:absolute;top:16px;right:16px;z-index:30;font-size:11px;color:var(--text2);text-align:right;line-height:2;pointer-events:none}
+    .l3-row{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+    .l3-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .ov3d{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:30;
+      background:rgba(6,14,31,.96);border:1px solid var(--border);border-radius:18px;
+      padding:18px 28px;min-width:210px;text-align:center;backdrop-filter:var(--glass);
+      box-shadow:var(--shadow);display:none;transition:opacity .25s}
+    .ov3d.show{display:block}
+    .ov3d-name{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+    .ov3d-grade{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums;transition:color .3s}
+    .ov3d-sub{font-size:12px;color:var(--text2);margin-top:6px}
+    .tip3d{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);color:var(--text2);font-size:12px;pointer-events:none;white-space:nowrap;opacity:.55}
+    .mode3d-tabs{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:5px;background:rgba(6,14,31,.85);border:1px solid var(--border);border-radius:20px;padding:4px;backdrop-filter:blur(16px)}
+    .mode3d-tab{padding:5px 14px;border-radius:14px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .mode3d-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628}
+    .city-tip{position:absolute;top:64px;left:50%;transform:translateX(-50%);color:var(--text2);font-size:11px;pointer-events:none;white-space:nowrap;opacity:.5;z-index:30}
+    #city-inspect{position:absolute;bottom:0;left:0;right:0;z-index:60;pointer-events:none;padding:0 12px 20px}
+    #city-inspect-inner{pointer-events:auto;background:rgba(8,15,34,0.96);border:1px solid #1e3268;border-radius:18px 18px 12px 12px;padding:16px 16px 14px;backdrop-filter:blur(12px);max-width:480px;margin:0 auto;position:relative}
+    #city-inspect-close{position:absolute;top:12px;right:12px;background:none;border:none;color:#7a90c0;font-size:16px;cursor:pointer;line-height:1;padding:4px 8px}
+    .ci-bars{display:flex;gap:5px;align-items:flex-end;height:52px}
+
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    @media(max-width:390px){main{padding:10px 10px 32px;gap:12px}.summary-cr{font-size:44px}}
+    svg{flex-shrink:0}
+  </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div class="cursor-glow" id="cursor-glow"></div>
+
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-inner">
+    <span class="pwa-icon">📲</span>
+    <div class="pwa-text">
+      <strong>Instale o app no iPhone!</strong>
+      <div class="pwa-steps">
+        <div class="pwa-step"><span class="pwa-step-num">1</span><span>Toque em <span class="pwa-hl">Compartilhar</span> (ícone ⬆️ na barra do Safari)</span></div>
+        <div class="pwa-step"><span class="pwa-step-num">2</span><span>Selecione <span class="pwa-hl">Adicionar à Tela de Início</span></span></div>
+        <div class="pwa-step"><span class="pwa-step-num">3</span><span>Toque em <span class="pwa-hl">Adicionar</span> — pronto! 🏆</span></div>
+      </div>
+    </div>
+    <button class="pwa-close" id="pwa-close">✕</button>
+  </div>
+</div>
+
+<div id="s-loading" class="screen active">
+  <div class="loading-ring"></div>
+  <p class="loading-text">A inicializar…</p>
+</div>
+
+<div id="s-login" class="screen">
+  <div class="login-card" id="login-card">
+    <div class="login-star">🏆</div>
+    <h1>Education Stars</h1>
+    <p class="sub">Lance suas notas ao longo do semestre e veja o que precisa tirar para o Ibmec Stars — e para passar</p>
+    <button class="btn btn-google" id="btn-google-login">
+      <svg width="18" height="18" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Entrar com Google
+    </button>
+  </div>
+</div>
+
+<div id="s-app" class="screen">
+  <header>
+    <div class="header-left">
+      <span style="font-size:20px">🏆</span>
+      <h1>Education Stars</h1>
+    </div>
+    <div class="header-right">
+      <img id="u-avatar" class="avatar" src="" alt="" style="display:none">
+      <span id="u-name" class="uname"></span>
+      <button class="btn btn-ghost btn-sm" id="btn-3d" style="display:none">🗺 3D</button>
+      <button class="btn btn-ghost btn-sm" id="btn-ranking" title="Ranking">🏆</button>
+      <button class="btn btn-ghost btn-sm" id="btn-notif" title="Ativar notificações" style="display:none">🔔</button>
+      <button class="btn btn-ghost btn-sm" id="btn-logout">Sair</button>
+    </div>
+  </header>
+
+  <div class="course-bar">
+    <span class="course-bar-lbl">Curso</span>
+    <div class="course-scroll" id="course-scroll"></div>
+  </div>
+
+  <main>
+    <div class="card">
+      <div class="card-label">Semestre</div>
+      <div class="sem-row">
+        <div class="sem-scroll" id="sem-list"></div>
+        <button class="btn btn-primary btn-sm" id="btn-new-sem">+ Novo</button>
+      </div>
+      <div class="sem-add-form" id="sem-add-panel" style="display:none">
+        <input id="sem-name-input" type="text" placeholder="Ex: 25.1, 24.2…" maxlength="12" autocomplete="off">
+        <button class="btn btn-primary btn-sm" id="btn-confirm-sem">Criar</button>
+        <button class="btn btn-ghost btn-sm" id="btn-cancel-sem">✕</button>
+      </div>
+    </div>
+
+    <div class="card" id="no-sem-card" style="display:none">
+      <div class="empty-msg">Nenhum semestre criado.<br>Crie um para começar.</div>
+    </div>
+
+    <div id="sem-content" style="display:none;flex-direction:column;gap:14px">
+
+      <div class="summary-card" id="summary-card">
+        <div class="summary-top">
+          <div class="summary-cr-block">
+            <div class="summary-cr-label">Coeficiente de Rendimento</div>
+            <div class="summary-cr" id="sum-cr">—</div>
+          </div>
+          <div class="summary-badge" id="sum-badge">Adicione disciplinas</div>
+        </div>
+        <div class="summary-msg" id="sum-msg"></div>
+        <div class="proj-row" id="partial-cr-row" style="display:none">
+          <span class="proj-label">CR em andamento (notas parciais)</span>
+          <span class="proj-cr" id="partial-cr">—</span>
+        </div>
+        <div class="proj-row" id="proj-row" style="display:none">
+          <span class="proj-label">CR projetado (meta 9,0 nas restantes)</span>
+          <span class="proj-cr" id="proj-cr">—</span>
+        </div>
+        <!-- Critérios integrados como chips -->
+        <div class="chk-chips">
+          <div class="chk-chip"><span class="chk-icon" id="chk-min">?</span><span id="chk-min-txt">4+ disciplinas</span></div>
+          <div class="chk-chip"><span class="chk-icon" id="chk-cr">?</span><span id="chk-cr-txt">CR ≥ 9,0</span></div>
+          <div class="chk-chip"><span class="chk-icon" id="chk-disq">?</span><span id="chk-disq-txt">Sem AS/Sub</span></div>
+        </div>
+        <button class="share-wpp-btn" id="btn-share-wpp">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Compartilhar meu CR
+        </button>
+      </div>
+
+      <!-- TP colapsável -->
+      <div class="card tp-card">
+        <div id="tp-toggle" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
+          <span class="card-label" style="margin:0;color:var(--purple)">🔬 Teste de Progresso</span>
+          <span id="tp-chevron" style="font-size:11px;color:var(--purple);transition:transform .25s;display:inline-block">▼</span>
+        </div>
+        <div class="tp-body" id="tp-body" style="display:none;margin-top:14px">
+          <div class="tp-row">
+            <span class="tp-label">Nota obtida (0–10 pts)</span>
+            <input type="number" class="tp-input" id="tp-nota" min="0" max="10" step="0.1" placeholder="—">
+          </div>
+          <div class="tp-row">
+            <span class="tp-label">Aplicar em</span>
+            <select class="tp-select" id="tp-select"><option value="">Nenhuma disciplina</option></select>
+          </div>
+          <p class="tp-hint">O TP vale até <strong>10 pts</strong> na nota final da disciplina escolhida. Realizado 1× por semestre.</p>
+        </div>
+      </div>
+
+      <!-- Disciplinas sem card wrapper externo -->
+      <div>
+        <div class="card-label" style="padding:0 2px;margin-bottom:10px">Disciplinas</div>
+        <div id="subj-list" style="display:flex;flex-direction:column;gap:10px">
+          <div class="empty-msg">Nenhuma disciplina adicionada</div>
+        </div>
+        <button class="add-btn" id="btn-add-subj" style="margin-top:10px">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar disciplina
+        </button>
+      </div>
+
+      <!-- Danger zone discreta -->
+      <div style="text-align:center;padding:2px 0 8px">
+        <button class="btn btn-danger btn-sm" id="btn-clear-sem" style="opacity:.5;font-size:11px">🗑 Limpar semestre</button>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="s-3d" class="screen">
+  <button class="btn btn-ghost btn-sm back3d" id="btn-back3d">← Voltar</button>
+  <div class="mode3d-tabs">
+    <button class="mode3d-tab active" id="tab-3d-tree">🌐 Meu Mapa</button>
+    <button class="mode3d-tab" id="tab-3d-city">🏙️ Cidade</button>
+  </div>
+  <div class="legend3d" id="legend3d">
+    <div class="l3-row"><span>Stars ≥9,0</span><span class="l3-dot" style="background:#f5a623"></span></div>
+    <div class="l3-row"><span>Aprovado</span><span class="l3-dot" style="background:#4ade80"></span></div>
+    <div class="l3-row"><span>Reprovado</span><span class="l3-dot" style="background:#f87171"></span></div>
+    <div class="l3-row"><span>Parcial</span><span class="l3-dot" style="background:#38bdf8"></span></div>
+    <div class="l3-row"><span>Sem nota</span><span class="l3-dot" style="background:#1a3060"></span></div>
+  </div>
+  <p class="city-tip" id="city-tip" style="display:none">Toque num bloco · Arraste para girar · Grid ordenado por CR</p>
+  <div id="city-inspect" style="display:none">
+    <div id="city-inspect-inner">
+      <button id="city-inspect-close">✕</button>
+      <div id="city-inspect-content"></div>
+    </div>
+  </div>
+  <canvas id="three-canvas"></canvas>
+  <div id="3d-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;background:#060e1f;flex-direction:column;gap:14px">
+    <div class="loading-ring"></div>
+    <p style="color:#7a90c0;font-size:13px;margin:0">Carregando cena 3D…</p>
+  </div>
+  <div class="ov3d" id="ov3d">
+    <div class="ov3d-name" id="ov3d-name"></div>
+    <div class="ov3d-grade" id="ov3d-grade">—</div>
+    <div class="ov3d-sub" id="ov3d-sub"></div>
+  </div>
+  <p class="tip3d" id="tip3d">Toque num nó para ver detalhes · arraste para girar</p>
+</div>
+
+<div class="lb-modal" id="lb-modal">
+  <div class="lb-sheet">
+    <div class="lb-drag"></div>
+    <div class="lb-header">
+      <span class="lb-title">🏆 Ranking</span>
+      <button class="lb-close" id="lb-close">✕</button>
+    </div>
+
+    <div class="lb-filter-tabs">
+      <button class="lb-filter-tab active" id="lb-tab-all">🌍 Geral</button>
+      <button class="lb-filter-tab" id="lb-tab-course">🎓 Meu Curso</button>
+    </div>
+
+    <div class="lb-section">
+      <div class="lb-section-title">Participação</div>
+      <div class="lb-toggle-row">
+        <div class="lb-toggle-info">
+          <div class="lb-toggle-label">Participar do ranking</div>
+          <div class="lb-toggle-sub">Seu CR aparece para outros alunos</div>
+        </div>
+        <div class="toggle" id="lb-optin-toggle"></div>
+      </div>
+      <div id="lb-extra-settings" style="display:none">
+        <div class="lb-divider"></div>
+        <div class="lb-toggle-row">
+          <div class="lb-toggle-info">
+            <div class="lb-toggle-label">Mostrar meu nome</div>
+            <div class="lb-toggle-sub">Desativado → aparece como "Anônimo"</div>
+          </div>
+          <div class="toggle" id="lb-named-toggle"></div>
+        </div>
+        <div class="lb-name-row" id="lb-name-row" style="display:none">
+          <input class="lb-name-input" id="lb-name-input" type="text" placeholder="Seu nome no ranking" maxlength="24" autocomplete="off">
+          <button class="btn btn-primary btn-sm" id="lb-name-save">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="lb-section-title" id="lb-list-label">Top alunos</div>
+      <div class="lb-entries" id="lb-entries">
+        <div class="lb-loading"><div class="loading-ring" style="width:28px;height:28px"></div><span>Carregando…</span></div>
+      </div>
+      <div class="lb-pos" id="lb-pos"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="module">
+
+// ─── FIREBASE ────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:"AIzaSyBqwfYeFzUrK9aJzuWB_cn6IfimLHYjsXo",authDomain:"ibmec-stars.firebaseapp.com",
+  projectId:"ibmec-stars",storageBucket:"ibmec-stars.firebasestorage.app",
+  messagingSenderId:"961950149197",appId:"1:961950149197:web:940f88fcc88c2a80f8ca04",
+  measurementId:"G-1250NDBMBR"
+};
+import{initializeApp}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut as fbSignOut}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import{getFirestore,doc,setDoc,getDoc,deleteDoc,collection,getDocs,onSnapshot,serverTimestamp,arrayUnion}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+
+// ─── ONESIGNAL ───────────────────────────────────────────────────────────────
+const OS_APP_ID='7bd240f1-a6de-4f04-9078-7d2d521b9b52';
+const OS_REST_KEY='***REMOVED_ONESIGNAL_REST_KEY***';
+window.OneSignalDeferred=window.OneSignalDeferred||[];
+OneSignalDeferred.push(async os=>{
+  await os.init({appId:OS_APP_ID,notifyButton:{enable:false},serviceWorkerPath:'/OneSignalSDKWorker.js'});
+});
+function initOneSignalUser(){
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  OneSignalDeferred.push(async os=>{
+    try{
+      await os.login(user.uid);
+      const perm=os.Notifications.permissionNative;
+      if(perm==='granted'){
+        document.getElementById('btn-notif').style.display='none';
+      } else {
+        document.getElementById('btn-notif').style.display='';
+      }
+    }catch(e){console.warn('[OS]:',e.message);}
+  });
+}
+document.getElementById('btn-notif').onclick=()=>{
+  window.OneSignalDeferred=window.OneSignalDeferred||[];
+  OneSignalDeferred.push(async os=>{
+    try{
+      await os.Notifications.requestPermission();
+      if(os.Notifications.permissionNative==='granted'){
+        document.getElementById('btn-notif').style.display='none';
+        toast('🔔 Notificações ativadas!');
+      }
+    }catch(e){console.warn('[OS]:',e.message);}
+  });
+};
+async function sendPushViaOneSignal(targetUid,emoji,fromName){
+  try{
+    const res=await fetch('https://api.onesignal.com/notifications',{
+      method:'POST',
+      headers:{'Authorization':'Key '+OS_REST_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        app_id:OS_APP_ID,
+        include_aliases:{external_id:[targetUid]},
+        target_channel:'push',
+        headings:{en:'🏙️ Ibmec Stars',pt:'🏙️ Ibmec Stars'},
+        contents:{en:`${emoji} ${fromName} reagiu ao seu prédio!`,pt:`${emoji} ${fromName} reagiu ao seu prédio!`},
+        url:'https://ibmec-stars.web.app'
+      })
+    });
+    const json=await res.json();
+    console.log('[OS] send result:',JSON.stringify(json));
+  }catch(e){console.warn('[OS] push error:',e.message);}
+}
+
+// ─── GSAP PLUGINS ────────────────────────────────────────────────────────────
+gsap.registerPlugin(TextPlugin, ScrollTrigger);
+
+// ─── CURSOR / TOUCH GLOW ─────────────────────────────────────────────────────
+(()=>{
+  const glow=document.getElementById('cursor-glow');
+  let glowX=0,glowY=0,targetX=0,targetY=0,raf=null;
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  function tickGlow(){
+    glowX=lerp(glowX,targetX,.1);glowY=lerp(glowY,targetY,.1);
+    glow.style.transform=`translate(${glowX-140}px,${glowY-140}px)`;
+    raf=requestAnimationFrame(tickGlow);
+  }
+  document.addEventListener('mousemove',e=>{targetX=e.clientX;targetY=e.clientY;glow.style.opacity='1';if(!raf)tickGlow()},{passive:true});
+  document.addEventListener('touchmove',e=>{const t=e.touches[0];targetX=t.clientX;targetY=t.clientY;glow.style.opacity='1';if(!raf)tickGlow()},{passive:true});
+  document.addEventListener('mouseleave',()=>glow.style.opacity='0');
+})();
+
+// ─── BUTTON RIPPLE ────────────────────────────────────────────────────────────
+document.addEventListener('pointerdown',e=>{
+  const btn=e.target.closest('.btn');if(!btn)return;
+  const r=document.createElement('span');r.className='ripple';
+  const rect=btn.getBoundingClientRect();
+  const size=Math.max(rect.width,rect.height)*2;
+  r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  btn.appendChild(r);setTimeout(()=>r.remove(),600);
+},{passive:true});
+
+// ─── PWA INSTALL BANNER ───────────────────────────────────────────────────────
+(()=>{
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed=localStorage.getItem('pwa-dismissed');
+  if(isIOS&&!isStandalone&&!dismissed){
+    setTimeout(()=>{
+      const banner=document.getElementById('pwa-banner');
+      banner.classList.add('show');
+      document.getElementById('pwa-close').onclick=()=>{
+        banner.classList.remove('show');
+        localStorage.setItem('pwa-dismissed','1');
+      };
+    },4000);
+  }
+})();
+
+// ─── COURSES ─────────────────────────────────────────────────────────────────
+const COURSES = {
+  computacao:{
+    label:'💻 Computação',color:'#38bdf8',glow:'rgba(56,189,248,0.5)',
+    symbols:['{','}','<>','()','[]','=>','//','&&','||','!=','++','--','**',
+             'if','for','fn','::','/*','*/','try','let','var','map','API',
+             '0x','npm','git','SQL','</>','!==','===','true','null','async']
+  },
+  administracao:{
+    label:'📊 Administração',color:'#f5a623',glow:'rgba(245,166,35,0.5)',
+    symbols:['∑','$','%','↑','↓','≈','∆','€','£','¥','ROI','P&L','▲','▼',
+             'KPI','≠','SWOT','B2B','SLA','MVP','OKR','CRM','PDCA','5S']
+  },
+  economia:{
+    label:'📈 Economia',color:'#4ade80',glow:'rgba(74,222,128,0.5)',
+    symbols:['∑','$','∆','%','∞','≈','↑','↓','∫','µ','σ','β','π','≤','≥',
+             'GDP','PIB','∂','ε','η','P*','Q*','MC','MR','IS','LM']
+  },
+  direito:{
+    label:'⚖️ Direito',color:'#c084fc',glow:'rgba(192,132,252,0.5)',
+    symbols:['§','¶','©','®','⚖','art.','inc.','vs.','cf.','ibid.',
+             '™','†','≡','∴','∵','CC','CF','STF','STJ','TJ','MP']
+  },
+  engenharia:{
+    label:'⚙️ Engenharia',color:'#fbbf24',glow:'rgba(251,191,36,0.5)',
+    symbols:['∫','∂','∑','√','∞','≠','π','φ','λ','Σ','∇','Δ','θ','ω',
+             'ρ','μ','τ','σ','α','β','∮','⊗','⊕','F=ma','E=mc²']
+  },
+  contabilidade:{
+    label:'🧾 Contabilidade',color:'#f87171',glow:'rgba(248,113,113,0.5)',
+    symbols:['∑','D','C','+','-','=','%','$','¢','≠','BP','DRE',
+             'ATIVO','CPC','IFRS','ROE','ROA','EBIT','LTDA','S/A']
+  },
+  marketing:{
+    label:'📣 Marketing',color:'#fb923c',glow:'rgba(251,146,60,0.5)',
+    symbols:['★','♦','✓','▲','%','↑','♥','✦','✱','◆','❋','✿','◉',
+             'SEO','CPC','CTR','ROI','NPS','CTA','B2C','viral','lead']
+  },
+  relacoes:{
+    label:'🌐 Rel. Int.',color:'#a78bfa',glow:'rgba(167,139,250,0.5)',
+    symbols:['♟','★','✈','⚑','♦','◆','✦','⊕','↔','⇌','ONU','UE',
+             'G20','FMI','OMC','NATO','BRICS','OEA','OCDE','treaty']
+  }
+};
+
+// ─── BG CANVAS ───────────────────────────────────────────────────────────────
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx    = bgCanvas.getContext('2d');
+let bgParticles = [], bgAnimId = null, currentCourse = 'computacao';
+
+function resizeBg(){bgCanvas.width=innerWidth;bgCanvas.height=innerHeight}
+resizeBg();
+window.addEventListener('resize',()=>{resizeBg();initBgParticles()});
+
+class BgSymbol {
+  constructor(spreadY){
+    this.init(spreadY);
+  }
+  init(spreadY){
+    const c = COURSES[currentCourse]||COURSES.computacao;
+    this.symbol = c.symbols[Math.floor(Math.random()*c.symbols.length)];
+    this.baseX  = Math.random()*bgCanvas.width;
+    this.x      = this.baseX;
+    this.y      = spreadY!==undefined ? spreadY : -40;
+    this.size   = Math.random()*14+10;       // 10–24px
+    this.speed  = Math.random()*0.55+0.2;    // 0.2–0.75 px/frame
+    this.alpha  = Math.random()*0.13+0.04;   // 4–17%
+    this.driftA = Math.random()*22+8;        // drift amplitude px
+    this.driftF = Math.random()*0.025+0.006; // drift frequency
+    this.driftP = Math.random()*Math.PI*2;   // drift phase
+    this.rot    = Math.random()*0.3-0.15;    // initial lean
+    this.rotSpd = (Math.random()-0.5)*0.012; // rotation speed
+  }
+  update(){
+    this.y   += this.speed;
+    this.x    = this.baseX + Math.sin(this.y*this.driftF+this.driftP)*this.driftA;
+    this.rot += this.rotSpd;
+    if(this.y > bgCanvas.height+50) this.init();
+  }
+  draw(){
+    const c = COURSES[currentCourse]||COURSES.computacao;
+    // fade at top (0–12%) and bottom (88–100%)
+    const yR = this.y/bgCanvas.height;
+    let a = this.alpha;
+    if(yR<0.12) a *= yR/0.12;
+    else if(yR>0.88) a *= (1-yR)/0.12;
+    bgCtx.save();
+    bgCtx.globalAlpha = Math.max(0,a);
+    bgCtx.fillStyle   = c.color;
+    bgCtx.shadowColor = c.glow;
+    bgCtx.shadowBlur  = 10;
+    bgCtx.font        = `${this.size}px monospace`;
+    bgCtx.translate(this.x,this.y);
+    bgCtx.rotate(this.rot);
+    bgCtx.fillText(this.symbol,0,0);
+    bgCtx.restore();
+  }
+}
+
+function initBgParticles(){
+  const count = Math.min(65, Math.max(30, Math.floor(innerWidth/22)));
+  bgParticles = [];
+  for(let i=0;i<count;i++){
+    const p = new BgSymbol(Math.random()*bgCanvas.height); // pre-scatter
+    bgParticles.push(p);
+  }
+}
+
+function animBg(){
+  bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  bgParticles.forEach(p=>{p.update();p.draw()});
+  bgAnimId = requestAnimationFrame(animBg);
+}
+
+function setCourse(key){
+  currentCourse = key;
+  // refresh symbols immediately with new course
+  bgParticles.forEach(p=>{
+    const c = COURSES[key]||COURSES.computacao;
+    p.symbol = c.symbols[Math.floor(Math.random()*c.symbols.length)];
+  });
+  renderCourseChips();
+}
+
+function renderCourseChips(){
+  const scroll = document.getElementById('course-scroll');
+  scroll.innerHTML='';
+  Object.entries(COURSES).forEach(([key,c])=>{
+    const btn=document.createElement('button');
+    btn.className='course-chip';
+    btn.textContent=c.label;
+    if(key===currentCourse){
+      btn.style.background=`${c.color}18`;
+      btn.style.color=c.color;
+      btn.style.borderColor=`${c.color}55`;
+      btn.style.boxShadow=`0 0 10px ${c.color}25`;
+    }
+    btn.onclick=async()=>{
+      setCourse(key);
+      try{await setDoc(doc(db,'users',user.uid,'prefs','settings'),{curso:key},{merge:true})}catch{}
+    };
+    scroll.appendChild(btn);
+  });
+}
+
+// ─── CONFETTI CANVAS ─────────────────────────────────────────────────────────
+const confCanvas = document.getElementById('particle-canvas');
+const confCtx    = confCanvas.getContext('2d');
+let particles = [];
+function resizeConf(){confCanvas.width=innerWidth;confCanvas.height=innerHeight}
+resizeConf();window.addEventListener('resize',resizeConf);
+class Particle{
+  constructor(x,y,color){
+    this.x=x;this.y=y;this.color=color;this.r=Math.random()*5+3;
+    this.vx=(Math.random()-.5)*10;this.vy=Math.random()*-14-4;
+    this.gravity=.35;this.alpha=1;this.decay=Math.random()*.02+.015;
+    this.spin=Math.random()-.5;this.angle=Math.random()*360;
+  }
+  update(){this.vy+=this.gravity;this.x+=this.vx;this.y+=this.vy;this.alpha-=this.decay;this.angle+=this.spin}
+  draw(){
+    confCtx.save();confCtx.globalAlpha=Math.max(0,this.alpha);confCtx.fillStyle=this.color;
+    confCtx.translate(this.x,this.y);confCtx.rotate(this.angle);
+    confCtx.beginPath();confCtx.rect(-this.r/2,-this.r/2,this.r,this.r*1.6);confCtx.fill();confCtx.restore();
+  }
+}
+function launchConfetti(){
+  const colors=['#f5a623','#ffc653','#4ade80','#38bdf8','#c084fc','#f87171','#fff'];
+  const cx=innerWidth/2,cy=innerHeight*.35;
+  for(let i=0;i<130;i++) particles.push(new Particle(cx+(Math.random()-.5)*60,cy,colors[Math.floor(Math.random()*colors.length)]));
+}
+function animParticles(){
+  confCtx.clearRect(0,0,confCanvas.width,confCanvas.height);
+  particles=particles.filter(p=>p.alpha>0);
+  particles.forEach(p=>{p.update();p.draw()});
+  if(particles.length)requestAnimationFrame(animParticles);
+}
+
+// ─── GSAP CR COUNTER ─────────────────────────────────────────────────────────
+let currentDisplayCR=null,crProxy={val:0},crTween=null;
+function animateCR(target){
+  const el=document.getElementById('sum-cr');
+  if(target===null){el.textContent='—';currentDisplayCR=null;return}
+  if(crTween)crTween.kill();
+  crProxy.val=currentDisplayCR??0;
+  crTween=gsap.to(crProxy,{val:target,duration:.8,ease:'power4.out',
+    onUpdate:()=>el.textContent=crProxy.val.toFixed(2).replace('.',','),
+    onComplete:()=>{currentDisplayCR=target}});
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const SLOTS={ac:{label:'AC',inputMax:20,weight:1,pts:20},ap1:{label:'AP1',inputMax:10,weight:4,pts:40},ap2:{label:'AP2',inputMax:10,weight:4,pts:40}};
+const TARGET_STARS=90,TARGET_PASS=70;
+let user=null,semId=null,sems={},saveTimer=null,wasApto=false;
+let lbPrefs={optin:false,named:false,displayName:''};
+let lbCourseFilter=false;
+let _notifUnsub=null;
+let _lastNotifSeen=0;
+const animatedDiscs=new Set();
+
+// ─── SCREENS ─────────────────────────────────────────────────────────────────
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='s-login') gsap.fromTo('#login-card',{opacity:0,y:40,scale:.95},{opacity:1,y:0,scale:1,duration:.65,ease:'back.out(1.4)'});
+  if(id==='s-app'){
+    gsap.fromTo('header',{opacity:0,y:-16},{opacity:1,y:0,duration:.4,ease:'power3.out'});
+    gsap.fromTo('.course-bar',{opacity:0,y:-8},{opacity:1,y:0,duration:.4,ease:'power3.out',delay:.1});
+    gsap.fromTo('main > *',{opacity:0,y:18},{opacity:1,y:0,stagger:.06,duration:.45,ease:'power3.out',delay:.2});
+  }
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-google-login').onclick=async()=>{
+  try{
+    await signInWithPopup(auth,new GoogleAuthProvider());
+  }catch(e){
+    if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')return;
+    console.warn('[Auth]',e.code,e.message);
+    toast('Erro ao entrar: '+e.code);
+  }
+};
+document.getElementById('btn-logout').onclick=()=>fbSignOut(auth);
+onAuthStateChanged(auth,async u=>{
+  if(u){
+    user=u;
+    document.getElementById('u-name').textContent=u.displayName?.split(' ')[0]??'';
+    const av=document.getElementById('u-avatar');
+    if(u.photoURL){av.src=u.photoURL;av.style.display='block'}
+    // load course preference
+    try{const snap=await getDoc(doc(db,'users',user.uid,'prefs','settings'));if(snap.exists()){const pd=snap.data();if(pd.curso)currentCourse=pd.curso;if(pd.lbOptin!=null)lbPrefs.optin=pd.lbOptin;if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;}}catch{}
+    renderCourseChips();
+    initBgParticles();
+    if(!bgAnimId) animBg();
+    _lastNotifSeen=Date.now();
+    if(_notifUnsub){_notifUnsub();_notifUnsub=null;}
+    _notifUnsub=onSnapshot(doc(db,'notifs',u.uid),snap=>{
+      const data=snap.data();
+      if(!data?.pending?.length)return;
+      const fresh=data.pending.filter(n=>n.ts>_lastNotifSeen);
+      if(!fresh.length)return;
+      fresh.slice(-3).forEach((n,i)=>setTimeout(()=>toast(`${n.emoji} ${n.fromName} reagiu ao seu prédio!`),i*800));
+      _lastNotifSeen=Date.now();
+      setDoc(doc(db,'notifs',u.uid),{pending:[]}).catch(()=>{});
+    });
+    await loadData();show('s-app');
+    initOneSignalUser();
+  }else{user=null;sems={};semId=null;show('s-login')}
+});
+
+// ─── FIRESTORE ───────────────────────────────────────────────────────────────
+async function loadData(){
+  sems={};
+  const ss=await getDocs(collection(db,'users',user.uid,'semestres'));
+  for(const sd of ss.docs){
+    const d=sd.data();sems[sd.id]={name:d.name??sd.id,tp_nota:d.tp_nota??'',tp_disc:d.tp_disc??'',discs:{}};
+    const ds=await getDocs(collection(db,'users',user.uid,'semestres',sd.id,'disciplinas'));
+    ds.forEach(dd=>{sems[sd.id].discs[dd.id]=dd.data()});
+  }
+  semId=Object.keys(sems)[0]??null;animatedDiscs.clear();renderAll();
+  if(lbPrefs.optin) updateLeaderboard();
+}
+async function saveSem(){
+  if(!user||!semId||!sems[semId])return;
+  const s=sems[semId];
+  await setDoc(doc(db,'users',user.uid,'semestres',semId),{name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc});
+  for(const[id,disc]of Object.entries(s.discs))
+    await setDoc(doc(db,'users',user.uid,'semestres',semId,'disciplinas',id),disc);
+  if(lbPrefs.optin) updateLeaderboard();
+}
+function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveSem,900)}
+
+// ─── SEMESTER OPS ─────────────────────────────────────────────────────────────
+const semAddPanel=document.getElementById('sem-add-panel'),semNameInput=document.getElementById('sem-name-input');
+document.getElementById('btn-new-sem').onclick=()=>{semAddPanel.style.display='flex';gsap.fromTo(semAddPanel,{opacity:0,y:-8},{opacity:1,y:0,duration:.3,ease:'back.out(1.6)'});semNameInput.focus()};
+document.getElementById('btn-cancel-sem').onclick=closeSemPanel;
+document.getElementById('btn-confirm-sem').onclick=addSem;
+semNameInput.addEventListener('keydown',e=>{if(e.key==='Enter')addSem();if(e.key==='Escape')closeSemPanel()});
+function closeSemPanel(){semAddPanel.style.display='none';semNameInput.value=''}
+async function addSem(){
+  const name=semNameInput.value.trim();if(!name){toast('Digite um nome');return}
+  const id='sem_'+Date.now();sems[id]={name,tp_nota:'',tp_disc:'',discs:{}};semId=id;
+  await setDoc(doc(db,'users',user.uid,'semestres',id),{name,tp_nota:'',tp_disc:''});
+  closeSemPanel();renderAll();toast(`Semestre "${name}" criado!`);
+}
+async function deleteSem(id,e){
+  e.stopPropagation();if(!confirm(`Excluir "${sems[id]?.name}"?`))return;
+  const snap=await getDocs(collection(db,'users',user.uid,'semestres',id,'disciplinas'));
+  await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'users',user.uid,'semestres',id,'disciplinas',d.id))));
+  await deleteDoc(doc(db,'users',user.uid,'semestres',id));delete sems[id];
+  semId=Object.keys(sems)[0]??null;renderAll();toast('Semestre excluído');
+}
+function selectSem(id){semId=id;animatedDiscs.clear();renderAll()}
+
+// ─── TP ──────────────────────────────────────────────────────────────────────
+document.getElementById('tp-nota').oninput=function(){
+  if(!semId)return;sems[semId].tp_nota=this.value===''?'':Math.min(10,Math.max(0,parseFloat(this.value)||0));
+  renderDiscs();updateSummary();queueSave();
+};
+document.getElementById('tp-select').onchange=function(){
+  if(!semId)return;sems[semId].tp_disc=this.value;renderDiscs();updateSummary();queueSave();
+};
+
+// ─── SUBJECT OPS ─────────────────────────────────────────────────────────────
+document.getElementById('btn-add-subj').onclick=addDisc;
+document.getElementById('btn-clear-sem').onclick=clearSem;
+document.getElementById('tp-toggle').onclick=()=>{
+  const body=document.getElementById('tp-body');
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'flex';
+  document.getElementById('tp-chevron').style.transform=open?'':'rotate(180deg)';
+};
+function addDisc(){
+  if(!semId)return;const id='disc_'+Date.now();
+  sems[semId].discs[id]={nome:'',ac:'',ap1:'',ap2:'',faltas:0,as:false,sub:false};
+  renderDiscs();updateTpSelect();queueSave();setTimeout(()=>document.getElementById('n_'+id)?.focus(),50);
+}
+async function removeDisc(id,cardEl){
+  if(!semId)return;
+  await new Promise(r=>gsap.to(cardEl,{opacity:0,scale:.94,y:-6,duration:.25,ease:'power2.in',onComplete:r}));
+  if(sems[semId].tp_disc===id)sems[semId].tp_disc='';
+  delete sems[semId].discs[id];animatedDiscs.delete(id);
+  try{await deleteDoc(doc(db,'users',user.uid,'semestres',semId,'disciplinas',id))}catch{}
+  renderDiscs();updateTpSelect();updateSummary();
+}
+async function clearSem(){
+  if(!semId)return;if(!confirm(`Limpar "${sems[semId].name}"?`))return;
+  await Promise.all(Object.keys(sems[semId].discs).map(id=>deleteDoc(doc(db,'users',user.uid,'semestres',semId,'disciplinas',id)).catch(()=>{})));
+  sems[semId].discs={};sems[semId].tp_disc='';await saveSem();
+  animatedDiscs.clear();renderDiscs();updateTpSelect();updateSummary();toast('Semestre limpo');
+}
+
+// ─── CALC ────────────────────────────────────────────────────────────────────
+function pv(v){if(v===''||v==null)return null;const n=parseFloat(v);return isNaN(n)?null:n}
+function inp2pts(f,v){return v===null?0:v*SLOTS[f].weight}
+function analyseDisc(d,tpPts){
+  if(d.as)return{type:'disq',stars:{txt:'Desclassificada — Média AS',cls:'bad'},pass:{txt:'',cls:''},grade:null,projGrade:null,partialGrade:null,knownPts:0,slotStars:{},slotPass:{}};
+  if(d.sub)return{type:'disq',stars:{txt:'Desclassificada — Sub AP1',cls:'bad'},pass:{txt:'',cls:''},grade:null,projGrade:null,partialGrade:null,knownPts:0,slotStars:{},slotPass:{}};
+  const ac=pv(d.ac),ap1=pv(d.ap1),ap2=pv(d.ap2);
+  const allFilled=ac!==null&&ap1!==null&&ap2!==null,noneFilled=ac===null&&ap1===null&&ap2===null;
+  const knownPts=inp2pts('ac',ac)+inp2pts('ap1',ap1)+inp2pts('ap2',ap2)+tpPts;
+  const maxRemPts=(ac===null?20:0)+(ap1===null?40:0)+(ap2===null?40:0);
+  const slotStars={},slotPass={};
+  if(!allFilled&&!noneFilled){
+    Object.entries(SLOTS).forEach(([k,s])=>{
+      if(pv(d[k])!==null)return;
+      const om=maxRemPts-s.pts,nS=TARGET_STARS-knownPts,nP=TARGET_PASS-knownPts;
+      if(nS<=0){slotStars[k]={val:'livre',type:'ok'}}
+      else{const m=Math.max(0,nS-om)/s.weight;slotStars[k]=m>s.inputMax?{val:`máx ${s.inputMax}`,type:'bad'}:{val:m===0?'livre':`mín ${fmtI(m)}`,type:m===0?'ok':'warn'}}
+      if(nP<=0){slotPass[k]={val:'livre',type:'ok'}}
+      else{const m=Math.max(0,nP-om)/s.weight;slotPass[k]=m>s.inputMax?{val:`máx ${s.inputMax}`,type:'bad'}:{val:m===0?'livre':`mín ${fmtI(m)}`,type:m===0?'ok':'warn'}}
+    });
+  }
+  if(allFilled){
+    const totalPts=Math.min(100,knownPts),grade=Math.floor(totalPts/10*100)/100,gf=fmtG(grade);
+    const starsOk=grade>=9,passOk=grade>=7;
+    return{type:starsOk?'ok':passOk?'warn':'bad',
+      stars:{txt:starsOk?`Nota ${gf} ✓`:`Nota ${gf} — faltam ${Math.max(0,TARGET_STARS-Math.min(100,knownPts))} pts`,cls:starsOk?'ok':'bad'},
+      pass:{txt:passOk?'Aprovado ✓':`Nota ${gf} — faltam ${Math.max(0,TARGET_PASS-Math.min(100,knownPts))} pts`,cls:passOk?'ok':'bad'},
+      grade,projGrade:grade,partialGrade:grade,knownPts,slotStars,slotPass};
+  }
+  if(noneFilled)return{type:'info',stars:{txt:'Preencha as notas',cls:''},pass:{txt:'',cls:''},grade:null,projGrade:null,partialGrade:null,knownPts:0,slotStars,slotPass};
+  const nS=TARGET_STARS-knownPts,nP=TARGET_PASS-knownPts,impS=nS>maxRemPts,impP=nP>maxRemPts;
+  const maxGrade=Math.min(100,knownPts+maxRemPts)/10;
+  // Nota parcial: média ponderada APENAS das notas preenchidas (denominador = peso das preenchidas)
+  const maxFilledPts=(ac!==null?20:0)+(ap1!==null?40:0)+(ap2!==null?40:0);
+  const partialGrade=maxFilledPts>0?Math.floor(Math.min(100,knownPts/maxFilledPts*100)/10*100)/100:null;
+  return{type:impS?'bad':'warn',
+    stars:{txt:nS<=0?'Nota 9,0 já garantida! 🎉':impS?`Impossível (máx ${fmtG(maxGrade)})`:tpPts>0?`Faltam ${nS} pts (TP incluso)`:`Faltam ${nS} pts para nota 9,0`,cls:nS<=0?'ok':impS?'bad':'warn'},
+    pass:{txt:nP<=0?'Aprovação já garantida ✓':impP?'Impossível atingir 7,0':`Faltam ${nP} pts para aprovação`,cls:nP<=0?'ok':impP?'bad':'warn'},
+    grade:null,projGrade:impS?maxGrade:9.0,partialGrade,knownPts,slotStars,slotPass};
+}
+function getTpPts(id){
+  if(!semId)return 0;const s=sems[semId];
+  if(s.tp_disc!==id||s.tp_nota===''||s.tp_nota==null)return 0;
+  return Math.min(10,Math.max(0,parseFloat(s.tp_nota)||0));
+}
+function calcCR(){
+  if(!semId)return{cr:null,projCr:null,partialCr:null,disq:false,reasons:[],validN:0,totalN:0,partialN:0};
+  const reasons=[],grades=[],proj=[],allGrades=[];let hasDisq=false,partialN=0;
+  for(const[id,d]of Object.entries(sems[semId].discs)){
+    const a=analyseDisc(d,getTpPts(id));
+    if(a.type==='disq'){hasDisq=true;reasons.push(`"${d.nome||'Sem nome'}" — ${d.as?'AS':'sub AP1'}`);continue}
+    if(a.grade!==null){grades.push(a.grade);allGrades.push(a.grade);}
+    else if(a.partialGrade!==null&&a.partialGrade>0){allGrades.push(a.partialGrade);partialN++;}
+    if(a.projGrade!==null)proj.push(a.projGrade);
+  }
+  const vN=grades.length,cr=vN?Math.floor(grades.reduce((a,b)=>a+b,0)/vN*100)/100:null;
+  const pN=proj.length,projCr=pN?Math.floor(proj.reduce((a,b)=>a+b,0)/pN*100)/100:null;
+  const aN=allGrades.length,partialCr=aN&&partialN>0?Math.floor(allGrades.reduce((a,b)=>a+b,0)/aN*100)/100:null;
+  return{cr,projCr,partialCr,disq:hasDisq,reasons,validN:vN,totalN:Object.keys(sems[semId].discs).length,partialN};
+}
+
+// ─── SUMMARY ─────────────────────────────────────────────────────────────────
+function updateSummary(){
+  const{cr,projCr,partialCr,disq,reasons,validN,totalN,partialN}=calcCR();
+  const card=document.getElementById('summary-card'),badge=document.getElementById('sum-badge'),
+        msg=document.getElementById('sum-msg'),projRow=document.getElementById('proj-row'),
+        projEl=document.getElementById('proj-cr'),crEl=document.getElementById('sum-cr'),
+        partialRow=document.getElementById('partial-cr-row'),partialEl=document.getElementById('partial-cr');
+  setChk('chk-min',validN>=4,validN>0||totalN>0);
+  setChk('chk-cr',cr!==null&&cr>=9,cr!==null);
+  setChk('chk-disq',!disq,totalN>0);
+  document.getElementById('chk-min-txt').textContent=`Mínimo de 4 disciplinas completas (${validN} completa${validN!==1?'s':''})`;
+  document.getElementById('chk-cr-txt').textContent=cr!==null?`CR ≥ 9,00 (atual: ${fmtG(cr)})`:'CR ≥ 9,00';
+  animateCR(cr);
+  if(projCr!==null&&totalN>0){projRow.style.display='flex';projEl.textContent=fmtG(projCr);projEl.className='proj-cr '+(projCr>=9?'ok':'bad')}
+  else projRow.style.display='none';
+  if(partialCr!==null&&partialRow&&partialEl){partialRow.style.display='flex';partialEl.textContent='~'+fmtG(partialCr);partialEl.className='proj-cr '+(partialCr>=9?'ok':'bad')}
+  else if(partialRow) partialRow.style.display='none';
+  if(!totalN){card.className='summary-card';crEl.className='summary-cr';badge.className='summary-badge';badge.textContent='Adicione disciplinas';msg.innerHTML='';return}
+  if(disq){card.className='summary-card inapto';crEl.className='summary-cr inapto';badge.className='summary-badge inapto';badge.textContent='Desclassificado';msg.innerHTML=reasons.map(r=>`⚠️ ${r}`).join('<br>');wasApto=false;return}
+  if(cr!==null&&cr>=9&&validN>=4){
+    card.className='summary-card apto';crEl.className='summary-cr apto';badge.className='summary-badge apto';badge.textContent='Apto para concorrer! 🏆';
+    msg.innerHTML='<strong>Parabéns!</strong> Você está elegível para o Ibmec Stars 🏆';
+    if(!wasApto){
+      wasApto=true;
+      const tl=gsap.timeline();
+      tl.fromTo(card,{boxShadow:'0 0 0px rgba(245,166,35,0)'},{boxShadow:'0 0 60px rgba(245,166,35,0.5),0 8px 32px rgba(0,0,0,0.4)',duration:.6,ease:'power2.out'})
+        .fromTo(badge,{scale:.5,opacity:0},{scale:1,opacity:1,duration:.55,ease:'back.out(2.8)'},'<.1')
+        .fromTo('#sum-cr',{scale:.85},{scale:1.08,duration:.3,ease:'power3.out'},'.1')
+        .to('#sum-cr',{scale:1,duration:.25,ease:'back.out(2)'},'+=0')
+        .fromTo('#sum-msg',{opacity:0,y:10},{opacity:1,y:0,duration:.4,ease:'power3.out'},'<');
+      launchConfetti();requestAnimationFrame(animParticles);
+    }
+    return;
+  }
+  wasApto=false;
+  card.className='summary-card progress';crEl.className='summary-cr progress';badge.className='summary-badge progress';badge.textContent='Em andamento';
+  const lines=[];
+  if(validN<4)lines.push(`Preencha pelo menos <strong>4 disciplinas</strong> completas para calcular o CR.`);
+  if(cr!==null&&cr<9)lines.push(`CR atual <strong>${fmtG(cr)}</strong> — meta: <strong>9,00</strong>.`);
+  if(partialCr!==null)lines.push(`CR em andamento <strong>~${fmtG(partialCr)}</strong> (${partialN} disc. incompleta${partialN!==1?'s':''}).`);
+  if(projCr!==null)lines.push(projCr>=9?`CR projetado (meta 9,0) <strong>${fmtG(projCr)}</strong> — no caminho certo! ✓`:`CR projetado (meta 9,0) <strong>${fmtG(projCr)}</strong> — revise as disciplinas.`);
+  msg.innerHTML=lines.join('<br>');
+}
+function setChk(id,ok,hasData){
+  const el=document.getElementById(id);
+  if(!hasData){el.className='chk-icon';el.textContent='?';return}
+  const was=el.classList.contains('ok');
+  el.className='chk-icon '+(ok?'ok':'fail');el.textContent=ok?'✓':'✕';
+  if(ok&&!was) gsap.fromTo(el,{scale:0},{scale:1,duration:.4,ease:'back.out(2.2)'});
+}
+function fmtG(n){return n.toFixed(2).replace('.',',')}
+function fmtI(n){return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function renderAll(){renderSems();renderContent();renderDiscs();updateSummary();refresh3D()}
+function renderSems(){
+  const list=document.getElementById('sem-list');list.innerHTML='';
+  const ids=Object.keys(sems);
+  if(!ids.length){document.getElementById('no-sem-card').style.display='block';document.getElementById('sem-content').style.display='none';return}
+  document.getElementById('no-sem-card').style.display='none';document.getElementById('sem-content').style.display='flex';
+  ids.forEach(id=>{
+    const chip=document.createElement('button');chip.className='sem-chip'+(id===semId?' active':'');chip.onclick=()=>selectSem(id);
+    const nm=document.createElement('span');nm.textContent=sems[id].name;
+    const del=document.createElement('button');del.className='chip-del';del.innerHTML='×';del.onclick=e=>deleteSem(id,e);
+    chip.append(nm,del);list.appendChild(chip);
+  });
+}
+function renderContent(){
+  if(!semId||!sems[semId])return;
+  const tpEl=document.getElementById('tp-nota');if(tpEl)tpEl.value=sems[semId].tp_nota??'';
+  updateTpSelect();
+}
+function updateTpSelect(){
+  if(!semId||!sems[semId])return;
+  const sel=document.getElementById('tp-select');if(!sel)return;
+  const cur=sems[semId].tp_disc??'';
+  sel.innerHTML='<option value="">Nenhuma disciplina</option>';
+  Object.entries(sems[semId].discs).forEach(([id,d],i)=>{
+    const opt=document.createElement('option');opt.value=id;
+    opt.textContent=d.nome||`Disciplina ${i+1}`;if(id===cur)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+function buildSlotHTML(field,id,d,a){
+  const s=SLOTS[field],val=d[field],filled=val!==''&&val!=null;
+  let hint='';
+  if(!filled){
+    const sH=a.slotStars[field],pH=a.slotPass[field];
+    if(sH||pH){
+      const sp=sH?`<span class="h-stars ${sH.type}">⭐${sH.val}</span>`:'';
+      const pp=pH?`<span class="h-pass ${pH.type}">📘${pH.val}</span>`:'';
+      hint=`${sp}${sp&&pp?'<span class="h-sep">·</span>':''}${pp}`;
+    }
+  }
+  return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="—" value="${filled?val:''}"><div class="g-hint">${hint}</div></div>`;
+}
+function renderDiscs(){
+  if(!semId)return;
+  const discs=sems[semId]?.discs??{},list=document.getElementById('subj-list');
+  const entries=Object.entries(discs);
+  if(!entries.length){list.innerHTML='<div class="empty-msg">Nenhuma disciplina adicionada</div>';return}
+  const focusedId=document.activeElement?.id;
+  list.innerHTML='';
+  entries.forEach(([id,d],i)=>{
+    const tpPts=getTpPts(id),a=analyseDisc(d,tpPts);
+    const card=document.createElement('div');
+    card.className='subj-card '+(a.type==='info'?'':a.type==='disq'?'s-bad':'s-'+a.type);
+    const tpSlot=tpPts>0?`<div class="g-slot tp-slot"><div class="g-label tp-lbl">TP<em>/10</em></div><div class="g-val">${tpPts}</div><div class="g-hint"><span class="h-stars ok">+${tpPts}pts</span></div></div>`:'';
+    let gradePill='';
+    if(a.grade!==null){const cls=a.grade>=9?'ok':a.grade>=7?'pass':'bad';const icon=a.grade>=9?'⭐':a.grade>=7?'📘':'✗';gradePill=`<span class="grade-pill ${cls}">${icon} ${fmtG(a.grade)}</span>`}
+    else if(a.partialGrade!==null&&a.partialGrade>0){gradePill=`<span class="grade-pill partial" title="Nota parcial — notas ainda incompletas">~${fmtG(a.partialGrade)}</span>`}
+    const pct=Math.min(100,a.knownPts/TARGET_STARS*100);
+    const pfCls=pct>=100?'pf-ok':pct>=70?'pf-warn':pct>=40?'pf-prog':'pf-bad';
+    card.innerHTML=`
+      <div class="subj-progress"><div class="subj-progress-fill ${pfCls}" style="width:${pct}%"></div></div>
+      <div class="subj-head">
+        <span class="subj-num">${String(i+1).padStart(2,'0')}</span>
+        <input type="text" class="name-input" id="n_${id}" placeholder="Nome da disciplina" value="${esc(d.nome??'')}" autocomplete="off" spellcheck="false">
+        ${tpPts>0?`<span class="tp-badge">🔬</span>`:''}
+        <button class="icon-btn" title="Remover"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+      <div class="grade-grid${tpPts>0?' has-tp':''}">
+        ${buildSlotHTML('ac',id,d,a)}${buildSlotHTML('ap1',id,d,a)}${buildSlotHTML('ap2',id,d,a)}${tpSlot}
+      </div>
+      <div class="subj-foot">
+        <label class="f-label"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Faltas<input type="number" class="f-input" id="f_${id}" min="0" value="${d.faltas??0}"></label>
+        <div class="flags">
+          <button class="flag-btn${d.as?' on':''}" data-flag="as">AS</button>
+          <button class="flag-btn${d.sub?' on':''}" data-flag="sub">Sub</button>
+        </div>
+        ${gradePill}
+      </div>`;
+    card.querySelector(`#n_${id}`).oninput=function(){sems[semId].discs[id].nome=this.value;updateTpSelect();queueSave()};
+    card.querySelector(`#f_${id}`).oninput=function(){sems[semId].discs[id].faltas=parseInt(this.value)||0;queueSave()};
+    const wire=(f,max)=>card.querySelector(`#${f}_${id}`).oninput=function(){
+      const v=parseFloat(this.value);sems[semId].discs[id][f]=isNaN(v)?'':Math.min(max,Math.max(0,v));
+      this.classList.toggle('has-val',sems[semId].discs[id][f]!=='');
+      refreshCard(id,card);updateSummary();queueSave();
+    };
+    wire('ac',20);wire('ap1',10);wire('ap2',10);
+    card.querySelector('.icon-btn').onclick=()=>removeDisc(id,card);
+    card.querySelectorAll('.flag-btn').forEach(btn=>btn.onclick=()=>{
+      sems[semId].discs[id][btn.dataset.flag]=!sems[semId].discs[id][btn.dataset.flag];
+      renderDiscs();updateSummary();queueSave();
+    });
+    list.appendChild(card);
+    if(!animatedDiscs.has(id)){
+      animatedDiscs.add(id);
+      gsap.fromTo(card,{opacity:0,y:22,scale:.96},{opacity:1,y:0,scale:1,duration:.45,ease:'back.out(1.6)',delay:i*.05});
+    }
+  });
+  if(focusedId){const el=document.getElementById(focusedId);if(el){el.focus();if(el.type==='text')el.setSelectionRange(el.value.length,el.value.length)}}
+}
+function refreshCard(id,card){
+  const d=sems[semId].discs[id],tpPts=getTpPts(id),a=analyseDisc(d,tpPts);
+  card.className='subj-card '+(a.type==='info'?'':a.type==='disq'?'s-bad':'s-'+a.type);
+  const fill=card.querySelector('.subj-progress-fill');
+  if(fill){
+    const pct=Math.min(100,a.knownPts/TARGET_STARS*100);
+    const pfCls=pct>=100?'pf-ok':pct>=70?'pf-warn':pct>=40?'pf-prog':'pf-bad';
+    fill.style.width=pct+'%';fill.className='subj-progress-fill '+pfCls;
+  }
+  const foot=card.querySelector('.subj-foot');
+  const old=foot?.querySelector('.grade-pill');if(old)old.remove();
+  if(foot){
+    if(a.grade!==null){
+      const cls=a.grade>=9?'ok':a.grade>=7?'pass':'bad';
+      const icon=a.grade>=9?'⭐':a.grade>=7?'📘':'✗';
+      const pill=document.createElement('span');pill.className=`grade-pill ${cls}`;pill.textContent=`${icon} ${fmtG(a.grade)}`;
+      foot.appendChild(pill);
+      gsap.fromTo(pill,{scale:0,opacity:0},{scale:1,opacity:1,duration:.38,ease:'back.out(2.2)'});
+    } else if(a.partialGrade!==null&&a.partialGrade>0){
+      const pill=document.createElement('span');pill.className='grade-pill partial';pill.title='Nota parcial — notas ainda incompletas';pill.textContent=`~${fmtG(a.partialGrade)}`;
+      foot.appendChild(pill);
+    }
+  }
+  Object.keys(SLOTS).forEach(f=>{
+    const inp=card.querySelector(`#${f}_${id}`);if(!inp)return;
+    const hintEl=inp.closest('.g-slot')?.querySelector('.g-hint');if(!hintEl)return;
+    const filled=sems[semId].discs[id][f]!==''&&sems[semId].discs[id][f]!=null;
+    if(filled){hintEl.innerHTML='';return}
+    const sH=a.slotStars[f],pH=a.slotPass[f];
+    if(!sH&&!pH){hintEl.innerHTML='';return}
+    const sp=sH?`<span class="h-stars ${sH.type}">⭐${sH.val}</span>`:'';
+    const pp=pH?`<span class="h-pass ${pH.type}">📘${pH.val}</span>`:'';
+    hintEl.innerHTML=`${sp}${sp&&pp?'<span class="h-sep">·</span>':''}${pp}`;
+  });
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+let toastTimer;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
+
+// ─── LEADERBOARD ─────────────────────────────────────────────────────────────
+function lbSyncUI(){
+  document.getElementById('lb-optin-toggle').classList.toggle('on',lbPrefs.optin);
+  document.getElementById('lb-named-toggle').classList.toggle('on',lbPrefs.named);
+  document.getElementById('lb-extra-settings').style.display=lbPrefs.optin?'block':'none';
+  document.getElementById('lb-name-row').style.display=lbPrefs.optin&&lbPrefs.named?'flex':'none';
+  const ni=document.getElementById('lb-name-input');
+  if(ni&&!ni.value&&lbPrefs.displayName) ni.value=lbPrefs.displayName;
+}
+async function lbSavePrefs(){
+  if(!user)return;
+  try{await setDoc(doc(db,'users',user.uid,'prefs','settings'),
+    {lbOptin:lbPrefs.optin,lbNamed:lbPrefs.named,lbDisplayName:lbPrefs.displayName},{merge:true})}catch{}
+}
+async function updateLeaderboard(){
+  if(!user)return;
+  if(!lbPrefs.optin){try{await deleteDoc(doc(db,'leaderboard',user.uid))}catch{};return}
+  if(!semId||!sems[semId])return;
+  const{cr,partialCr,validN}=calcCR();
+  const dn=lbPrefs.named?(lbPrefs.displayName||user.displayName?.split(' ')[0]||'Usuário'):'Anônimo';
+  const buildings=Object.entries(sems[semId].discs).map(([id,d])=>{
+    const a=analyseDisc(d,getTpPts(id));
+    if(a.grade!==null)return{v:a.grade,t:a.grade>=9?'ok':a.grade>=7?'pass':'bad',n:d.nome||id};
+    if(a.partialGrade!==null&&a.partialGrade>0)return{v:a.partialGrade,t:'partial',n:d.nome||id};
+    return null;
+  });
+  try{await setDoc(doc(db,'leaderboard',user.uid),{
+    displayName:dn,anonymous:!lbPrefs.named,
+    cr:cr??null,partialCr:partialCr??null,validN,
+    buildings,curso:currentCourse??'',
+    semName:sems[semId].name,updatedAt:serverTimestamp()
+  })}catch(e){console.error('lb',e)}
+}
+async function openLeaderboard(){
+  lbSyncUI();
+  document.getElementById('lb-modal').classList.add('open');
+  await renderLeaderboard();
+}
+function closeLeaderboard(){document.getElementById('lb-modal').classList.remove('open')}
+async function renderLeaderboard(){
+  const list=document.getElementById('lb-entries'),posEl=document.getElementById('lb-pos'),title=document.getElementById('lb-list-label');
+  list.innerHTML='<div class="lb-loading"><div class="loading-ring" style="width:28px;height:28px"></div><span>Carregando…</span></div>';
+  posEl.textContent='';
+  try{
+    const snap=await getDocs(collection(db,'leaderboard'));
+    const all=snap.docs.map(d=>({...d.data(),uid:d.id}));
+    const filtered=lbCourseFilter&&currentCourse?all.filter(e=>e.curso===currentCourse):all;
+    filtered.sort((a,b)=>{
+      const as=a.cr!==null?a.cr:(a.partialCr!==null?a.partialCr-0.01:-1);
+      const bs=b.cr!==null?b.cr:(b.partialCr!==null?b.partialCr-0.01:-1);
+      return bs-as;
+    });
+    if(!filtered.length){
+      list.innerHTML='<div class="lb-empty">Nenhum aluno no ranking ainda.<br>Seja o primeiro a participar! 🚀</div>';
+      title.textContent=lbCourseFilter&&currentCourse?`Top ${currentCourse}`:'Top alunos';return;
+    }
+    title.textContent=lbCourseFilter&&currentCourse?`Top ${currentCourse} (${filtered.length})`:`Top alunos (${filtered.length})`;
+    list.innerHTML='';
+    const medals=['🥇','🥈','🥉'];
+    let myPos=-1;
+    filtered.forEach((e,i)=>{
+      const isMe=e.uid===user?.uid;
+      if(isMe)myPos=i+1;
+      const hasCr=e.cr!==null, hasPartial=e.partialCr!==null;
+      const crVal=hasCr?fmtG(e.cr):hasPartial?'~'+fmtG(e.partialCr):'—';
+      const crCls=hasCr&&e.cr>=9?'ok':hasCr&&e.cr>=7?'prog':hasPartial?'prog':'low';
+      const el=document.createElement('div');
+      el.className='lb-entry'+(isMe?' me':'');
+      el.innerHTML=`
+        <span class="lb-rank">${i<3?medals[i]:i+1}</span>
+        <div class="lb-entry-info">
+          <div class="lb-ename"><span>${e.displayName||'Anônimo'}</span>${isMe?'<span class="lb-you">Você</span>':''}</div>
+          <div class="lb-esem">${e.semName||''}</div>
+        </div>
+        <div class="lb-ecr">
+          <div class="lb-ecr-val ${crCls}">${crVal}</div>
+          ${!hasCr&&hasPartial?'<div class="lb-ecr-sub">parcial</div>':''}
+        </div>`;
+      list.appendChild(el);
+    });
+    if(!lbPrefs.optin){posEl.innerHTML='Ative a participação para aparecer no ranking!';}
+    else if(myPos>0){posEl.innerHTML=myPos<=3?`Você está no <strong>top ${myPos}</strong>! 🎉`:`Você está na posição <strong>#${myPos}</strong>`;}
+    else{posEl.innerHTML='Seu CR ainda não foi publicado. Salve uma nota para aparecer.';}
+  }catch(e){
+    console.error('lb render',e);
+    list.innerHTML='<div class="lb-empty">Erro ao carregar o ranking.<br>Verifique sua conexão.</div>';
+  }
+}
+// LB event handlers
+document.getElementById('lb-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeLeaderboard()});
+document.getElementById('lb-close').onclick=closeLeaderboard;
+document.getElementById('lb-tab-all').onclick=()=>{
+  lbCourseFilter=false;
+  document.getElementById('lb-tab-all').classList.add('active');
+  document.getElementById('lb-tab-course').classList.remove('active');
+  renderLeaderboard();
+};
+document.getElementById('lb-tab-course').onclick=()=>{
+  lbCourseFilter=true;
+  document.getElementById('lb-tab-course').classList.add('active');
+  document.getElementById('lb-tab-all').classList.remove('active');
+  renderLeaderboard();
+};
+document.getElementById('btn-ranking').onclick=openLeaderboard;
+document.getElementById('lb-optin-toggle').onclick=async()=>{
+  lbPrefs.optin=!lbPrefs.optin;
+  if(!lbPrefs.optin)lbPrefs.named=false;
+  lbSyncUI();await lbSavePrefs();await updateLeaderboard();renderLeaderboard();
+};
+document.getElementById('lb-named-toggle').onclick=async()=>{
+  lbPrefs.named=!lbPrefs.named;lbSyncUI();await lbSavePrefs();await updateLeaderboard();renderLeaderboard();
+};
+document.getElementById('lb-name-save').onclick=async()=>{
+  const v=document.getElementById('lb-name-input').value.trim();
+  if(!v){toast('Digite um nome');return}
+  lbPrefs.displayName=v;await lbSavePrefs();await updateLeaderboard();renderLeaderboard();toast('Nome salvo!');
+};
+
+// ─── WHATSAPP SHARE ──────────────────────────────────────────────────────────
+function shareWhatsApp(){
+  const{cr,partialCr}=calcCR();
+  const crVal=cr??partialCr;
+  const crStr=crVal!==null?fmtG(crVal):'—';
+  const stars=cr!==null&&cr>=9.0;
+  const partial=cr===null&&partialCr!==null;
+  const cursoLabel=(COURSES[currentCourse]?.label??'IBMEC');
+  const semName=semId?sems[semId]?.name??'':'';
+  let statusLine;
+  if(stars) statusLine=`⭐ *APTO PARA O STARS!* Fui aprovado com CR ${crStr} 🔥`;
+  else if(cr!==null) statusLine=`📊 CR: *${crStr}* — correndo atrás do Stars 💪`;
+  else if(partial) statusLine=`📊 CR parcial: *${crStr}* — semestre em andamento`;
+  else statusLine=`📊 Acompanhando o semestre em tempo real`;
+  const lines=[
+    `🏆 *Ibmec Education Stars*`,
+    `━━━━━━━━━━━━━━━━`,
+    `🎓 ${cursoLabel}${semName?` | ${semName}`:''}`,
+    statusLine,
+    `━━━━━━━━━━━━━━━━`,
+    `🏙️ Minhas notas viram prédios num mapa 3D!`,
+    `Disputo o ranking com outros alunos em tempo real.`,
+    ``,
+    `👉 Acessa grátis: https://ibmec-stars.web.app`,
+  ];
+  window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')),'_blank');
+}
+document.getElementById('btn-share-wpp').onclick=shareWhatsApp;
+
+// ─── 3D SCENE ────────────────────────────────────────────────────────────────
+let T3=null, _3dIniting=false;
+let THREE=null; // loaded lazily when user opens 3D view
+
+document.getElementById('btn-3d').onclick=()=>open3D();
+document.getElementById('btn-back3d').onclick=()=>{show('s-app');};
+
+function open3D(){
+  show('s-3d');
+  if(!T3){ if(!_3dIniting) init3D(); }
+  else {
+    if(T3.cityMode) switchToTreeMode();
+    else { build3DScene(); if(!T3.running) loop3D(); }
+  }
+  updateModeTabsUI();
+}
+
+async function init3D(){
+  _3dIniting=true;
+  const ld=document.getElementById('3d-loading');
+  ld.style.display='flex';
+  try{
+    if(!THREE) THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+    const {OrbitControls} = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js');
+
+    const cvs=document.getElementById('three-canvas');
+    const W=innerWidth, H=innerHeight;
+
+    const scene=new THREE.Scene();
+    scene.fog=new THREE.FogExp2(0x060e1f,0.016);
+
+    const cam=new THREE.PerspectiveCamera(52,W/H,0.1,200);
+    cam.position.set(0,8,20);
+
+    const rend=new THREE.WebGLRenderer({canvas:cvs,antialias:true,alpha:false});
+    rend.setPixelRatio(Math.min(devicePixelRatio,2));
+    rend.setSize(W,H);
+    rend.setClearColor(0x060e1f,1);
+    rend.toneMapping=THREE.ACESFilmicToneMapping;
+    rend.toneMappingExposure=1.3;
+
+    const ctrl=new OrbitControls(cam,rend.domElement);
+    ctrl.enableDamping=true; ctrl.dampingFactor=0.06;
+    ctrl.autoRotate=true; ctrl.autoRotateSpeed=0.65;
+    ctrl.maxPolarAngle=Math.PI*0.62;
+    ctrl.minDistance=6; ctrl.maxDistance=38;
+    ctrl.target.set(0,3,0);
+
+    // Lights — brighter so dark nodes stay visible
+    scene.add(new THREE.AmbientLight(0x2a3d70,3.5));
+    const lG=new THREE.PointLight(0xf5a623,7,40); lG.position.set(0,14,0); scene.add(lG);
+    const lB=new THREE.PointLight(0x38bdf8,4,25); lB.position.set(-8,5,6); scene.add(lB);
+    const lP=new THREE.PointLight(0xc084fc,2.5,20); lP.position.set(8,3,-5); scene.add(lP);
+
+    // Floor plane (subtle glow so the grid has a base)
+    const fp=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshBasicMaterial({color:0x080f22,transparent:true,opacity:0.85}));
+    fp.rotation.x=-Math.PI/2; fp.position.y=-1.42; scene.add(fp);
+
+    // Floor grid — brighter lines
+    const treeGrid=new THREE.GridHelper(36,30,0x1e3268,0x142244);
+    treeGrid.position.y=-1.4; scene.add(treeGrid);
+
+    // Background star field — brighter & denser
+    const sg=new THREE.BufferGeometry();
+    const sp=new Float32Array(1800);
+    for(let i=0;i<1800;i++) sp[i]=(Math.random()-.5)*90;
+    sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+    scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0x6080b0,size:0.20,sizeAttenuation:true})));
+
+    const clock=new THREE.Clock();
+    const ray=new THREE.Raycaster();
+    const mouse=new THREE.Vector2();
+
+    T3={scene,cam,rend,ctrl,clock,nodes:{},conns:[],running:false,treeGrid,fp,cityMode:false};
+
+  // Click / tap
+  cvs.addEventListener('pointerup',e=>{
+    const rc=cvs.getBoundingClientRect();
+    mouse.set(((e.clientX-rc.left)/rc.width)*2-1,-((e.clientY-rc.top)/rc.height)*2+1);
+    ray.setFromCamera(mouse,cam);
+    if(T3.cityMode){
+      const hits=ray.intersectObjects(_cityHitboxes);
+      if(hits.length&&hits[0].object.userData.cityPlayer)
+        zoomToPlayer(hits[0].object.userData.cityPlayer,hits[0].object.userData.pos);
+      return;
+    }
+    const meshes=Object.values(T3.nodes).map(n=>n.mesh).filter(Boolean);
+    const hits=ray.intersectObjects(meshes);
+    if(hits.length){
+      const nd=Object.values(T3.nodes).find(n=>n.mesh===hits[0].object);
+      showOv3d(nd); document.getElementById('tip3d').style.display='none';
+    } else hideOv3d();
+  });
+
+  window.addEventListener('resize',()=>{
+    if(!document.getElementById('s-3d').classList.contains('active'))return;
+    rend.setSize(innerWidth,innerHeight); cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix();
+  });
+
+    build3DScene();
+    loop3D();
+  } catch(err){
+    console.error('3D init failed',err);
+    _3dIniting=false;
+    ld.innerHTML='<p style="color:#f87171;font-size:13px;padding:20px;text-align:center;max-width:300px">Erro ao carregar cena 3D.<br>'+err.message+'</p>';
+    return;
+  }
+  _3dIniting=false;
+  ld.style.display='none';
+}
+
+function loop3D(){
+  if(!T3)return;
+  T3.running=true;
+  (function tick(){
+    if(!document.getElementById('s-3d').classList.contains('active')){T3.running=false;return;}
+    requestAnimationFrame(tick);
+    const t=T3.clock.getElapsedTime();
+    T3.ctrl.update();
+    if(!T3.cityMode){
+      Object.values(T3.nodes).forEach((n,i)=>{
+        if(n.group) n.group.position.y=n.baseY+Math.sin(t*0.72+i*1.25)*0.1;
+        if(n.spin)  n.spin.rotation.y+=0.009;
+      });
+      if(T3.starsOk) T3.conns.forEach((c,i)=>{if(c.material)c.material.opacity=0.42+Math.sin(t*2.8+i*0.9)*0.38;});
+    }
+    T3.rend.render(T3.scene,T3.cam);
+  })();
+}
+
+function hexPrism3D(h,col){
+  const g=new THREE.CylinderGeometry(0.60,0.60,h,6);
+  const m=new THREE.MeshBasicMaterial({color:col});
+  return new THREE.Mesh(g,m);
+}
+
+function labelSprite3D(line1,line2,col='#f0f4ff'){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=88;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,256,88);
+  ctx.font='bold 23px system-ui,sans-serif'; ctx.fillStyle=col; ctx.textAlign='center';
+  ctx.fillText(line1.length>16?line1.slice(0,15)+'…':line1,128,32);
+  if(line2){ctx.font='21px system-ui,sans-serif'; ctx.fillStyle='rgba(122,144,192,.85)'; ctx.fillText(line2,128,64);}
+  const tex=new THREE.CanvasTexture(cv);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  sp.scale.set(2.5,0.78,1); return sp;
+}
+
+function tube3D(a,b,color,opacity){
+  const mid=new THREE.Vector3((a.x+b.x)/2,Math.max(a.y,b.y)+1.4,(a.z+b.z)/2);
+  const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(a.x,a.y,a.z),mid,new THREE.Vector3(b.x,b.y,b.z));
+  return new THREE.Mesh(new THREE.TubeGeometry(curve,22,.042,8),new THREE.MeshBasicMaterial({color,transparent:true,opacity}));
+}
+
+// ─── CITY MODE ───────────────────────────────────────────────────────────────
+let _cityObjs=[], _cityHitboxes=[];
+let _playerBldMap={};       // uid -> {entries:[{grp,bld,bx}], pos:{x,z}, player, localMaxH}
+let _reactionSprites={};    // uid -> THREE.Sprite
+let _reactionUnsub=null;
+let _xrayGroup=null;
+let _citySign=null;
+let _inspectedUid=null;
+
+function building3D(val,type){
+  // h proportional to grade — grade 10 = 5.5 units (very tall and visible)
+  const h=Math.max(0.45,val*0.55);
+  const w=0.54,d=0.54;
+  const grp=new THREE.Group();
+  const mainCol=type==='ok'?0xe08010:type==='pass'?0x28a040:type==='partial'?0x0a9ad0:0xd03030;
+  const glowCol=type==='ok'?0xf5a623:type==='pass'?0x4ade80:type==='partial'?0x38bdf8:0xf87171;
+  const sideCol=type==='ok'?0x8a5000:type==='pass'?0x165a28:type==='partial'?0x065888:0x7a1818;
+
+  // Single solid body
+  const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({color:mainCol}));
+  body.position.y=h/2; grp.add(body);
+
+  // Dark side strips to fake 3D depth
+  const sideL=new THREE.Mesh(new THREE.BoxGeometry(0.04,h,d),new THREE.MeshBasicMaterial({color:sideCol}));
+  sideL.position.set(-w/2-0.02,h/2,0); grp.add(sideL);
+  const sideR=new THREE.Mesh(new THREE.BoxGeometry(0.04,h,d),new THREE.MeshBasicMaterial({color:sideCol}));
+  sideR.position.set(w/2+0.02,h/2,0); grp.add(sideR);
+
+  // Bright roof cap
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(w+0.1,0.08,d+0.1),new THREE.MeshBasicMaterial({color:glowCol}));
+  roof.position.y=h+0.04; grp.add(roof);
+
+  // Glowing window strips on front face
+  const winRows=Math.min(6,Math.max(1,Math.floor(h/0.55)));
+  for(let wi=0;wi<winRows;wi++){
+    const wy=0.32+wi*(h/(winRows+0.6));
+    const win=new THREE.Mesh(new THREE.BoxGeometry(w*0.65,0.08,0.02),new THREE.MeshBasicMaterial({color:glowCol,transparent:true,opacity:0.65}));
+    win.position.set(0,wy,d/2+0.01); grp.add(win);
+  }
+
+  // Antenna + beacon for top grades
+  if(val>=8.5){
+    const ant=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,0.55,4),new THREE.MeshBasicMaterial({color:glowCol}));
+    ant.position.y=h+0.3; grp.add(ant);
+    const dot=new THREE.Mesh(new THREE.SphereGeometry(0.055,6,6),new THREE.MeshBasicMaterial({color:0xffffff}));
+    dot.position.y=h+0.6; grp.add(dot);
+  }
+  return grp;
+}
+
+function clearCityObjs(){
+  _cityObjs.forEach(o=>T3.scene.remove(o)); _cityObjs=[]; _cityHitboxes=[];
+  _playerBldMap={};
+  Object.values(_reactionSprites).forEach(s=>T3?.scene.remove(s)); _reactionSprites={};
+  if(_xrayGroup){T3?.scene.remove(_xrayGroup);_xrayGroup=null;}
+  if(_citySign){T3?.scene.remove(_citySign);_citySign=null;}
+  _inspectedUid=null;
+  document.getElementById('city-inspect').style.display='none';
+}
+
+
+function buildCityScene(players){
+  clearCityObjs();
+  const COLS=5;
+  const BLDW=0.72, BLDGAP=0.13, BLOCK_PAD=0.45;
+  const STREET_X=2.6, STREET_Z=3.0, PLOT_D=2.0;
+  const maxBlds=Math.max(...players.map(p=>(p.buildings||[]).length),1);
+  const PLOT_W=maxBlds*(BLDW+BLDGAP)-BLDGAP+BLOCK_PAD*2;
+  const STEP_X=PLOT_W+STREET_X, STEP_Z=PLOT_D+STREET_Z;
+  const rows=Math.ceil(players.length/COLS);
+  const gridW=COLS*STEP_X-STREET_X, gridD=rows*STEP_Z-STREET_Z;
+  const cx=gridW/2, cz=gridD/2;
+
+  // Ground plane — same style as tree-mode floor
+  const PAD=3;
+  const gnd=new THREE.Mesh(new THREE.PlaneGeometry(gridW+PAD*2,gridD+PAD*2),new THREE.MeshBasicMaterial({color:0x080f22,transparent:true,opacity:0.9}));
+  gnd.rotation.x=-Math.PI/2; gnd.position.set(cx,-0.01,cz);
+  T3.scene.add(gnd); _cityObjs.push(gnd);
+  // Subtle grid overlay (same colors as tree-mode grid)
+  const gSize=Math.ceil(Math.max(gridW,gridD)+PAD*2);
+  const cityGrid=new THREE.GridHelper(gSize,gSize,0x1e3268,0x142244);
+  cityGrid.position.set(cx,0.001,cz);
+  T3.scene.add(cityGrid); _cityObjs.push(cityGrid);
+
+  let maxH=0;
+  let myBlockCenter={x:cx,z:cz};
+  const bldGroups=[];
+
+  players.forEach((player,pi)=>{
+    const col=pi%COLS, row=Math.floor(pi/COLS);
+    const px=col*STEP_X, pz=row*STEP_Z;
+    const pcx=px+PLOT_W/2;
+    const isMe=player.uid===user?.uid;
+    if(isMe) myBlockCenter={x:pcx,z:pz};
+
+    // Plot base
+    const plate=new THREE.Mesh(new THREE.BoxGeometry(PLOT_W,0.1,PLOT_D),new THREE.MeshBasicMaterial({color:isMe?0x1c3870:0x0d1a38}));
+    plate.position.set(pcx,0.05,pz);
+    T3.scene.add(plate); _cityObjs.push(plate);
+
+    // Gold border for current user
+    if(isMe){
+      const fr=new THREE.Mesh(new THREE.BoxGeometry(PLOT_W+0.18,0.05,PLOT_D+0.18),new THREE.MeshBasicMaterial({color:0xf5a623}));
+      fr.position.set(pcx,0.02,pz);
+      T3.scene.add(fr); _cityObjs.push(fr);
+    }
+
+    // Transparent hitbox — full-plot tap target
+    const hb=new THREE.Mesh(new THREE.PlaneGeometry(PLOT_W,PLOT_D),new THREE.MeshBasicMaterial({transparent:true,opacity:0,side:THREE.DoubleSide}));
+    hb.rotation.x=-Math.PI/2; hb.position.set(pcx,1.0,pz);
+    hb.userData={cityPlayer:player,pos:{x:pcx,z:pz}};
+    T3.scene.add(hb); _cityObjs.push(hb); _cityHitboxes.push(hb);
+
+    // Buildings + empty-lot placeholders
+    const buildings=player.buildings||[];
+    let localMaxH=0.45;
+    for(let bi=0;bi<maxBlds;bi++){
+      const bld=buildings[bi];
+      const bx=px+BLOCK_PAD+bi*(BLDW+BLDGAP)+BLDW/2;
+      if(bld&&bld.v>0){
+        const bgrp=building3D(bld.v,bld.t);
+        bgrp.position.set(bx,0.1,pz);
+        bgrp.scale.y=0; // start collapsed — animated in switchToCityMode
+        T3.scene.add(bgrp); _cityObjs.push(bgrp);
+        bldGroups.push({grp:bgrp, delay:pi*65});
+        const h=Math.max(0.45,bld.v*0.55);
+        if(h>localMaxH) localMaxH=h;
+        if(h>maxH) maxH=h;
+        if(!_playerBldMap[player.uid]) _playerBldMap[player.uid]={entries:[],pos:{x:pcx,z:pz},player,localMaxH:0};
+        _playerBldMap[player.uid].entries.push({grp:bgrp,bld,bx,bz:pz});
+        _playerBldMap[player.uid].localMaxH=Math.max(_playerBldMap[player.uid].localMaxH,h);
+      } else {
+        const lot=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.07,0.52),new THREE.MeshBasicMaterial({color:0x112040,transparent:true,opacity:0.7}));
+        lot.position.set(bx,0.135,pz);
+        T3.scene.add(lot); _cityObjs.push(lot);
+      }
+    }
+
+    // Name label
+    const crDisp=player.cr!==null?fmtG(player.cr):player.partialCr!==null?'~'+fmtG(player.partialCr):'—';
+    const nameLbl=labelSprite3D(player.displayName||'Anônimo',`CR ${crDisp}${isMe?' 👤':''}`,isMe?'#f5a623':'#7a90c0');
+    nameLbl.scale.set(2.4,0.76,1);
+    nameLbl.position.set(pcx,localMaxH+1.8,pz);
+    T3.scene.add(nameLbl); _cityObjs.push(nameLbl);
+  });
+
+  // City title
+  const titleLbl=labelSprite3D('🏙️ Cidade IBMEC',`${players.length} aluno${players.length!==1?'s':''}`,`#f5a623`);
+  titleLbl.scale.set(3.8,1.15,1);
+  titleLbl.position.set(cx,maxH+5,cz);
+  T3.scene.add(titleLbl); _cityObjs.push(titleLbl);
+
+  return {gridW,gridD,maxH,myBlockCenter,bldGroups};
+}
+
+function updateModeTabsUI(){
+  document.getElementById('tab-3d-tree').classList.toggle('active',!T3?.cityMode);
+  document.getElementById('tab-3d-city').classList.toggle('active',!!T3?.cityMode);
+  document.getElementById('legend3d').style.display=T3?.cityMode?'none':'';
+  document.getElementById('city-tip').style.display=T3?.cityMode?'block':'none';
+}
+
+async function switchToCityMode(){
+  if(!T3){toast('Carregando 3D…');return;}
+  T3.cityMode=true;
+  T3.scene.fog=null; // disable fog so distant buildings stay sharp
+  // Hide skill tree objects
+  Object.values(T3.nodes).forEach(n=>{if(n.group)n.group.visible=false});
+  T3.conns.forEach(c=>{c.visible=false});
+  if(T3.treeGrid) T3.treeGrid.visible=false;
+  if(T3.fp) T3.fp.visible=false;
+  T3.ctrl.autoRotate=false;
+  updateModeTabsUI();
+
+  const ld=document.getElementById('3d-loading');
+  ld.innerHTML='<div class="loading-ring"></div><p style="color:#7a90c0;font-size:13px;margin:0">Carregando cidade…</p>';
+  ld.style.display='flex';
+  try{
+    const snap=await getDocs(collection(db,'leaderboard'));
+    let players=snap.docs.map(d=>({...d.data(),uid:d.id}));
+    // Sort by CR descending (best at top-left of grid)
+    players.sort((a,b)=>{
+      const as=a.cr!==null?a.cr:(a.partialCr!==null?a.partialCr-0.01:-1);
+      const bs=b.cr!==null?b.cr:(b.partialCr!==null?b.partialCr-0.01:-1);
+      return bs-as;
+    });
+    if(!players.length){ld.style.display='none';toast('Nenhum aluno no ranking ainda');switchToTreeMode();return;}
+    const {gridW,gridD,maxH,myBlockCenter,bldGroups}=buildCityScene(players);
+    const eyeY=Math.max(6,maxH*1.5+4);
+    const eyeBack=Math.max(8,Math.max(gridW,gridD)*0.35);
+    T3.cam.position.set(myBlockCenter.x,eyeY,myBlockCenter.z+eyeBack);
+    T3.ctrl.target.set(myBlockCenter.x,0,myBlockCenter.z);
+    T3.ctrl.minDistance=2;
+    T3.ctrl.maxDistance=Math.max(60,Math.max(gridW,gridD)*1.8);
+    T3.ctrl.update();
+    // Animate buildings growing up from the ground
+    bldGroups.forEach(({grp,delay})=>{
+      gsap.to(grp.scale,{y:1,duration:0.65,ease:'back.out(1.7)',delay:delay/1000});
+    });
+    loadCityReactions();
+  }catch(e){console.error('city',e);toast('Erro ao carregar cidade');}
+  ld.style.display='none';
+}
+
+function switchToTreeMode(){
+  if(!T3)return;
+  T3.cityMode=false;
+  if(_reactionUnsub){_reactionUnsub();_reactionUnsub=null;}
+  T3.scene.fog=new THREE.FogExp2(0x060e1f,0.016); // restore fog for skill tree
+  clearCityObjs();
+  // Show skill tree
+  Object.values(T3.nodes).forEach(n=>{if(n.group)n.group.visible=true});
+  T3.conns.forEach(c=>{c.visible=true});
+  if(T3.treeGrid) T3.treeGrid.visible=true;
+  if(T3.fp) T3.fp.visible=true;
+  T3.ctrl.autoRotate=true;
+  T3.cam.position.set(0,8,20); T3.ctrl.target.set(0,3,0); T3.ctrl.update();
+  updateModeTabsUI();
+}
+
+document.getElementById('tab-3d-tree').onclick=()=>{if(T3?.cityMode)switchToTreeMode()};
+document.getElementById('tab-3d-city').onclick=()=>{if(!T3?.cityMode)switchToCityMode()};
+
+function zoomToPlayer(player,pos){
+  if(!T3)return;
+  _inspectedUid=player.uid;
+  const {x,z}=pos;
+  const info=_playerBldMap[player.uid];
+  const inspH=info?.localMaxH||1.5;
+
+  // Feature 5: placa sobe da calçada
+  if(_citySign) T3.scene.remove(_citySign);
+  const isMe=player.uid===user?.uid;
+  const crDisp=player.cr!==null?fmtG(player.cr):player.partialCr!==null?'~'+fmtG(player.partialCr):'—';
+  const sign=labelSprite3D(player.displayName||'Anônimo',`CR ${crDisp}`,isMe?'#f5a623':'#38bdf8');
+  sign.scale.set(2.0,0.64,1);
+  sign.position.set(x,0.1,z+1.3); // frente do lote
+  T3.scene.add(sign);
+  _citySign=sign;
+  gsap.to(sign.position,{y:2.0,duration:0.55,ease:'back.out(1.6)'});
+
+  gsap.to(T3.cam.position,{x,y:inspH*2+4,z:z+inspH+5,duration:0.9,ease:'power2.inOut',
+    onUpdate(){T3.ctrl.target.set(x,inspH*0.3,z);T3.ctrl.update();}
+  });
+  showCityInspectCard(player);
+}
+
+function showCityInspectCard(player){
+  const isMe=player.uid===user?.uid;
+  const crDisp=player.cr!==null?fmtG(player.cr):player.partialCr!==null?'~'+fmtG(player.partialCr):'—';
+  const colMap={ok:'#f5a623',pass:'#4ade80',bad:'#f87171',partial:'#38bdf8'};
+  const activeBlds=(player.buildings||[]).filter(b=>b&&b.v>0);
+  const bars=activeBlds.map(b=>{
+    const h=Math.round(Math.max(10,(b.v/10)*46));
+    return `<div title="${b.n||''} · ${b.v?.toFixed(1)||''}" style="width:20px;height:${h}px;background:${colMap[b.t]||'#1a3060'};border-radius:3px 3px 0 0;flex-shrink:0"></div>`;
+  }).join('');
+  const compareBtn=!isMe?`<button id="city-compare-btn" style="background:#0d1a38;border:1px solid #1e3268;color:#a0b4e0;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer">⚔️ Comparar</button>`:'';
+  const xrayBtn=activeBlds.length?`<button id="xray-btn" style="background:#0d1a38;border:1px solid #1e3268;color:#38bdf8;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer">🔬 Raio-X</button>`:'';
+  document.getElementById('city-inspect-content').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span style="font-size:15px;font-weight:700;color:${isMe?'#f5a623':'#e2e8f0'}">${player.displayName||'Anônimo'}${isMe?' 👤':''}</span>
+      <span style="margin-left:auto;font-size:13px;color:#7a90c0">CR <b style="color:${isMe?'#f5a623':'#e2e8f0'}">${crDisp}</b></span>
+    </div>
+    <div class="ci-bars">${bars||'<span style="color:#4a5a7a;font-size:12px;align-self:center">Sem prédios ainda</span>'}</div>
+    <div style="margin-top:8px;font-size:11px;color:#4a5a7a">${activeBlds.length} matéria${activeBlds.length!==1?'s':''} lançadas · ${player.semName||''}${player.cr===null&&player.partialCr!==null?' · parcial':''}</div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      ${xrayBtn}${compareBtn}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      ${['🔥','👏','😮','💀'].map(e=>`<button data-emoji="${e}" class="react-btn" style="background:#0a1628;border:1px solid #1e3268;border-radius:8px;padding:6px 10px;font-size:17px;cursor:pointer;flex:1">${e}</button>`).join('')}
+    </div>`;
+  // Attach handlers after innerHTML is set (module scope — can't use inline onclick)
+  document.getElementById('xray-btn')?.addEventListener('click',()=>toggleXray(player.uid));
+  document.getElementById('city-compare-btn')?.addEventListener('click',()=>showComparison(player));
+  document.querySelectorAll('.react-btn').forEach(btn=>btn.addEventListener('click',()=>sendReaction(player.uid,btn.dataset.emoji)));
+  const card=document.getElementById('city-inspect');
+  card.style.display='block';
+  gsap.fromTo('#city-inspect-inner',{y:60,opacity:0},{y:0,opacity:1,duration:0.38,ease:'back.out(1.5)'});
+}
+
+document.getElementById('city-inspect-close').onclick=()=>{
+  if(_xrayGroup){T3?.scene.remove(_xrayGroup);_xrayGroup=null;
+    const info=_playerBldMap[_inspectedUid];
+    if(info) info.entries.forEach(({grp})=>grp.traverse(c=>{if(c.isMesh&&c.userData._om){c.material=c.userData._om;delete c.userData._om;}}));
+  }
+  gsap.to('#city-inspect-inner',{y:60,opacity:0,duration:0.25,ease:'power2.in',
+    onComplete(){document.getElementById('city-inspect').style.display='none';}
+  });
+};
+
+// ── Feature 2: Raio-X ────────────────────────────────────────────────────────
+function toggleXray(uid){
+  const info=_playerBldMap[uid]; if(!info) return;
+  const btn=document.getElementById('xray-btn');
+  if(_xrayGroup){
+    T3.scene.remove(_xrayGroup); _xrayGroup=null;
+    info.entries.forEach(({grp})=>grp.traverse(c=>{if(c.isMesh&&c.userData._om){c.material=c.userData._om;delete c.userData._om;}}));
+    if(btn){btn.style.color='#38bdf8';btn.textContent='🔬 Raio-X';}
+    return;
+  }
+  // Make buildings semi-transparent
+  info.entries.forEach(({grp})=>grp.traverse(c=>{if(c.isMesh){c.userData._om=c.material;c.material=c.material.clone();c.material.transparent=true;c.material.opacity=0.22;}}));
+  // Build x-ray overlay
+  _xrayGroup=new THREE.Group();
+  const colMap={ok:'#f5a623',pass:'#4ade80',bad:'#f87171',partial:'#38bdf8'};
+  info.entries.forEach(({grp,bld,bx,bz})=>{
+    const h=Math.max(0.45,bld.v*0.55);
+    // Scan plane (sweeps up)
+    const scanMat=new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.18,side:THREE.DoubleSide});
+    const scan=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.72),scanMat);
+    scan.rotation.x=-Math.PI/2; scan.position.set(bx,0.1,bz);
+    _xrayGroup.add(scan);
+    gsap.to(scan.position,{y:h+0.2,duration:0.7,ease:'power1.inOut'});
+    gsap.to(scanMat,{opacity:0,duration:0.35,delay:0.5});
+    // Floor plates
+    const fl=Math.max(1,Math.round(h/0.55));
+    for(let fi=0;fi<fl;fi++){
+      const fy=0.15+(fi+0.5)*(h/fl);
+      const plate=new THREE.Mesh(new THREE.PlaneGeometry(0.66,0.66),new THREE.MeshBasicMaterial({color:new THREE.Color(colMap[bld.t]||'#38bdf8'),transparent:true,opacity:0.55,side:THREE.DoubleSide}));
+      plate.rotation.x=-Math.PI/2; plate.position.set(bx,fy,bz);
+      _xrayGroup.add(plate);
+    }
+    // Subject label
+    const lbl=labelSprite3D(bld.n||'Matéria',bld.v.toFixed(1),colMap[bld.t]||'#38bdf8');
+    lbl.scale.set(1.6,0.52,1); lbl.position.set(bx,h+0.9,bz);
+    _xrayGroup.add(lbl);
+  });
+  T3.scene.add(_xrayGroup);
+  if(btn){btn.style.color='#f5a623';btn.textContent='🔬 Fechar';}
+}
+
+// ── Feature 3: Comparação ────────────────────────────────────────────────────
+function showComparison(theirPlayer){
+  if(!theirPlayer) return;
+  const myInfo=_playerBldMap[user?.uid];
+  if(!myInfo){toast('Ative o ranking para comparar');return;}
+  const theirInfo=_playerBldMap[theirPlayer.uid];
+  if(!theirInfo) return;
+  const mx=(myInfo.pos.x+theirInfo.pos.x)/2, mz=(myInfo.pos.z+theirInfo.pos.z)/2;
+  const dist=Math.sqrt((myInfo.pos.x-theirInfo.pos.x)**2+(myInfo.pos.z-theirInfo.pos.z)**2);
+  const eyeY=Math.max(10,dist*0.7+6);
+  gsap.to(T3.cam.position,{x:mx,y:eyeY,z:mz+eyeY*0.55,duration:1.1,ease:'power2.inOut',
+    onUpdate(){T3.ctrl.target.set(mx,0,mz);T3.ctrl.update();}
+  });
+  // Comparison card
+  const myP=myInfo.player, theirP=theirPlayer;
+  const colMap={ok:'#f5a623',pass:'#4ade80',bad:'#f87171',partial:'#38bdf8'};
+  const makeBars=p=>(p.buildings||[]).filter(b=>b&&b.v>0).map(b=>{
+    const h=Math.round(Math.max(8,(b.v/10)*44));
+    return `<div title="${b.n||''} · ${b.v?.toFixed(1)}" style="width:18px;height:${h}px;background:${colMap[b.t]||'#1a3060'};border-radius:3px 3px 0 0;flex-shrink:0"></div>`;
+  }).join('');
+  const myCR=myP.cr??myP.partialCr??0, theirCR=theirP.cr??theirP.partialCr??0;
+  const diff=(myCR-theirCR).toFixed(1);
+  const dc=diff>=0?'#4ade80':'#f87171';
+  document.getElementById('city-inspect-content').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:6px">
+      <span style="font-size:13px;font-weight:700;color:#f5a623">👤 Você<br><span style="font-size:11px;color:#7a90c0">CR ${fmtG(myCR)}</span></span>
+      <span style="font-size:14px;font-weight:700;color:${dc}">${diff>=0?'+':''}${diff}</span>
+      <span style="font-size:13px;font-weight:700;color:#a0b4e0;text-align:right">${theirP.displayName||'Anônimo'}<br><span style="font-size:11px;color:#7a90c0">CR ${fmtG(theirCR)}</span></span>
+    </div>
+    <div style="display:flex;gap:12px">
+      <div><div class="ci-bars">${makeBars(myP)||'<span style="color:#4a5a7a;font-size:11px">—</span>'}</div></div>
+      <div style="width:1px;background:#1e3268;align-self:stretch"></div>
+      <div><div class="ci-bars">${makeBars(theirP)||'<span style="color:#4a5a7a;font-size:11px">—</span>'}</div></div>
+    </div>
+    <div style="margin-top:10px"><button id="city-back-btn" style="background:#0d1a38;border:1px solid #1e3268;color:#7a90c0;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer">← Voltar ao bloco</button></div>`;
+  document.getElementById('city-back-btn')?.addEventListener('click',()=>{
+    const info=_playerBldMap[theirP.uid];
+    if(info) zoomToPlayer(info.player,info.pos);
+  });
+}
+
+// ── Feature 1: Reações ────────────────────────────────────────────────────────
+async function sendReaction(targetUid,emoji){
+  if(!user){toast('Faça login para reagir');return;}
+  try{
+    const fromName=lbPrefs.named?(lbPrefs.displayName||user.displayName?.split(' ')[0]||'Alguém'):'Alguém';
+    await setDoc(doc(db,'cityReactions',`${user.uid}_${targetUid}_${emoji}`),
+      {targetUid,emoji,fromUid:user.uid,fromName,ts:serverTimestamp()});
+    toast(emoji+' Reação enviada!');
+    setDoc(doc(db,'notifs',targetUid),{pending:arrayUnion({fromName,emoji,ts:Date.now()})},{merge:true}).catch(()=>{});
+    sendPushViaOneSignal(targetUid,emoji,fromName);
+  }catch(e){console.error('reaction',e);toast('Erro ao reagir');}
+}
+function loadCityReactions(){
+  if(_reactionUnsub){_reactionUnsub();_reactionUnsub=null;}
+  _reactionUnsub=onSnapshot(collection(db,'cityReactions'),snap=>{
+    const hourAgo=Date.now()-3600000;
+    const grouped={};
+    snap.docs.forEach(d=>{
+      const r=d.data();
+      const ts=r.ts?.toMillis?.()??0;
+      if(ts<hourAgo) return;
+      if(!grouped[r.targetUid]) grouped[r.targetUid]={};
+      grouped[r.targetUid][r.emoji]=(grouped[r.targetUid][r.emoji]||0)+1;
+    });
+    updateReactionSprites(grouped);
+  });
+}
+function updateReactionSprites(grouped){
+  Object.values(_reactionSprites).forEach(s=>T3?.scene.remove(s));
+  _reactionSprites={};
+  Object.entries(grouped).forEach(([uid,counts])=>{
+    const info=_playerBldMap[uid]; if(!info) return;
+    const txt=Object.entries(counts).map(([e,n])=>n>1?`${e}${n}`:e).join(' ');
+    const sp=labelSprite3D(txt,'','#ffffff');
+    sp.scale.set(Math.min(3.2,1.2+Object.keys(counts).length*0.5),0.52,1);
+    sp.position.set(info.pos.x,info.localMaxH+3.2,info.pos.z);
+    T3.scene.add(sp);
+    _reactionSprites[uid]=sp;
+  });
+}
+
+function build3DScene(){
+  if(!T3)return;
+  Object.values(T3.nodes).forEach(n=>{if(n.group)T3.scene.remove(n.group)});
+  T3.conns.forEach(c=>T3.scene.remove(c));
+  T3.nodes={}; T3.conns=[];
+
+  if(!semId||!sems[semId])return;
+  const discs=Object.entries(sems[semId]?.discs??{});
+  const count=discs.length;
+  const{cr,partialCr,validN,partialN}=calcCR();
+  T3.starsOk=cr!==null&&cr>=9&&validN>=4;
+
+  // ── Subject nodes ──
+  discs.forEach(([id,d],i)=>{
+    const arc=Math.min(Math.PI*1.3,count*0.58+0.4);
+    const angle=count>1?-arc/2+(arc/(count-1))*i:0;
+    const R=Math.min(3.8+count*0.38,7.5);
+    const x=Math.sin(angle)*R, z=Math.cos(angle)*R*0.55;
+
+    const a=analyseDisc(d,getTpPts(id));
+    const isPartial=a.grade===null&&a.partialGrade!==null&&a.partialGrade>0;
+    const col=
+      a.type==='ok'    ?0xf5a623:
+      isPartial        ?0x38bdf8:
+      a.type==='warn'  ?0x4ade80:
+      (a.type==='bad'||a.type==='disq')?0xf87171:
+                        0x4a6adc;
+
+    const h=a.grade!==null?Math.max(0.65,a.grade*0.28):
+            isPartial?Math.max(0.5,a.partialGrade*0.28):0.9;
+    const mesh=hexPrism3D(h,col);
+    const grp=new THREE.Group();
+    grp.position.set(x,h/2-1,z);
+
+    const lblVal=a.grade!==null?fmtG(a.grade):isPartial?'~'+fmtG(a.partialGrade):'—';
+    const lblCol=a.type==='ok'?'#f5a623':isPartial?'#38bdf8':a.type==='warn'?'#4ade80':a.type==='bad'||a.type==='disq'?'#f87171':'#7a90c0';
+    const lbl=labelSprite3D(d.nome||`Disc. ${i+1}`,lblVal,lblCol);
+    lbl.position.set(0,h/2+0.72,0);
+
+    if(a.type==='ok'){
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(0.66,0.055,8,32),new THREE.MeshBasicMaterial({color:0xf5a623}));
+      ring.rotation.x=Math.PI/2; ring.position.y=h/2+0.04; grp.add(ring);
+    } else if(isPartial){
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(0.66,0.04,8,32),new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.5}));
+      ring.rotation.x=Math.PI/2; ring.position.y=h/2+0.04; grp.add(ring);
+    }
+
+    grp.add(mesh); grp.add(lbl); T3.scene.add(grp);
+    T3.nodes[id]={group:grp,mesh,baseY:h/2-1,spin:null,disc:d,ana:a,isPartial,pos:{x,y:h/2-1,z}};
+  });
+
+  // ── CR node ──
+  const crVal=cr!==null?fmtG(cr):partialCr!==null?'~'+fmtG(partialCr):'—';
+  const crCol=cr!==null&&cr>=9?0xf5a623:cr!==null||partialCr!==null?0x38bdf8:0x4a6adc;
+  const crLblCol=cr!==null&&cr>=9?'#f5a623':'#38bdf8';
+  const crH=1.5;
+  const crMesh=hexPrism3D(crH,crCol); crMesh.scale.set(1.5,1,1.5);
+  const crLbl=labelSprite3D('CR',crVal,crLblCol);
+  crLbl.position.set(0,crH/2+0.75,0);
+  const crGrp=new THREE.Group(); crGrp.position.set(0,2,-1);
+  crGrp.add(crMesh); crGrp.add(crLbl); T3.scene.add(crGrp);
+  T3.nodes['__cr']={group:crGrp,mesh:crMesh,spin:crMesh,baseY:2,pos:{x:0,y:2,z:-1}};
+
+  // ── Stars node ──
+  const stCol=T3.starsOk?0xf5a623:0x4a6adc;
+  const stH=1.8;
+  const stMesh=hexPrism3D(stH,stCol); stMesh.scale.set(1.7,1,1.7);
+  const crDisplay=cr!==null?`CR ${fmtG(cr)}`:partialCr!==null?`~${fmtG(partialCr)}`:'—';
+  const stLbl=labelSprite3D(T3.starsOk?'⭐ STARS':'🔒 STARS',T3.starsOk?'APTO!':crDisplay,T3.starsOk?'#f5a623':'#7a90c0');
+  stLbl.position.set(0,stH/2+0.8,0);
+  if(T3.starsOk){
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(1.1,0.09,8,40),new THREE.MeshBasicMaterial({color:0xf5a623,transparent:true,opacity:0.7}));
+    halo.rotation.x=Math.PI/2; stMesh.add(halo);
+  }
+  const stGrp=new THREE.Group(); stGrp.position.set(0,6,-1);
+  stGrp.add(stMesh); stGrp.add(stLbl); T3.scene.add(stGrp);
+  T3.nodes['__stars']={group:stGrp,mesh:stMesh,spin:stMesh,baseY:6,pos:{x:0,y:6,z:-1}};
+
+  // ── Connection tubes ──
+  const crP={x:0,y:2,z:-1}, stP={x:0,y:6,z:-1};
+  discs.forEach(([id])=>{
+    const n=T3.nodes[id]; if(!n)return;
+    const a=n.ana;
+    const lc=a.type==='ok'?0xf5a623:n.isPartial?0x38bdf8:a.type==='warn'?0x4ade80:0x4a6adc;
+    const lo=a.type==='ok'?0.7:a.grade!==null?0.5:n.isPartial?0.4:0.3;
+    const tb=tube3D(n.pos,crP,lc,lo); T3.scene.add(tb); T3.conns.push(tb);
+  });
+  const tb2=tube3D(crP,stP,T3.starsOk?0xf5a623:0x4a6adc,T3.starsOk?0.8:0.35);
+  T3.scene.add(tb2); T3.conns.push(tb2);
+}
+
+function showOv3d(n){
+  if(!n)return;
+  const ov=document.getElementById('ov3d');
+  const nm=document.getElementById('ov3d-name');
+  const gr=document.getElementById('ov3d-grade');
+  const sb=document.getElementById('ov3d-sub');
+  if(n.disc){
+    nm.textContent=n.disc.nome||'Sem nome';
+    const a=n.ana;
+    const isPartial=a.grade===null&&a.partialGrade!==null&&a.partialGrade>0;
+    gr.textContent=a.grade!==null?fmtG(a.grade):isPartial?'~'+fmtG(a.partialGrade):'—';
+    gr.style.color=a.type==='ok'?'var(--gold)':isPartial?'var(--blue)':a.type==='warn'?'var(--green)':a.type==='bad'||a.type==='disq'?'var(--red)':'var(--text2)';
+    sb.textContent=a.type==='ok'?'⭐ Stars elegível':isPartial?'📊 Nota parcial':a.type==='warn'?'📘 Aprovado':a.type==='bad'||a.type==='disq'?'✗ Desclassificado':'Sem notas';
+  } else {
+    const{cr,partialCr,validN,partialN}=calcCR();
+    nm.textContent=n===T3.nodes['__stars']?'IBMEC Stars':'Coef. de Rendimento';
+    const dispCr=cr!==null?fmtG(cr):partialCr!==null?'~'+fmtG(partialCr):null;
+    gr.textContent=n===T3.nodes['__stars']?(T3.starsOk?'APTO':'INAPTO'):dispCr||'—';
+    gr.style.color=n===T3.nodes['__stars']?(T3.starsOk?'var(--gold)':'var(--red)'):(cr!==null&&cr>=9?'var(--gold)':cr!==null||partialCr!==null?'var(--blue)':'var(--text2)');
+    sb.textContent=n===T3.nodes['__stars']?(T3.starsOk?`${validN} disciplinas ≥ 9,0`:`Faltam ${Math.max(0,4-validN)} disc. completas`):(cr!==null?`${validN} disc. completa${validN!==1?'s':''}`:partialCr!==null?`${partialN} disc. parcial${partialN!==1?'s':''}` :'');
+  }
+  ov.classList.add('show');
+}
+function hideOv3d(){document.getElementById('ov3d').classList.remove('show')}
+
+function refresh3D(){
+  if(T3&&document.getElementById('s-3d').classList.contains('active')) build3DScene();
+  const btn=document.getElementById('btn-3d');
+  if(btn) btn.style.display=semId&&sems[semId]?'':'none';
+}
+</script>
+</body>
+</html>
