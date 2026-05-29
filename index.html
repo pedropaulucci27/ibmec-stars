@@ -206,9 +206,6 @@
     .f-label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
     .f-input{background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--text1);font-size:13px;font-weight:700;padding:3px 7px;width:50px;text-align:center;transition:all .2s}
     .f-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-glow)}
-    .flags{display:flex;gap:5px}
-    .flag-btn{padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-    .flag-btn.on{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.4)}
     .grade-pill{margin-left:auto;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid}
     .grade-pill.ok{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.3)}
     .grade-pill.pass{background:var(--blue-bg);color:var(--blue);border-color:rgba(56,189,248,.3)}
@@ -1561,10 +1558,6 @@ function renderDiscs(){
       </div>
       <div class="subj-foot">
         <label class="f-label"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Faltas<input type="number" class="f-input" id="f_${id}" min="0" value="${d.faltas??0}"></label>
-        <div class="flags">
-          <button class="flag-btn${d.as?' on':''}" data-flag="as">AS</button>
-          <button class="flag-btn${d.sub?' on':''}" data-flag="sub">Sub</button>
-        </div>
         ${gradePill}
       </div>`;
     card.querySelector(`#n_${id}`).oninput=function(){sems[semId].discs[id].nome=this.value;updateTpSelect();queueSave()};
@@ -1576,10 +1569,6 @@ function renderDiscs(){
     };
     wire('ac',20);wire('ap1',10);wire('ap2',10);
     card.querySelector('.icon-btn').onclick=()=>removeDisc(id,card);
-    card.querySelectorAll('.flag-btn').forEach(btn=>btn.onclick=()=>{
-      sems[semId].discs[id][btn.dataset.flag]=!sems[semId].discs[id][btn.dataset.flag];
-      renderDiscs();updateSummary();queueSave();
-    });
     list.appendChild(card);
     if(!animatedDiscs.has(id)){
       animatedDiscs.add(id);
