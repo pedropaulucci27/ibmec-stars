@@ -391,11 +391,18 @@
     .um-item-danger:hover{background:var(--red-bg);border-color:rgba(248,113,113,.3)}
 
     /* SIA IMPORT */
-    .sia-step{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--text2);line-height:1.5}
+    .sia-step{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--text2);line-height:1.6}
     .sia-step-n{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-    .sia-bm-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-size:14px;font-weight:800;border-radius:14px;text-decoration:none;cursor:grab;user-select:none;border:none;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(245,166,35,.35)}
+    .sia-install-card{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
+    .sia-install-header{display:flex;align-items:center;gap:10px}
+    .sia-install-options{display:flex;flex-direction:column;gap:8px}
+    .sia-install-opt{display:flex;align-items:flex-start;gap:10px;font-size:12px;color:var(--text2);line-height:1.6}
+    .sia-install-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+    .sia-bm-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-size:14px;font-weight:800;border-radius:14px;text-decoration:none;cursor:grab;user-select:none;border:none;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(245,166,35,.35);width:100%;justify-content:center}
     .sia-bm-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,166,35,.45)}
     .sia-bm-btn:active{cursor:grabbing;transform:scale(.97)}
+    .sia-copy-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;background:transparent;border:1px solid rgba(245,166,35,.3);border-radius:10px;color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+    .sia-copy-btn:hover{background:rgba(245,166,35,.08);border-color:var(--gold)}
     .import-subj-row{display:flex;align-items:center;gap:10px;padding:9px 13px;background:rgba(10,18,38,.5);border:1px solid var(--border);border-radius:11px}
     .import-subj-name{flex:1;font-size:13px;font-weight:600;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .import-grades{display:flex;gap:8px;flex-shrink:0}
@@ -820,19 +827,38 @@
       <span class="lb-title">📥 Importar notas do SIA</span>
       <button class="lb-close" id="sia-modal-close">✕</button>
     </div>
-    <p style="font-size:13px;color:var(--text2);line-height:1.7">Instale o bookmarklet uma vez e use sempre que quiser importar suas notas automaticamente.</p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <div class="sia-step"><span class="sia-step-n">1</span><span>Arraste o botão abaixo para a sua <strong style="color:var(--text1)">barra de favoritos</strong> do navegador</span></div>
-      <a id="sia-bookmarklet-link" class="sia-bm-btn" title="Arraste para os favoritos">
+
+    <!-- Step 1: save the shortcut -->
+    <div class="sia-install-card">
+      <div class="sia-install-header">
+        <span class="sia-step-n">1</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text1)">Salve o atalho abaixo</span>
+      </div>
+      <a id="sia-bookmarklet-link" class="sia-bm-btn">
         <span style="font-size:18px">⭐</span> Ibmec Stars — Importar
       </a>
-      <div class="sia-step"><span class="sia-step-n">2</span><span>No portal do IBMEC, acesse <strong style="color:var(--text1)">Acadêmico → Notas de Provas</strong></span></div>
-      <div class="sia-step"><span class="sia-step-n">3</span><span>Clique no favorito <strong style="color:var(--text1)">"Ibmec Stars — Importar"</strong></span></div>
-      <div class="sia-step"><span class="sia-step-n">4</span><span>O app abre automaticamente com suas notas prontas para confirmar</span></div>
+      <div class="sia-install-options">
+        <div class="sia-install-opt">
+          <span class="sia-install-icon">🖥️</span>
+          <span><strong style="color:var(--text1)">Computador:</strong> clique com o botão direito no botão acima → <em>"Adicionar aos favoritos"</em></span>
+        </div>
+        <div class="sia-install-opt">
+          <span class="sia-install-icon">📱</span>
+          <span><strong style="color:var(--text1)">Celular:</strong> toque em <em>"Copiar link"</em> abaixo, depois crie um favorito manual colando a URL</span>
+        </div>
+      </div>
+      <button class="sia-copy-btn" id="sia-copy-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copiar link do atalho
+      </button>
     </div>
-    <div style="background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.6">
-      💡 No celular? Copie o link e salve como favorito manualmente nas configurações do Safari ou Chrome.
+
+    <!-- Steps 2-3 -->
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div class="sia-step"><span class="sia-step-n">2</span><span>Abra o SIA e vá em <strong style="color:var(--text1)">Acadêmico → Notas de Provas</strong></span></div>
+      <div class="sia-step"><span class="sia-step-n">3</span><span>Clique no favorito salvo — o app abre com as notas preenchidas automaticamente ✅</span></div>
     </div>
+
   </div>
 </div>
 
@@ -1225,6 +1251,14 @@ function openSiaModal(){document.getElementById('sia-modal').classList.add('open
 function closeSiaModal(){document.getElementById('sia-modal').classList.remove('open');}
 document.getElementById('sia-modal-close').onclick=closeSiaModal;
 document.getElementById('sia-modal').addEventListener('click',e=>{if(e.target===document.getElementById('sia-modal'))closeSiaModal();});
+document.getElementById('sia-copy-btn').onclick=()=>{
+  const href=document.getElementById('sia-bookmarklet-link').href;
+  navigator.clipboard.writeText(href).then(()=>{
+    const btn=document.getElementById('sia-copy-btn');
+    btn.textContent='✅ Link copiado!';
+    setTimeout(()=>{btn.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar link do atalho';},2500);
+  }).catch(()=>toast('Não foi possível copiar automaticamente'));
+};
 
 // ─── SIA IMPORT ──────────────────────────────────────────────────────────────
 let _importData=null,_importSemTarget=null;
