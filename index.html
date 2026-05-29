@@ -371,6 +371,22 @@
     #btn-help{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);color:var(--gold);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;transition:all .2s}
     #btn-help:hover{background:rgba(245,166,35,.22);transform:scale(1.1)}
 
+    /* USER MENU BUTTON */
+    .usr-menu-btn{background:none;border:none;padding:0;cursor:pointer;border-radius:50%;line-height:0;flex-shrink:0;transition:transform .2s}
+    .usr-menu-btn:hover{transform:scale(1.1)}
+    .usr-menu-btn .avatar{border-color:rgba(245,166,35,.5);transition:border-color .2s}
+    .usr-menu-btn:hover .avatar{border-color:var(--gold)}
+
+    /* USER MENU ITEMS */
+    .um-item{width:100%;display:flex;align-items:center;gap:13px;padding:13px 16px;background:rgba(10,18,38,.5);border:1px solid var(--border);border-radius:14px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text1);transition:all .2s;text-align:left}
+    .um-item:hover{background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.28)}
+    .um-item:active{transform:scale(.98)}
+    .um-item-icon{font-size:18px;line-height:1;flex-shrink:0}
+    .um-item-label{flex:1}
+    .um-item-sub{font-size:11px;color:var(--text2);font-weight:400;display:block;margin-top:1px}
+    .um-item-danger{color:var(--red)}
+    .um-item-danger:hover{background:var(--red-bg);border-color:rgba(248,113,113,.3)}
+
     /* GUIDED TOUR */
     #tour-wrap{position:fixed;inset:0;z-index:500;opacity:0;pointer-events:none;transition:opacity .3s}
     #tour-wrap.active{opacity:1;pointer-events:all}
@@ -438,13 +454,12 @@
       <button id="btn-course" class="course-btn" style="display:none">💻 Comp. ▾</button>
     </div>
     <div class="header-right">
-      <img id="u-avatar" class="avatar" src="" alt="" style="display:none">
-      <span id="u-name" class="uname"></span>
-      <button class="btn btn-ghost btn-sm" id="btn-3d" style="display:none">🗺 3D</button>
+      <button class="btn btn-ghost btn-sm" id="btn-3d" style="display:none;padding:6px 9px" title="Visualização 3D">🗺</button>
       <button id="btn-help" title="Como usar">?</button>
-      <button class="btn btn-ghost btn-sm" id="btn-ranking" title="Ranking">🏆</button>
-      <button class="btn btn-ghost btn-sm" id="btn-notif" title="Ativar notificações" style="display:none">🔔</button>
-      <button class="btn btn-ghost btn-sm" id="btn-logout">Sair</button>
+      <button class="btn btn-ghost btn-sm" id="btn-ranking" style="padding:6px 9px" title="Ranking">🏆</button>
+      <button class="usr-menu-btn" id="btn-user-menu" style="display:none" title="Minha conta">
+        <img id="u-avatar" class="avatar" src="" alt="">
+      </button>
     </div>
   </header>
 
@@ -738,6 +753,31 @@
   </div>
 </div>
 
+<div class="lb-modal" id="user-modal">
+  <div class="lb-sheet" style="gap:10px">
+    <div class="lb-drag"></div>
+    <div style="display:flex;align-items:center;gap:14px;padding:4px 2px 14px;border-bottom:1px solid var(--border)">
+      <img id="um-avatar" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,166,35,.5);flex-shrink:0" src="" alt="">
+      <div>
+        <div id="um-name" style="font-size:16px;font-weight:800;color:var(--text1)"></div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">Ibmec Education Stars</div>
+      </div>
+    </div>
+    <button class="um-item" id="um-notif" style="display:none">
+      <span class="um-item-icon">🔔</span>
+      <span class="um-item-label">Ativar notificações<span class="um-item-sub">Receba alertas quando alguém reagir ao seu prédio</span></span>
+    </button>
+    <button class="um-item" id="um-help">
+      <span class="um-item-icon">❓</span>
+      <span class="um-item-label">Tutorial guiado<span class="um-item-sub">Ver como cada parte do app funciona</span></span>
+    </button>
+    <button class="um-item um-item-danger" id="um-logout">
+      <span class="um-item-icon">🚪</span>
+      <span class="um-item-label">Sair da conta</span>
+    </button>
+  </div>
+</div>
+
 <div class="lb-modal" id="course-modal">
   <div class="lb-sheet" style="gap:16px">
     <div class="lb-drag"></div>
@@ -790,22 +830,18 @@ function initOneSignalUser(){
     try{
       await os.login(user.uid);
       const perm=os.Notifications.permissionNative;
-      if(perm==='granted'){
-        document.getElementById('btn-notif').style.display='none';
-      } else {
-        document.getElementById('btn-notif').style.display='';
-      }
+      document.getElementById('um-notif').style.display=perm==='granted'?'none':'flex';
     }catch(e){console.warn('[OS]:',e.message);}
   });
 }
-document.getElementById('btn-notif').onclick=()=>{
+document.getElementById('um-notif').onclick=()=>{
   window.OneSignalDeferred=window.OneSignalDeferred||[];
   OneSignalDeferred.push(async os=>{
     try{
       await os.Notifications.requestPermission();
       if(os.Notifications.permissionNative==='granted'){
-        document.getElementById('btn-notif').style.display='none';
-        toast('🔔 Notificações ativadas!');
+        document.getElementById('um-notif').style.display='none';
+        closeUserModal();toast('🔔 Notificações ativadas!');
       }
     }catch(e){console.warn('[OS]:',e.message);}
   });
@@ -1107,13 +1143,21 @@ document.getElementById('btn-google-login').onclick=async()=>{
     toast('Erro ao entrar: '+e.code);
   }
 };
-document.getElementById('btn-logout').onclick=()=>fbSignOut(auth);
+function openUserModal(){document.getElementById('user-modal').classList.add('open');}
+function closeUserModal(){document.getElementById('user-modal').classList.remove('open');}
+document.getElementById('btn-user-menu').onclick=openUserModal;
+document.getElementById('user-modal').addEventListener('click',e=>{if(e.target===document.getElementById('user-modal'))closeUserModal();});
+document.getElementById('um-logout').onclick=()=>{closeUserModal();fbSignOut(auth);};
+document.getElementById('um-help').onclick=()=>{closeUserModal();setTimeout(startTour,350);};
 onAuthStateChanged(auth,async u=>{
   if(u){
     user=u;
-    document.getElementById('u-name').textContent=u.displayName?.split(' ')[0]??'';
+    const fullName=u.displayName??'';
+    document.getElementById('um-name').textContent=fullName;
+    document.getElementById('um-avatar').src=u.photoURL??'';
     const av=document.getElementById('u-avatar');
-    if(u.photoURL){av.src=u.photoURL;av.style.display='block'}
+    if(u.photoURL){av.src=u.photoURL;}
+    document.getElementById('btn-user-menu').style.display='flex';
     // load course preference
     try{const snap=await getDoc(doc(db,'users',user.uid,'prefs','settings'));if(snap.exists()){const pd=snap.data();if(pd.curso)currentCourse=pd.curso;if(pd.lbOptin!=null)lbPrefs.optin=pd.lbOptin;if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;}}catch{}
     updateCourseBtn();
