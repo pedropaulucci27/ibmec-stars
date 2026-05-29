@@ -1126,6 +1126,7 @@ let lbPrefs={optin:false,named:false,displayName:''};
 let lbCourseFilter=false;
 let _notifUnsub=null;
 let _lastNotifSeen=0;
+let _needsOnboard=false;
 const animatedDiscs=new Set();
 
 // ─── SCREENS ─────────────────────────────────────────────────────────────────
@@ -1164,8 +1165,19 @@ onAuthStateChanged(auth,async u=>{
     const av=document.getElementById('u-avatar');
     if(u.photoURL){av.src=u.photoURL;}
     document.getElementById('btn-user-menu').style.display='flex';
-    // load course preference
-    try{const snap=await getDoc(doc(db,'users',user.uid,'prefs','settings'));if(snap.exists()){const pd=snap.data();if(pd.curso)currentCourse=pd.curso;if(pd.lbOptin!=null)lbPrefs.optin=pd.lbOptin;if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;}}catch{}
+    // load prefs; detect new account (no onboarded flag in Firestore)
+    _needsOnboard=false;
+    try{
+      const snap=await getDoc(doc(db,'users',user.uid,'prefs','settings'));
+      if(snap.exists()){
+        const pd=snap.data();
+        if(pd.curso)currentCourse=pd.curso;
+        if(pd.lbOptin!=null)lbPrefs.optin=pd.lbOptin;
+        if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;
+        if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;
+        if(!pd.onboarded)_needsOnboard=true;
+      }else{_needsOnboard=true;}
+    }catch{_needsOnboard=!localStorage.getItem('edu-onboarded');}
     updateCourseBtn();
     initBgParticles();
     if(!bgAnimId) animBg();
@@ -1182,7 +1194,7 @@ onAuthStateChanged(auth,async u=>{
     });
     await loadData();show('s-app');
     initOneSignalUser();
-    if(!localStorage.getItem('edu-onboarded')) openOnboard();
+    if(_needsOnboard) openOnboard();
   }else{user=null;sems={};semId=null;show('s-login')}
 });
 
@@ -1196,6 +1208,8 @@ function openOnboard(){
 function closeOnboard(doTour=false){
   document.getElementById('onboard-modal').classList.remove('open');
   localStorage.setItem('edu-onboarded','1');
+  _needsOnboard=false;
+  if(user) setDoc(doc(db,'users',user.uid,'prefs','settings'),{onboarded:true},{merge:true}).catch(()=>{});
   if(doTour) setTimeout(startTour,500);
 }
 function _onboardUpdateUI(){
