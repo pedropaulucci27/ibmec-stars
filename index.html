@@ -365,6 +365,22 @@
     /* HELP BTN */
     #btn-help{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);color:var(--gold);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;transition:all .2s}
     #btn-help:hover{background:rgba(245,166,35,.22);transform:scale(1.1)}
+
+    /* GUIDED TOUR */
+    #tour-wrap{position:fixed;inset:0;z-index:500;opacity:0;pointer-events:none;transition:opacity .3s}
+    #tour-wrap.active{opacity:1;pointer-events:all}
+    #tour-hl{position:fixed;border-radius:12px;border:2px solid rgba(245,166,35,.9);box-shadow:0 0 0 9999px rgba(0,0,0,.75),0 0 0 5px rgba(245,166,35,.12),0 0 28px rgba(245,166,35,.5);pointer-events:none;z-index:501;transition:top .38s cubic-bezier(.34,1.56,.64,1),left .38s cubic-bezier(.34,1.56,.64,1),width .38s cubic-bezier(.34,1.56,.64,1),height .38s cubic-bezier(.34,1.56,.64,1)}
+    #tour-card{position:fixed;z-index:503;background:var(--bg1);border:1px solid rgba(245,166,35,.4);border-radius:18px;padding:16px 18px 18px;max-width:300px;box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 20px rgba(245,166,35,.12);transition:top .38s cubic-bezier(.34,1.56,.64,1),left .38s cubic-bezier(.34,1.56,.64,1)}
+    .tc-prog-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .tc-step{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);white-space:nowrap}
+    .tc-prog{flex:1;height:3px;background:rgba(80,110,180,.2);border-radius:2px;overflow:hidden}
+    .tc-prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .38s}
+    .tc-title{font-size:15px;font-weight:900;color:var(--gold);margin-bottom:6px}
+    .tc-text{font-size:12.5px;color:var(--text2);line-height:1.65;margin-bottom:14px;white-space:pre-line}
+    .tc-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .tc-next{padding:9px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-weight:700;border:none;border-radius:11px;cursor:pointer;font-size:13px;flex-shrink:0;transition:transform .15s}
+    .tc-next:active{transform:scale(.95)}
+    .tc-skip{background:none;border:none;color:var(--text2);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
   </style>
 </head>
 <body>
@@ -613,6 +629,22 @@
         <div class="lb-loading"><div class="loading-ring" style="width:28px;height:28px"></div><span>Carregando…</span></div>
       </div>
       <div class="lb-pos" id="lb-pos"></div>
+    </div>
+  </div>
+</div>
+
+<div id="tour-wrap">
+  <div id="tour-hl" style="top:50%;left:50%;width:0;height:0"></div>
+  <div id="tour-card">
+    <div class="tc-prog-row">
+      <span class="tc-step" id="tc-step">1 / 8</span>
+      <div class="tc-prog"><div class="tc-prog-fill" id="tc-fill"></div></div>
+    </div>
+    <div class="tc-title" id="tc-title"></div>
+    <div class="tc-text" id="tc-text"></div>
+    <div class="tc-actions">
+      <button class="tc-skip" id="tc-skip">Encerrar tour</button>
+      <button class="tc-next" id="tc-next">Próximo →</button>
     </div>
   </div>
 </div>
@@ -1086,23 +1118,86 @@ function openOnboard(){
   _onboardUpdateUI();
   document.getElementById('onboard-modal').classList.add('open');
 }
-function closeOnboard(){
+function closeOnboard(doTour=false){
   document.getElementById('onboard-modal').classList.remove('open');
   localStorage.setItem('edu-onboarded','1');
+  if(doTour) setTimeout(startTour,500);
 }
 function _onboardUpdateUI(){
   document.getElementById('onboard-track').style.transform=`translateX(-${_onboardSlide*33.333}%)`;
   document.querySelectorAll('.od').forEach((d,i)=>d.classList.toggle('active',i===_onboardSlide));
   const isLast=_onboardSlide===2;
-  document.getElementById('onboard-next').textContent=isLast?'Começar agora':'Próximo';
+  document.getElementById('onboard-next').textContent=isLast?'Fazer Tour Guiado →':'Próximo';
 }
 document.getElementById('onboard-next').onclick=()=>{
   if(_onboardSlide<2){_onboardSlide++;_onboardUpdateUI();}
-  else closeOnboard();
+  else closeOnboard(true);
 };
-document.getElementById('onboard-skip').onclick=closeOnboard;
-document.getElementById('onboard-modal').addEventListener('click',e=>{if(e.target===document.getElementById('onboard-modal'))closeOnboard();});
-document.getElementById('btn-help').onclick=openOnboard;
+document.getElementById('onboard-skip').onclick=()=>closeOnboard(false);
+document.getElementById('onboard-modal').addEventListener('click',e=>{if(e.target===document.getElementById('onboard-modal'))closeOnboard(false);});
+document.getElementById('btn-help').onclick=()=>{
+  if(document.getElementById('tour-wrap').classList.contains('active')) endTour();
+  else startTour();
+};
+
+// ─── GUIDED TOUR ─────────────────────────────────────────────────────────────
+const TOUR_DEF=[
+  {sel:'.course-bar',title:'🎓 Curso',text:'Selecione seu curso aqui. Os símbolos no fundo e a identidade visual do app mudam de acordo com a sua área.',pos:'bottom'},
+  {sel:'main>.card:first-child',title:'📅 Semestres',text:'Crie um semestre (ex: "25.1") para organizar suas disciplinas. Você pode ter vários e alternar entre eles livremente.',pos:'bottom'},
+  {sel:'#summary-card',title:'📊 CR em Tempo Real',text:'O Coeficiente de Rendimento é calculado aqui automaticamente conforme você lança as notas. Inclui também uma projeção do que pode acontecer com as notas que faltam.',pos:'bottom'},
+  {sel:'.chk-chips',title:'⭐ Critérios Ibmec Stars',text:'Esses indicadores mostram em tempo real o que falta para você ser elegível:\n• 4+ disciplinas completas\n• CR ≥ 9,0\n• Sem dependências (AS ou Sub)',pos:'top'},
+  {sel:'#btn-add-subj',title:'📚 Adicionar Disciplinas',text:'Toque aqui para cadastrar cada matéria do semestre. Você nomeia como quiser — ex: "Cálculo I" — e depois lança as notas.',pos:'top'},
+  {sel:'.grade-grid',title:'📝 Lançar Notas',text:'Cada disciplina tem 3 campos:\n• AC — Avaliação Continuada (0–20 pts)\n• AP1 — 1ª Prova (0–10 pts)\n• AP2 — 2ª Prova (0–10 pts)\n\nO app mostra o que você precisa tirar para passar e para os Stars.',pos:'top'},
+  {sel:'#btn-3d',title:'🏙️ Visualização 3D',text:'Veja suas notas como uma cidade de LEGO ou árvore de conhecimento. Cada prédio representa uma disciplina — toque para ver detalhes.',pos:'bottom'},
+  {sel:'#btn-ranking',title:'🏆 Ranking',text:'Compare seu CR com outros alunos do Ibmec de forma anônima ou exibindo seu nome.',pos:'bottom'},
+];
+let _tourActive=[],_tourIdx=0;
+function startTour(){
+  _tourActive=TOUR_DEF.filter(s=>{
+    const el=document.querySelector(s.sel);
+    if(!el)return false;
+    const r=el.getBoundingClientRect();
+    return r.width>0||r.height>0;
+  });
+  if(!_tourActive.length)return;
+  _tourIdx=0;
+  document.getElementById('tour-wrap').classList.add('active');
+  _tourGo();
+}
+function _tourGo(){
+  const step=_tourActive[_tourIdx];
+  const el=document.querySelector(step.sel);
+  if(!el){if(_tourIdx<_tourActive.length-1){_tourIdx++;_tourGo();}else endTour();return}
+  const n=_tourIdx+1,tot=_tourActive.length;
+  document.getElementById('tc-step').textContent=`${n} / ${tot}`;
+  document.getElementById('tc-fill').style.width=`${(n/tot)*100}%`;
+  document.getElementById('tc-title').textContent=step.title;
+  document.getElementById('tc-text').textContent=step.text;
+  document.getElementById('tc-next').textContent=_tourIdx===tot-1?'Concluir ✓':'Próximo →';
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>_tourPos(el,step.pos),380);
+}
+function _tourPos(el,pref){
+  const r=el.getBoundingClientRect(),P=10,G=16;
+  const hl=document.getElementById('tour-hl');
+  const card=document.getElementById('tour-card');
+  hl.style.top=(r.top-P)+'px';hl.style.left=(r.left-P)+'px';
+  hl.style.width=(r.width+P*2)+'px';hl.style.height=(r.height+P*2)+'px';
+  const cW=Math.min(300,window.innerWidth-32);
+  const cH=card.offsetHeight||160;
+  let top=pref==='top'&&(r.top-P-G-cH)>=8?r.top-P-G-cH:r.bottom+P+G;
+  if(top+cH>window.innerHeight-8)top=r.top-P-G-cH;
+  if(top<8)top=r.bottom+P+G;
+  top=Math.max(8,Math.min(top,window.innerHeight-cH-8));
+  let left=r.left+r.width/2-cW/2;
+  left=Math.max(16,Math.min(left,window.innerWidth-cW-16));
+  card.style.top=top+'px';card.style.left=left+'px';card.style.width=cW+'px';
+}
+function endTour(){
+  document.getElementById('tour-wrap').classList.remove('active');
+}
+document.getElementById('tc-next').onclick=()=>{if(_tourIdx<_tourActive.length-1){_tourIdx++;_tourGo();}else endTour();};
+document.getElementById('tc-skip').onclick=endTour;
 
 // ─── FIRESTORE ───────────────────────────────────────────────────────────────
 async function loadData(){
