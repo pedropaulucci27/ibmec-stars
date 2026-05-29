@@ -318,6 +318,7 @@
     .ci-bars{display:flex;gap:5px;align-items:flex-end;height:52px}
 
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    @media(max-width:430px){.login-card{padding:28px 20px 28px}.login-star{width:88px!important;height:88px!important}.login-card h1{font-size:22px}.login-card .sub{font-size:12px;margin-bottom:28px}}
     @media(max-width:390px){main{padding:10px 10px 32px;gap:12px}.summary-cr{font-size:44px}}
     svg{flex-shrink:0}
 
@@ -1359,7 +1360,8 @@ function updateSummary(){
   else projRow.style.display='none';
   if(partialCr!==null&&partialRow&&partialEl){partialRow.style.display='flex';partialEl.textContent='~'+fmtG(partialCr);partialEl.className='proj-cr '+(partialCr>=9?'ok':'bad')}
   else if(partialRow) partialRow.style.display='none';
-  if(!totalN){card.className='summary-card';crEl.className='summary-cr';badge.className='summary-badge';badge.textContent='Adicione disciplinas';msg.innerHTML='';return}
+  if(!totalN){card.className='summary-card';crEl.className='summary-cr';badge.className='summary-badge';badge.style.display='none';msg.innerHTML='';return}
+  badge.style.display='';
   if(disq){card.className='summary-card inapto';crEl.className='summary-cr inapto';badge.className='summary-badge inapto';badge.textContent='Desclassificado';msg.innerHTML=reasons.map(r=>`⚠️ ${r}`).join('<br>');wasApto=false;return}
   if(cr!==null&&cr>=9&&validN>=4){
     card.className='summary-card apto';crEl.className='summary-cr apto';badge.className='summary-badge apto';badge.textContent='Apto para concorrer! 🏆';
