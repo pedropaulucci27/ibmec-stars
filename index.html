@@ -821,42 +821,52 @@
 
 <!-- BOOKMARKLET INSTRUCTIONS MODAL -->
 <div class="lb-modal" id="sia-modal">
-  <div class="lb-sheet" style="gap:14px">
+  <div class="lb-sheet" style="gap:16px">
     <div class="lb-drag"></div>
     <div class="lb-header">
       <span class="lb-title">📥 Importar notas do SIA</span>
       <button class="lb-close" id="sia-modal-close">✕</button>
     </div>
 
-    <!-- Step 1: save the shortcut -->
+    <!-- Step 1 -->
     <div class="sia-install-card">
       <div class="sia-install-header">
         <span class="sia-step-n">1</span>
-        <span style="font-size:13px;font-weight:700;color:var(--text1)">Salve o atalho abaixo</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text1)">Copie o link do atalho</span>
       </div>
-      <a id="sia-bookmarklet-link" class="sia-bm-btn">
-        <span style="font-size:18px">⭐</span> Ibmec Stars — Importar
-      </a>
-      <div class="sia-install-options">
-        <div class="sia-install-opt">
-          <span class="sia-install-icon">🖥️</span>
-          <span><strong style="color:var(--text1)">Computador:</strong> clique com o botão direito no botão acima → <em>"Adicionar aos favoritos"</em></span>
-        </div>
-        <div class="sia-install-opt">
-          <span class="sia-install-icon">📱</span>
-          <span><strong style="color:var(--text1)">Celular:</strong> toque em <em>"Copiar link"</em> abaixo, depois crie um favorito manual colando a URL</span>
-        </div>
-      </div>
-      <button class="sia-copy-btn" id="sia-copy-btn">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-        Copiar link do atalho
+      <button class="sia-bm-btn" id="sia-copy-btn">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        <span id="sia-copy-label">Copiar link do atalho</span>
       </button>
+      <a id="sia-bookmarklet-link" style="display:none"></a>
     </div>
 
-    <!-- Steps 2-3 -->
+    <!-- Step 2 -->
+    <div class="sia-install-card">
+      <div class="sia-install-header">
+        <span class="sia-step-n">2</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text1)">Crie um favorito no navegador</span>
+      </div>
+      <div class="sia-install-options">
+        <div class="sia-install-opt">
+          <span class="sia-install-icon">🌐</span>
+          <span><strong style="color:var(--text1)">Chrome:</strong> menu <em>⋮ → Favoritos → Adicionar página</em> — troque a URL pelo link copiado</span>
+        </div>
+        <div class="sia-install-opt">
+          <span class="sia-install-icon">🧭</span>
+          <span><strong style="color:var(--text1)">Safari:</strong> menu <em>Favoritos → Adicionar favorito</em> — troque a URL pelo link copiado</span>
+        </div>
+        <div class="sia-install-opt">
+          <span class="sia-install-icon">🦊</span>
+          <span><strong style="color:var(--text1)">Firefox:</strong> menu <em>☰ → Favoritos → Adicionar</em> — troque a URL pelo link copiado</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Steps 3-4 -->
     <div style="display:flex;flex-direction:column;gap:9px">
-      <div class="sia-step"><span class="sia-step-n">2</span><span>Abra o SIA e vá em <strong style="color:var(--text1)">Acadêmico → Notas de Provas</strong></span></div>
-      <div class="sia-step"><span class="sia-step-n">3</span><span>Clique no favorito salvo — o app abre com as notas preenchidas automaticamente ✅</span></div>
+      <div class="sia-step"><span class="sia-step-n">3</span><span>No SIA, acesse <strong style="color:var(--text1)">Acadêmico → Notas de Provas</strong></span></div>
+      <div class="sia-step"><span class="sia-step-n">4</span><span>Abra o favorito salvo na barra do navegador — o app abre aqui com as notas já preenchidas ✅</span></div>
     </div>
 
   </div>
@@ -1244,20 +1254,29 @@ document.getElementById('um-sia').onclick=()=>{closeUserModal();openSiaModal();}
 
 // ─── SIA BOOKMARKLET ─────────────────────────────────────────────────────────
 (()=>{
-  const bm=`javascript:(function(){'use strict';if(!/notasprovas/i.test(location.pathname)){alert('Abra a página "Notas de Provas" no SIA.\\nMenu: Acadêmico → Notas de Provas');return;}var subjs={},cur=null;function toTitle(s){return s.toLowerCase().replace(/(^|\\s)\\S/g,function(c){return c.toUpperCase();})}function parseN(v){if(!v||v==='-'||/^f$/i.test(v.trim()))return'';var n=parseFloat(v.replace(',','.'));return isNaN(n)?'':n;}function set(k,v){if(!cur)return;if(!subjs[cur])subjs[cur]={nome:toTitle(cur),ac:'',ap1:'',ap2:''};subjs[cur][k]=parseN(v);}document.querySelectorAll('table tr').forEach(function(tr){var cs=Array.from(tr.querySelectorAll('td')).map(function(c){return c.textContent.trim();});var name,type,val;if(cs.length>=3){name=cs[0];type=cs[1].toUpperCase();val=cs[2];}else if(cs.length===2){type=cs[0].toUpperCase();val=cs[1];}else return;if(name&&name.length>2)cur=name;if(type==='AC')set('ac',val);else if(type==='AP1')set('ap1',val);else if(type==='AP2')set('ap2',val);});var list=Object.values(subjs).filter(function(s){return s.nome;});if(!list.length){alert('Nenhuma disciplina encontrada.');return;}try{var enc=btoa(unescape(encodeURIComponent(JSON.stringify({subjects:list}))));window.open('https://ibmec-stars.web.app?import='+enc,'_blank');}catch(e){alert('Erro: '+e.message);}})();`;
+  // FIX: use location.href (not window.open) to avoid popup blocker
+  const bm=`javascript:(function(){'use strict';if(!/notasprovas/i.test(location.href)){alert('Abra a página "Notas de Provas" no SIA.\\nMenu: Acadêmico → Notas de Provas');return;}var subjs={},cur=null;function toTitle(s){return s.toLowerCase().replace(/(^|\\s)\\S/g,function(c){return c.toUpperCase();})}function parseN(v){if(!v||v==='-'||/^f$/i.test(v.trim()))return'';var n=parseFloat(v.replace(',','.'));return isNaN(n)?'':n;}function set(k,v){if(!cur)return;if(!subjs[cur])subjs[cur]={nome:toTitle(cur),ac:'',ap1:'',ap2:''};subjs[cur][k]=parseN(v);}document.querySelectorAll('table tr').forEach(function(tr){var cs=Array.from(tr.querySelectorAll('td')).map(function(c){return c.textContent.trim();});var name,type,val;if(cs.length>=3){name=cs[0];type=cs[1].toUpperCase();val=cs[2];}else if(cs.length===2){type=cs[0].toUpperCase();val=cs[1];}else return;if(name&&name.length>2)cur=name;if(type==='AC')set('ac',val);else if(type==='AP1')set('ap1',val);else if(type==='AP2')set('ap2',val);});var list=Object.values(subjs).filter(function(s){return s.nome;});if(!list.length){alert('Nenhuma disciplina encontrada. Verifique se está na página Notas de Provas.');return;}try{var enc=btoa(unescape(encodeURIComponent(JSON.stringify({subjects:list}))));location.href='https://ibmec-stars.web.app?import='+enc;}catch(e){alert('Erro ao exportar: '+e.message);}})();`;
   document.getElementById('sia-bookmarklet-link').href=bm;
+  // expose for copy button
+  window._siaBmCode=bm;
 })();
 function openSiaModal(){document.getElementById('sia-modal').classList.add('open');}
 function closeSiaModal(){document.getElementById('sia-modal').classList.remove('open');}
 document.getElementById('sia-modal-close').onclick=closeSiaModal;
 document.getElementById('sia-modal').addEventListener('click',e=>{if(e.target===document.getElementById('sia-modal'))closeSiaModal();});
 document.getElementById('sia-copy-btn').onclick=()=>{
-  const href=document.getElementById('sia-bookmarklet-link').href;
-  navigator.clipboard.writeText(href).then(()=>{
-    const btn=document.getElementById('sia-copy-btn');
-    btn.textContent='✅ Link copiado!';
-    setTimeout(()=>{btn.innerHTML='<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copiar link do atalho';},2500);
-  }).catch(()=>toast('Não foi possível copiar automaticamente'));
+  const code=window._siaBmCode||'';
+  const label=document.getElementById('sia-copy-label');
+  navigator.clipboard.writeText(code).then(()=>{
+    label.textContent='✅ Copiado! Agora crie o favorito conforme o passo 2';
+    document.getElementById('sia-copy-btn').style.background='rgba(74,222,128,.15)';
+    document.getElementById('sia-copy-btn').style.borderColor='rgba(74,222,128,.5)';
+    document.getElementById('sia-copy-btn').style.color='var(--green)';
+    setTimeout(()=>{
+      label.textContent='Copiar link do atalho';
+      document.getElementById('sia-copy-btn').style.cssText='';
+    },4000);
+  }).catch(()=>toast('Não foi possível copiar — tente pelo computador'));
 };
 
 // ─── SIA IMPORT ──────────────────────────────────────────────────────────────
