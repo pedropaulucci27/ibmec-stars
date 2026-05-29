@@ -82,12 +82,16 @@
     .avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,166,35,.5)}
     .uname{font-size:12px;color:var(--text2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-    /* COURSE BAR */
-    .course-bar{padding:7px 16px;border-bottom:1px solid var(--border);background:rgba(6,14,31,.7);backdrop-filter:blur(24px);position:sticky;top:54px;z-index:19;display:flex;align-items:center;gap:10px}
-    .course-bar-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);white-space:nowrap;flex-shrink:0}
-    .course-scroll{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-    .course-scroll::-webkit-scrollbar{display:none}
-    .course-chip{padding:4px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+    /* COURSE BUTTON */
+    .course-btn{background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);color:var(--gold);border-radius:20px;padding:4px 10px;font-size:13px;cursor:pointer;display:none;align-items:center;gap:3px;transition:all .2s;line-height:1;font-weight:600;flex-shrink:0}
+    .course-btn:hover{background:rgba(245,166,35,.22);border-color:rgba(245,166,35,.5);transform:scale(1.04)}
+
+    /* COURSE MODAL */
+    .course-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .course-opt{padding:14px 12px;border-radius:14px;border:1px solid var(--border);background:rgba(10,18,38,.5);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s;width:100%;text-align:left}
+    .course-opt:active{transform:scale(.97)}
+    .course-opt-icon{font-size:22px;line-height:1;flex-shrink:0}
+    .course-opt-name{font-size:12px;font-weight:700;color:var(--text1);line-height:1.3}
 
     main{flex:1;padding:16px 16px 48px;max-width:560px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 
@@ -250,8 +254,8 @@
     .lb-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--text2);font-size:13px}
 
     /* ADD BTN */
-    .add-btn{width:100%;padding:13px;margin-top:4px;border:1.5px dashed rgba(80,110,180,.3);background:transparent;color:var(--text2);font-size:13px;font-weight:600;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s}
-    .add-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(245,166,35,.04);transform:translateY(-1px)}
+    .add-btn{width:100%;padding:13px;margin-top:4px;border:1.5px dashed rgba(245,166,35,.35);background:rgba(245,166,35,.04);color:var(--gold);font-size:13px;font-weight:600;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s}
+    .add-btn:hover{border-color:var(--gold);background:rgba(245,166,35,.09);transform:translateY(-1px);box-shadow:0 4px 14px rgba(245,166,35,.12)}
 
     .empty-msg{text-align:center;padding:32px 16px;color:var(--text2);font-size:13px}
     .danger-area{display:flex;justify-content:center}
@@ -431,6 +435,7 @@
     <div class="header-left">
       <img src="icon-192.png" style="width:28px;height:28px;border-radius:7px" alt="logo">
       <h1>Education Stars</h1>
+      <button id="btn-course" class="course-btn" style="display:none">💻 Comp. ▾</button>
     </div>
     <div class="header-right">
       <img id="u-avatar" class="avatar" src="" alt="" style="display:none">
@@ -442,11 +447,6 @@
       <button class="btn btn-ghost btn-sm" id="btn-logout">Sair</button>
     </div>
   </header>
-
-  <div class="course-bar">
-    <span class="course-bar-lbl">Curso</span>
-    <div class="course-scroll" id="course-scroll"></div>
-  </div>
 
   <main>
     <div class="card">
@@ -738,6 +738,18 @@
   </div>
 </div>
 
+<div class="lb-modal" id="course-modal">
+  <div class="lb-sheet" style="gap:16px">
+    <div class="lb-drag"></div>
+    <div class="lb-header">
+      <span class="lb-title">🎓 Selecione seu Curso</span>
+      <button class="lb-close" id="course-modal-close">✕</button>
+    </div>
+    <p style="font-size:12px;color:var(--text2);margin:-4px 0 0">Os símbolos do fundo e a identidade visual do app se adaptam ao seu curso.</p>
+    <div class="course-grid" id="course-grid"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="importmap">
@@ -978,34 +990,47 @@ function animBg(){
 
 function setCourse(key){
   currentCourse = key;
-  // refresh symbols immediately with new course
   bgParticles.forEach(p=>{
     const c = COURSES[key]||COURSES.computacao;
     p.symbol = c.symbols[Math.floor(Math.random()*c.symbols.length)];
   });
-  renderCourseChips();
+  updateCourseBtn();
 }
 
-function renderCourseChips(){
-  const scroll = document.getElementById('course-scroll');
-  scroll.innerHTML='';
+function updateCourseBtn(){
+  const btn=document.getElementById('btn-course');
+  if(!btn)return;
+  const c=COURSES[currentCourse]||COURSES.computacao;
+  const parts=c.label.split(' ');
+  const emoji=parts[0];
+  const abbr=parts.slice(1).join(' ').split(' ')[0];
+  btn.textContent=`${emoji} ${abbr} ▾`;
+  btn.style.color=c.color;
+  btn.style.borderColor=c.color+'66';
+  btn.style.background=c.color+'15';
+  btn.style.display='flex';
+}
+function renderCourseGrid(){
+  const grid=document.getElementById('course-grid');
+  if(!grid)return;
+  grid.innerHTML='';
   Object.entries(COURSES).forEach(([key,c])=>{
     const btn=document.createElement('button');
-    btn.className='course-chip';
-    btn.textContent=c.label;
-    if(key===currentCourse){
-      btn.style.background=`${c.color}18`;
-      btn.style.color=c.color;
-      btn.style.borderColor=`${c.color}55`;
-      btn.style.boxShadow=`0 0 10px ${c.color}25`;
-    }
+    btn.className='course-opt';
+    const isSel=key===currentCourse;
+    if(isSel){btn.style.borderColor=c.color+'66';btn.style.background=c.color+'18';}
+    const emoji=c.label.split(' ')[0];
+    const name=c.label.split(' ').slice(1).join(' ');
+    btn.innerHTML=`<span class="course-opt-icon">${emoji}</span><span class="course-opt-name">${name}${isSel?' ✓':''}</span>`;
     btn.onclick=async()=>{
-      setCourse(key);
+      setCourse(key);closeCourseModal();
       try{await setDoc(doc(db,'users',user.uid,'prefs','settings'),{curso:key},{merge:true})}catch{}
     };
-    scroll.appendChild(btn);
+    grid.appendChild(btn);
   });
 }
+function openCourseModal(){renderCourseGrid();document.getElementById('course-modal').classList.add('open');}
+function closeCourseModal(){document.getElementById('course-modal').classList.remove('open');}
 
 // ─── CONFETTI CANVAS ─────────────────────────────────────────────────────────
 const confCanvas = document.getElementById('particle-canvas');
@@ -1068,8 +1093,7 @@ function show(id){
   if(id==='s-login') gsap.fromTo('#login-card',{opacity:0,y:40,scale:.95},{opacity:1,y:0,scale:1,duration:.65,ease:'back.out(1.4)'});
   if(id==='s-app'){
     gsap.fromTo('header',{opacity:0,y:-16},{opacity:1,y:0,duration:.4,ease:'power3.out'});
-    gsap.fromTo('.course-bar',{opacity:0,y:-8},{opacity:1,y:0,duration:.4,ease:'power3.out',delay:.1});
-    gsap.fromTo('main > *',{opacity:0,y:18},{opacity:1,y:0,stagger:.06,duration:.45,ease:'power3.out',delay:.2});
+    gsap.fromTo('main > *',{opacity:0,y:18},{opacity:1,y:0,stagger:.06,duration:.45,ease:'power3.out',delay:.15});
   }
 }
 
@@ -1092,7 +1116,7 @@ onAuthStateChanged(auth,async u=>{
     if(u.photoURL){av.src=u.photoURL;av.style.display='block'}
     // load course preference
     try{const snap=await getDoc(doc(db,'users',user.uid,'prefs','settings'));if(snap.exists()){const pd=snap.data();if(pd.curso)currentCourse=pd.curso;if(pd.lbOptin!=null)lbPrefs.optin=pd.lbOptin;if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;}}catch{}
-    renderCourseChips();
+    updateCourseBtn();
     initBgParticles();
     if(!bgAnimId) animBg();
     _lastNotifSeen=Date.now();
@@ -1140,10 +1164,13 @@ document.getElementById('btn-help').onclick=()=>{
   if(document.getElementById('tour-wrap').classList.contains('active')) endTour();
   else startTour();
 };
+document.getElementById('btn-course').onclick=openCourseModal;
+document.getElementById('course-modal-close').onclick=closeCourseModal;
+document.getElementById('course-modal').addEventListener('click',e=>{if(e.target===document.getElementById('course-modal'))closeCourseModal();});
 
 // ─── GUIDED TOUR ─────────────────────────────────────────────────────────────
 const TOUR_DEF=[
-  {sel:'.course-bar',title:'🎓 Curso',text:'Selecione seu curso aqui. Os símbolos no fundo e a identidade visual do app mudam de acordo com a sua área.',pos:'bottom'},
+  {sel:'#btn-course',title:'🎓 Curso',text:'Toque aqui para selecionar seu curso. Os símbolos no fundo e as cores do app se adaptam à sua área.',pos:'bottom'},
   {sel:'main>.card:first-child',title:'📅 Semestres',text:'Crie um semestre (ex: "25.1") para organizar suas disciplinas. Você pode ter vários e alternar entre eles livremente.',pos:'bottom'},
   {sel:'#summary-card',title:'📊 CR em Tempo Real',text:'O Coeficiente de Rendimento é calculado aqui automaticamente conforme você lança as notas. Inclui também uma projeção do que pode acontecer com as notas que faltam.',pos:'bottom'},
   {sel:'.chk-chips',title:'⭐ Critérios Ibmec Stars',text:'Esses indicadores mostram em tempo real o que falta para você ser elegível:\n• 4+ disciplinas completas\n• CR ≥ 9,0\n• Sem dependências (AS ou Sub)',pos:'top'},
