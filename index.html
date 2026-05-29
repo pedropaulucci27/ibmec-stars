@@ -31,11 +31,11 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg0);color:var(--text1);min-height:100dvh;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
     body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:radial-gradient(ellipse 80% 60% at 15% 15%,rgba(245,166,35,.07) 0%,transparent 60%),
-        radial-gradient(ellipse 60% 80% at 85% 85%,rgba(56,189,248,.05) 0%,transparent 60%),
-        radial-gradient(ellipse 100% 100% at 50% 50%,rgba(192,132,252,.03) 0%,transparent 70%);
-      animation:bgDrift 12s ease-in-out infinite alternate}
-    @keyframes bgDrift{0%{transform:scale(1) translate(0,0)}50%{transform:scale(1.05) translate(-1%,1%)}100%{transform:scale(1.02) translate(1%,-1%)}}
+      background:radial-gradient(ellipse 80% 60% at 15% 15%,rgba(245,166,35,.03) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 80% at 85% 85%,rgba(56,189,248,.025) 0%,transparent 60%),
+        radial-gradient(ellipse 100% 100% at 50% 50%,rgba(192,132,252,.015) 0%,transparent 70%);
+      animation:bgDrift 18s ease-in-out infinite alternate}
+    @keyframes bgDrift{0%{transform:scale(1) translate(0,0)}50%{transform:scale(1.02) translate(-.5%,.5%)}100%{transform:scale(1.01) translate(.5%,-.5%)}}
     #bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
     #particle-canvas{position:fixed;inset:0;pointer-events:none;z-index:1000}
     .screen{display:none;min-height:100dvh;position:relative;z-index:1}
@@ -926,9 +926,9 @@ class BgSymbol {
     this.baseX  = Math.random()*bgCanvas.width;
     this.x      = this.baseX;
     this.y      = spreadY!==undefined ? spreadY : -40;
-    this.size   = Math.random()*14+10;       // 10–24px
-    this.speed  = Math.random()*0.55+0.2;    // 0.2–0.75 px/frame
-    this.alpha  = Math.random()*0.13+0.04;   // 4–17%
+    this.size   = Math.random()*10+8;        // 8–18px
+    this.speed  = Math.random()*0.4+0.15;   // 0.15–0.55 px/frame
+    this.alpha  = Math.random()*0.06+0.02;  // 2–8%
     this.driftA = Math.random()*22+8;        // drift amplitude px
     this.driftF = Math.random()*0.025+0.006; // drift frequency
     this.driftP = Math.random()*Math.PI*2;   // drift phase
@@ -952,7 +952,7 @@ class BgSymbol {
     bgCtx.globalAlpha = Math.max(0,a);
     bgCtx.fillStyle   = c.color;
     bgCtx.shadowColor = c.glow;
-    bgCtx.shadowBlur  = 10;
+    bgCtx.shadowBlur  = 4;
     bgCtx.font        = `${this.size}px monospace`;
     bgCtx.translate(this.x,this.y);
     bgCtx.rotate(this.rot);
@@ -962,7 +962,7 @@ class BgSymbol {
 }
 
 function initBgParticles(){
-  const count = Math.min(65, Math.max(30, Math.floor(innerWidth/22)));
+  const count = Math.min(35, Math.max(18, Math.floor(innerWidth/36)));
   bgParticles = [];
   for(let i=0;i<count;i++){
     const p = new BgSymbol(Math.random()*bgCanvas.height); // pre-scatter
