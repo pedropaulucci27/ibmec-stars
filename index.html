@@ -1350,17 +1350,33 @@ document.getElementById('import-confirm').onclick=async()=>{
   }
 
   semId=targetId;
+  const normalize=n=>n.toLowerCase().replace(/\s+/g,' ').trim();
+  let created=0,updated=0;
   for(const s of _importData.subjects){
-    const id='disc_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
-    const disc={nome:s.nome,ac:s.ac??'',ap1:s.ap1??'',ap2:s.ap2??'',faltas:0,as:false,sub:false};
-    sems[targetId].discs[id]=disc;
-    await setDoc(doc(db,'users',user.uid,'semestres',targetId,'disciplinas',id),disc);
+    // find existing disc by name (case-insensitive)
+    const existing=Object.entries(sems[targetId].discs||{})
+      .find(([,d])=>normalize(d.nome||'')===normalize(s.nome));
+    if(existing){
+      const [eid,ed]=existing;
+      if(s.ac!=='')ed.ac=s.ac;
+      if(s.ap1!=='')ed.ap1=s.ap1;
+      if(s.ap2!=='')ed.ap2=s.ap2;
+      await setDoc(doc(db,'users',user.uid,'semestres',targetId,'disciplinas',eid),ed);
+      updated++;
+    }else{
+      const id='disc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+      const disc={nome:s.nome,ac:s.ac??'',ap1:s.ap1??'',ap2:s.ap2??'',faltas:0,as:false,sub:false};
+      sems[targetId].discs[id]=disc;
+      await setDoc(doc(db,'users',user.uid,'semestres',targetId,'disciplinas',id),disc);
+      created++;
+    }
   }
 
   _importData=null;
   document.getElementById('import-modal').classList.remove('open');
   animatedDiscs.clear();renderAll();
-  toast(`✅ ${count} disciplinas importadas!`);
+  const msg=created&&updated?`✅ ${created} criadas, ${updated} atualizadas`:created?`✅ ${created} disciplinas importadas!`:`✅ ${updated} disciplinas atualizadas!`;
+  toast(msg);
 };
 document.getElementById('import-modal-close').onclick=()=>document.getElementById('import-modal').classList.remove('open');
 document.getElementById('import-modal').addEventListener('click',e=>{if(e.target===document.getElementById('import-modal'))document.getElementById('import-modal').classList.remove('open');});
