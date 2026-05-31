@@ -2751,41 +2751,12 @@ function build3DScene(){
   const{cr,partialCr,validN,partialN}=calcCR();
   T3.starsOk=cr!==null&&cr>=9&&validN>=4;
 
-  // ── City grid layout ──
-  const COLS=count<=1?1:count<=4?2:3;
-  const ROWS=Math.ceil((count||1)/COLS);
-  const SLOT=2.6, STREET=1.8, STEP=SLOT+STREET; // 4.4 per slot
-  const totalW=(COLS-1)*STEP, totalD=(ROWS-1)*STEP;
-
-  const roadMat=new THREE.MeshBasicMaterial({color:0x06101f,transparent:true,opacity:0.97});
-  const lotMat=new THREE.MeshBasicMaterial({color:0x0d1c38});
-
-  // ── Main avenue along Z axis (connects CR ↔ Stars) ──
-  const crZ=totalD/2+STEP*1.5, stZ=-totalD/2-STEP*1.5;
-  const avLen=crZ-stZ+SLOT*0.6;
-  const av=new THREE.Mesh(new THREE.PlaneGeometry(STREET*0.9,avLen),roadMat);
-  av.rotation.x=-Math.PI/2; av.position.set(0,-1.385,(crZ+stZ)/2);
-  T3.scene.add(av); T3._streets.push(av);
-
-  // ── Cross streets between rows ──
-  for(let r=0;r<ROWS-1;r++){
-    const z=(-totalD/2)+(r+0.5)*STEP;
-    const rd=new THREE.Mesh(new THREE.PlaneGeometry(totalW+SLOT,STREET),roadMat);
-    rd.rotation.x=-Math.PI/2; rd.position.set(0,-1.385,z);
-    T3.scene.add(rd); T3._streets.push(rd);
-  }
-  // ── Side streets between columns ──
-  for(let c=0;c<COLS-1;c++){
-    const x=(-totalW/2)+(c+0.5)*STEP;
-    const rd=new THREE.Mesh(new THREE.PlaneGeometry(STREET,totalD+SLOT),roadMat);
-    rd.rotation.x=-Math.PI/2; rd.position.set(x,-1.385,0);
-    T3.scene.add(rd); T3._streets.push(rd);
-  }
-
-  // ── Subject nodes (grid positions) ──
+  // ── Subject nodes (arc layout) ──
   discs.forEach(([id,d],i)=>{
-    const ci=i%COLS, ri=Math.floor(i/COLS);
-    const x=(-totalW/2)+ci*STEP, z=(-totalD/2)+ri*STEP;
+    const arc=Math.min(Math.PI*1.3,count*0.58+0.4);
+    const angle=count>1?-arc/2+(arc/(count-1))*i:0;
+    const R=Math.min(3.8+count*0.38,7.5);
+    const x=Math.sin(angle)*R, z=Math.cos(angle)*R*0.55;
 
     const a=analyseDisc(d,getTpPts(id));
     const isPartial=a.grade===null&&a.partialGrade!==null&&a.partialGrade>0;
@@ -2801,10 +2772,6 @@ function build3DScene(){
     const mesh=hexPrism3D(h,col);
     const grp=new THREE.Group();
     grp.position.set(x,h/2-1,z);
-
-    // Building lot (raised sidewalk platform)
-    const lot=new THREE.Mesh(new THREE.BoxGeometry(SLOT*0.83,0.07,SLOT*0.83),lotMat);
-    lot.position.set(x,-1.385,z); T3.scene.add(lot); T3._streets.push(lot);
 
     const lblVal=a.grade!==null?fmtG(a.grade):isPartial?'~'+fmtG(a.partialGrade):'—';
     const lblCol=a.type==='ok'?'#f5a623':isPartial?'#38bdf8':a.type==='warn'?'#4ade80':a.type==='bad'||a.type==='disq'?'#f87171':'#7a90c0';
@@ -2823,7 +2790,7 @@ function build3DScene(){
     T3.nodes[id]={group:grp,mesh,baseY:h/2-1,spin:null,disc:d,ana:a,isPartial,pos:{x,y:h/2-1,z}};
   });
 
-  // ── CR node — front of main avenue ──
+  // ── CR node ──
   const crVal=cr!==null?fmtG(cr):partialCr!==null?'~'+fmtG(partialCr):'—';
   const crCol=cr!==null&&cr>=9?0xf5a623:cr!==null||partialCr!==null?0x38bdf8:0x4a6adc;
   const crLblCol=cr!==null&&cr>=9?'#f5a623':'#38bdf8';
@@ -2831,12 +2798,12 @@ function build3DScene(){
   const crMesh=hexPrism3D(crH,crCol); crMesh.scale.set(1.5,1,1.5);
   const crLbl=labelSprite3D('CR',crVal,crLblCol);
   crLbl.position.set(0,crH/2+0.75,0);
-  const crGrp=new THREE.Group(); crGrp.position.set(0,crH/2-1,crZ);
+  const crGrp=new THREE.Group(); crGrp.position.set(0,2,-1);
   crGrp.add(crMesh); crGrp.add(crLbl); T3.scene.add(crGrp);
-  const crP={x:0,y:crH/2-1,z:crZ};
-  T3.nodes['__cr']={group:crGrp,mesh:crMesh,spin:crMesh,baseY:crH/2-1,pos:crP};
+  const crP={x:0,y:2,z:-1};
+  T3.nodes['__cr']={group:crGrp,mesh:crMesh,spin:crMesh,baseY:2,pos:crP};
 
-  // ── Stars node — far end of avenue ──
+  // ── Stars node ──
   const stCol=T3.starsOk?0xf5a623:0x4a6adc;
   const stH=1.8;
   const stMesh=hexPrism3D(stH,stCol); stMesh.scale.set(1.7,1,1.7);
@@ -2847,27 +2814,21 @@ function build3DScene(){
     const halo=new THREE.Mesh(new THREE.TorusGeometry(1.1,0.09,8,40),new THREE.MeshBasicMaterial({color:0xf5a623,transparent:true,opacity:0.7}));
     halo.rotation.x=Math.PI/2; stMesh.add(halo);
   }
-  const stGrp=new THREE.Group(); stGrp.position.set(0,stH/2-1,stZ);
+  const stGrp=new THREE.Group(); stGrp.position.set(0,6,-1);
   stGrp.add(stMesh); stGrp.add(stLbl); T3.scene.add(stGrp);
-  const stP={x:0,y:stH/2-1,z:stZ};
-  T3.nodes['__stars']={group:stGrp,mesh:stMesh,spin:stMesh,baseY:stH/2-1,pos:stP};
+  const stP={x:0,y:6,z:-1};
+  T3.nodes['__stars']={group:stGrp,mesh:stMesh,spin:stMesh,baseY:6,pos:stP};
 
   // ── Connection tubes ──
   discs.forEach(([id])=>{
     const n=T3.nodes[id]; if(!n)return;
     const a=n.ana;
     const lc=a.type==='ok'?0xf5a623:n.isPartial?0x38bdf8:a.type==='warn'?0x4ade80:0x4a6adc;
-    const lo=a.type==='ok'?0.55:a.grade!==null?0.35:n.isPartial?0.3:0.2;
+    const lo=a.type==='ok'?0.7:a.grade!==null?0.5:n.isPartial?0.4:0.3;
     const tb=tube3D(n.pos,crP,lc,lo); T3.scene.add(tb); T3.conns.push(tb);
   });
-  const tb2=tube3D(crP,stP,T3.starsOk?0xf5a623:0x4a6adc,T3.starsOk?0.7:0.3);
+  const tb2=tube3D(crP,stP,T3.starsOk?0xf5a623:0x4a6adc,T3.starsOk?0.8:0.35);
   T3.scene.add(tb2); T3.conns.push(tb2);
-
-  // ── Reset camera to frame the full city ──
-  const span=Math.max(totalW,totalD,6);
-  T3.cam.position.set(span*0.4+2, span*0.55+6, span*0.85+14);
-  T3.ctrl.target.set(0,0,(crZ+stZ)/2*0.15);
-  T3.ctrl.update();
 }
 
 function showOv3d(n){
