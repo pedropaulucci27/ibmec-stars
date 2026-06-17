@@ -522,14 +522,6 @@
           <div class="summary-badge" id="sum-badge">Adicione disciplinas</div>
         </div>
         <div class="summary-msg" id="sum-msg"></div>
-        <div class="proj-row" id="partial-cr-row" style="display:none">
-          <span class="proj-label">CR em andamento (notas parciais)</span>
-          <span class="proj-cr" id="partial-cr">—</span>
-        </div>
-        <div class="proj-row" id="proj-row" style="display:none">
-          <span class="proj-label">CR projetado (meta 9,0 nas restantes)</span>
-          <span class="proj-cr" id="proj-cr">—</span>
-        </div>
         <!-- Critérios integrados como chips -->
         <div class="chk-chips">
           <div class="chk-chip"><span class="chk-icon" id="chk-min">?</span><span id="chk-min-txt">4+ disciplinas</span></div>
@@ -1675,9 +1667,7 @@ function calcCR(){
 function updateSummary(){
   const{cr,projCr,partialCr,disq,reasons,validN,totalN,partialN}=calcCR();
   const card=document.getElementById('summary-card'),badge=document.getElementById('sum-badge'),
-        msg=document.getElementById('sum-msg'),projRow=document.getElementById('proj-row'),
-        projEl=document.getElementById('proj-cr'),crEl=document.getElementById('sum-cr'),
-        partialRow=document.getElementById('partial-cr-row'),partialEl=document.getElementById('partial-cr');
+        msg=document.getElementById('sum-msg'),crEl=document.getElementById('sum-cr');
   setChk('chk-min',validN>=4,validN>0||totalN>0);
   setChk('chk-cr',cr!==null&&cr>=9,cr!==null);
   setChk('chk-disq',!disq,totalN>0);
@@ -1711,8 +1701,6 @@ function updateSummary(){
   const lines=[];
   if(validN<4)lines.push(`Preencha pelo menos <strong>4 disciplinas</strong> completas para calcular o CR.`);
   if(cr!==null&&cr<9)lines.push(`CR atual <strong>${fmtG(cr)}</strong> — meta: <strong>9,00</strong>.`);
-  if(partialCr!==null)lines.push(`CR em andamento <strong>~${fmtG(partialCr)}</strong> (${partialN} disc. incompleta${partialN!==1?'s':''}).`);
-  if(projCr!==null)lines.push(projCr>=9?`CR projetado (meta 9,0) <strong>${fmtG(projCr)}</strong> — no caminho certo! ✓`:`CR projetado (meta 9,0) <strong>${fmtG(projCr)}</strong> — revise as disciplinas.`);
   msg.innerHTML=lines.join('<br>');
 }
 function setChk(id,ok,hasData){
