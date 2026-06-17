@@ -1674,10 +1674,6 @@ function updateSummary(){
   document.getElementById('chk-min-txt').textContent=`Mínimo de 4 disciplinas completas (${validN} completa${validN!==1?'s':''})`;
   document.getElementById('chk-cr-txt').textContent=cr!==null?`CR ≥ 9,00 (atual: ${fmtG(cr)})`:'CR ≥ 9,00';
   animateCR(cr);
-  if(projCr!==null&&totalN>0){projRow.style.display='flex';projEl.textContent=fmtG(projCr);projEl.className='proj-cr '+(projCr>=9?'ok':'bad')}
-  else projRow.style.display='none';
-  if(partialCr!==null&&partialRow&&partialEl){partialRow.style.display='flex';partialEl.textContent='~'+fmtG(partialCr);partialEl.className='proj-cr '+(partialCr>=9?'ok':'bad')}
-  else if(partialRow) partialRow.style.display='none';
   if(!totalN){card.className='summary-card';crEl.className='summary-cr';badge.className='summary-badge';badge.style.display='none';msg.innerHTML='';return}
   badge.style.display='';
   if(disq){card.className='summary-card inapto';crEl.className='summary-cr inapto';badge.className='summary-badge inapto';badge.textContent='Desclassificado';msg.innerHTML=reasons.map(r=>`⚠️ ${r}`).join('<br>');wasApto=false;return}
