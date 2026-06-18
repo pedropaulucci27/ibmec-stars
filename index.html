@@ -1166,6 +1166,7 @@ function renderCourseGrid(){
     btn.onclick=async()=>{
       setCourse(key);closeCourseModal();
       try{await setDoc(doc(db,'users',user.uid,'prefs','settings'),{curso:key},{merge:true})}catch{}
+      updateLeaderboard();
     };
     grid.appendChild(btn);
   });
@@ -1447,6 +1448,7 @@ function openCourseConfirm(){
       document.getElementById('course-confirm-modal').classList.remove('open');
       _needsCourseConfirm=false;
       try{await setDoc(doc(db,'users',user.uid,'prefs','settings'),{curso:key,courseConfirmed:true},{merge:true});}catch{}
+      updateLeaderboard();
     };
     grid.appendChild(btn);
   });
