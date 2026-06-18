@@ -1879,9 +1879,7 @@ async function renderLeaderboard(){
   try{
     const snap=await getDocs(collection(db,'leaderboard'));
     const all=snap.docs.map(d=>({...d.data(),uid:d.id}));
-    const TECH_GROUP=['computacao','eng_comp','ciencia_dados'];
-    const courseGroup=TECH_GROUP.includes(currentCourse)?TECH_GROUP:[currentCourse];
-    const filtered=lbCourseFilter&&currentCourse?all.filter(e=>courseGroup.includes(e.curso)):all;
+    const filtered=lbCourseFilter&&currentCourse?all.filter(e=>e.curso===currentCourse):all;
     filtered.sort((a,b)=>{
       const as=a.cr!==null?a.cr:(a.partialCr!==null?a.partialCr-0.01:-1);
       const bs=b.cr!==null?b.cr:(b.partialCr!==null?b.partialCr-0.01:-1);
@@ -1936,8 +1934,6 @@ document.getElementById('lb-tab-course').onclick=()=>{
   lbCourseFilter=true;
   document.getElementById('lb-tab-course').classList.add('active');
   document.getElementById('lb-tab-all').classList.remove('active');
-  const TECH_GROUP=['computacao','eng_comp','ciencia_dados'];
-  document.getElementById('lb-tab-course').textContent=TECH_GROUP.includes(currentCourse)?'💻 Tecnologia':'🎓 Meu Curso';
   renderLeaderboard();
 };
 document.getElementById('btn-ranking').onclick=openLeaderboard;
