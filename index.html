@@ -812,6 +812,19 @@
   </div>
 </div>
 
+<!-- COURSE CONFIRM MODAL -->
+<div class="lb-modal" id="course-confirm-modal">
+  <div class="lb-sheet" style="gap:14px">
+    <div class="lb-drag"></div>
+    <div style="text-align:center;padding:4px 0 2px">
+      <div style="font-size:36px;margin-bottom:8px">🎓</div>
+      <div style="font-size:17px;font-weight:900;color:var(--text1);margin-bottom:6px">Qual é o seu curso?</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">Selecione seu curso para o ranking funcionar corretamente.<br>Isso aparece apenas uma vez.</div>
+    </div>
+    <div class="course-grid" id="course-confirm-grid"></div>
+  </div>
+</div>
+
 <!-- BOOKMARKLET INSTRUCTIONS MODAL -->
 <div class="lb-modal" id="sia-modal">
   <div class="lb-sheet" style="gap:16px">
@@ -1381,7 +1394,7 @@ onAuthStateChanged(auth,async u=>{
     if(u.photoURL){av.src=u.photoURL;}
     document.getElementById('btn-user-menu').style.display='flex';
     // load prefs; detect new account (no onboarded flag in Firestore)
-    _needsOnboard=false;
+    _needsOnboard=false; _needsCourseConfirm=false;
     try{
       const snap=await getDoc(doc(db,'users',user.uid,'prefs','settings'));
       if(snap.exists()){
@@ -1391,7 +1404,8 @@ onAuthStateChanged(auth,async u=>{
         if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;
         if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;
         if(!pd.onboarded)_needsOnboard=true;
-      }else{_needsOnboard=true;}
+        if(!pd.courseConfirmed)_needsCourseConfirm=true;
+      }else{_needsOnboard=true; _needsCourseConfirm=true;}
     }catch{_needsOnboard=!localStorage.getItem('edu-onboarded');}
     updateCourseBtn();
     initBgParticles();
@@ -1411,8 +1425,33 @@ onAuthStateChanged(auth,async u=>{
     initOneSignalUser();
     checkImportParam();
     if(_needsOnboard) openOnboard();
+    else if(_needsCourseConfirm) setTimeout(openCourseConfirm,400);
   }else{user=null;sems={};semId=null;show('s-login')}
 });
+
+// ─── COURSE CONFIRM ──────────────────────────────────────────────────────────
+let _needsCourseConfirm=false;
+function openCourseConfirm(){
+  const grid=document.getElementById('course-confirm-grid');
+  grid.innerHTML='';
+  Object.entries(COURSES).forEach(([key,c])=>{
+    const btn=document.createElement('button');
+    btn.className='course-opt';
+    const isSel=key===currentCourse;
+    if(isSel){btn.style.borderColor=c.color+'66';btn.style.background=c.color+'18';}
+    const emoji=c.label.split(' ')[0];
+    const name=c.label.split(' ').slice(1).join(' ');
+    btn.innerHTML=`<span class="course-opt-icon">${emoji}</span><span class="course-opt-name">${name}</span>`;
+    btn.onclick=async()=>{
+      setCourse(key);
+      document.getElementById('course-confirm-modal').classList.remove('open');
+      _needsCourseConfirm=false;
+      try{await setDoc(doc(db,'users',user.uid,'prefs','settings'),{curso:key,courseConfirmed:true},{merge:true});}catch{}
+    };
+    grid.appendChild(btn);
+  });
+  document.getElementById('course-confirm-modal').classList.add('open');
+}
 
 // ─── ONBOARDING ──────────────────────────────────────────────────────────────
 let _onboardSlide=0;
@@ -1427,6 +1466,7 @@ function closeOnboard(doTour=false){
   _needsOnboard=false;
   if(user) setDoc(doc(db,'users',user.uid,'prefs','settings'),{onboarded:true},{merge:true}).catch(()=>{});
   if(doTour) setTimeout(startTour,500);
+  else if(_needsCourseConfirm) setTimeout(openCourseConfirm,400);
 }
 function _onboardUpdateUI(){
   document.getElementById('onboard-track').style.transform=`translateX(-${_onboardSlide*33.333}%)`;
