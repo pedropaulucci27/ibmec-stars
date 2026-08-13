@@ -969,11 +969,11 @@ const firebaseConfig = {
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut as fbSignOut}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import{getFirestore,doc,setDoc,getDoc,deleteDoc,collection,getDocs,onSnapshot,serverTimestamp,arrayUnion}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-functions.js";
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app);
 
 // ─── ONESIGNAL ───────────────────────────────────────────────────────────────
 const OS_APP_ID='7bd240f1-a6de-4f04-9078-7d2d521b9b52';
-const OS_REST_KEY='***REMOVED_ONESIGNAL_REST_KEY***';
 window.OneSignalDeferred=window.OneSignalDeferred||[];
 OneSignalDeferred.push(async os=>{
   await os.init({appId:OS_APP_ID,notifyButton:{enable:false},serviceWorkerPath:'/OneSignalSDKWorker.js'});
@@ -1002,20 +1002,9 @@ document.getElementById('um-notif').onclick=()=>{
 };
 async function sendPushViaOneSignal(targetUid,emoji,fromName){
   try{
-    const res=await fetch('https://api.onesignal.com/notifications',{
-      method:'POST',
-      headers:{'Authorization':'Key '+OS_REST_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        app_id:OS_APP_ID,
-        include_aliases:{external_id:[targetUid]},
-        target_channel:'push',
-        headings:{en:'🏙️ Ibmec Stars',pt:'🏙️ Ibmec Stars'},
-        contents:{en:`${emoji} ${fromName} reagiu ao seu prédio!`,pt:`${emoji} ${fromName} reagiu ao seu prédio!`},
-        url:'https://ibmec-stars.web.app'
-      })
-    });
-    const json=await res.json();
-    console.log('[OS] send result:',JSON.stringify(json));
+    const fn=httpsCallable(functions,'sendOneSignalPush');
+    const res=await fn({targetUid,emoji,fromName});
+    console.log('[OS] send result:',JSON.stringify(res.data));
   }catch(e){console.warn('[OS] push error:',e.message);}
 }
 
