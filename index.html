@@ -251,6 +251,26 @@
     .lb-empty{text-align:center;padding:28px 12px;color:var(--text2);font-size:13px;line-height:1.8}
     .lb-pos{text-align:center;font-size:12px;color:var(--text2);padding:10px 0 0}
     .lb-pos strong{color:var(--text1)}
+    .lb-rev-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+    .lb-rev-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:10px}
+    .lb-rev-need-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px;background:rgba(10,18,38,.5);border:1px solid var(--border);margin-bottom:5px;gap:8px}
+    .lb-rev-need-name{font-size:12px;font-weight:600;color:var(--text1);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .lb-rev-need-pts{font-size:12px;font-weight:900;color:var(--gold);text-align:right;white-space:nowrap}
+    .lb-rev-need-hint{font-size:10px;color:var(--text2);text-align:right;white-space:nowrap}
+    .lb-rev-top{text-align:center;font-size:13px;color:var(--text2);padding:8px 0}
+    .lb-rev-sim{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(10,18,38,.6);border:1px solid var(--border)}
+    .lb-rev-sim-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:10px}
+    .lb-rev-inputs{display:flex;gap:10px;margin-bottom:10px}
+    .lb-rev-inp-grp{flex:1;display:flex;flex-direction:column;gap:5px}
+    .lb-rev-inp-label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+    .lb-rev-stepper{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+    .lb-rev-stepper button{background:rgba(255,255,255,.05);border:none;color:var(--text1);font-size:18px;width:34px;height:36px;cursor:pointer;flex-shrink:0;line-height:1}
+    .lb-rev-stepper button:active{background:rgba(255,255,255,.14)}
+    .lb-rev-stepper-val{flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--text1)}
+    .lb-rev-result{font-size:12px;color:var(--text2);line-height:2}
+    .lb-rev-result strong{color:var(--text1)}
+    .lb-rev-result .ok{color:#4ade80}
+    .lb-rev-result .na{color:var(--text2)}
     .lb-filter-tabs{display:flex;gap:5px;background:rgba(10,18,38,.6);border:1px solid var(--border);border-radius:12px;padding:3px}
     .lb-filter-tab{flex:1;padding:6px 12px;border-radius:9px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
     .lb-filter-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628}
@@ -659,6 +679,34 @@
         <div class="lb-loading"><div class="loading-ring" style="width:28px;height:28px"></div><span>Carregando…</span></div>
       </div>
       <div class="lb-pos" id="lb-pos"></div>
+      <div id="lb-rev-section" style="display:none">
+        <div class="lb-rev-section">
+          <div class="lb-rev-title">🔬 Simulador de Revisão</div>
+          <div id="lb-rev-ahead"></div>
+          <div class="lb-rev-sim">
+            <div class="lb-rev-sim-label">Simular ganhos nas revisões</div>
+            <div class="lb-rev-inputs">
+              <div class="lb-rev-inp-grp">
+                <div class="lb-rev-inp-label">AP1 +pts</div>
+                <div class="lb-rev-stepper">
+                  <button id="lb-rev-ap1-dec">−</button>
+                  <span class="lb-rev-stepper-val" id="lb-rev-ap1-val">0.0</span>
+                  <button id="lb-rev-ap1-inc">+</button>
+                </div>
+              </div>
+              <div class="lb-rev-inp-grp">
+                <div class="lb-rev-inp-label">AP2 +pts</div>
+                <div class="lb-rev-stepper">
+                  <button id="lb-rev-ap2-dec">−</button>
+                  <span class="lb-rev-stepper-val" id="lb-rev-ap2-val">0.0</span>
+                  <button id="lb-rev-ap2-inc">+</button>
+                </div>
+              </div>
+            </div>
+            <div id="lb-rev-result"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1934,10 +1982,10 @@ async function renderLeaderboard(){
     title.textContent=lbCourseFilter&&currentCourse?`Top ${currentCourse} (${filtered.length})`:`Top alunos (${filtered.length})`;
     list.innerHTML='';
     const medals=['🥇','🥈','🥉'];
-    let myPos=-1;
+    let myPos=-1,myEntry=null;
     filtered.forEach((e,i)=>{
       const isMe=e.uid===user?.uid;
-      if(isMe)myPos=i+1;
+      if(isMe){myPos=i+1;myEntry=e;}
       const hasCr=e.cr!==null, hasPartial=e.partialCr!==null;
       const crVal=hasCr?fmtG(e.cr):hasPartial?'~'+fmtG(e.partialCr):'—';
       const crCls=hasCr&&e.cr>=9?'ok':hasCr&&e.cr>=7?'prog':hasPartial?'prog':'low';
@@ -1958,11 +2006,83 @@ async function renderLeaderboard(){
     if(!lbPrefs.optin){posEl.innerHTML='Ative a participação para aparecer no ranking!';}
     else if(myPos>0){posEl.innerHTML=myPos<=3?`Você está no <strong>top ${myPos}</strong>! 🎉`:`Você está na posição <strong>#${myPos}</strong>`;}
     else{posEl.innerHTML='Seu CR ainda não foi publicado. Salve uma nota para aparecer.';}
+
+    renderRevSection(filtered,myEntry,myPos);
   }catch(e){
     console.error('lb render',e);
     list.innerHTML='<div class="lb-empty">Erro ao carregar o ranking.<br>Verifique sua conexão.</div>';
   }
 }
+// ─── SIMULADOR DE REVISÃO ────────────────────────────────────────────────────
+function simulateCR(dAp1,dAp2){
+  if(!semId||!sems[semId])return null;
+  const grades=[];
+  for(const[id,d]of Object.entries(sems[semId].discs)){
+    const simD={...d};
+    const ap1=pv(d.ap1),ap2=pv(d.ap2);
+    if(ap1!==null)simD.ap1=Math.min(10,ap1+dAp1);
+    if(ap2!==null)simD.ap2=Math.min(10,ap2+dAp2);
+    const a=analyseDisc(simD,getTpPts(id));
+    if(a.grade!==null)grades.push(a.grade);
+  }
+  if(!grades.length)return null;
+  return Math.floor(grades.reduce((a,b)=>a+b,0)/grades.length*100)/100;
+}
+let _revAp1=0,_revAp2=0,_revFiltered=[],_revMyEntry=null,_revMyPos=-1;
+function _revEffScore(e){return e.cr!==null?e.cr:(e.partialCr!==null?e.partialCr-0.01:-1);}
+function updateRevResult(){
+  const resultEl=document.getElementById('lb-rev-result');
+  if(!resultEl)return;
+  const simCR=simulateCR(_revAp1,_revAp2);
+  const myScore=_revMyEntry?_revEffScore(_revMyEntry):null;
+  if(simCR===null||myScore===null){resultEl.innerHTML='<span>Sem disciplinas completas para simular.</span>';return;}
+  const delta=+(simCR-myScore).toFixed(2);
+  const sign=delta>=0?'+':'';
+  const col=delta>0?'#4ade80':delta<0?'#f87171':'var(--text2)';
+  let html=`CR atual <strong>${fmtG(myScore)}</strong> → simulado <strong>${fmtG(simCR)}</strong> <span style="color:${col}">(${sign}${fmtG(Math.abs(delta))})</span><br>`;
+  if(_revMyPos>1){
+    const ahead=_revFiltered.slice(0,_revMyPos-1).reverse().slice(0,5);
+    ahead.forEach(e=>{
+      const ts=_revEffScore(e);
+      const surpasses=simCR>ts;
+      html+=`<span class="${surpasses?'ok':'na'}">${surpasses?'✓':'✗'} ${e.displayName||'Anônimo'} (CR ${fmtG(e.cr??e.partialCr??0)})</span><br>`;
+    });
+  }
+  resultEl.innerHTML=html;
+}
+function renderRevSection(filtered,myEntry,myPos){
+  const sec=document.getElementById('lb-rev-section');
+  if(!lbPrefs.optin||!myEntry||_revEffScore(myEntry)<=-1){sec.style.display='none';return;}
+  _revFiltered=filtered;_revMyEntry=myEntry;_revMyPos=myPos;
+  sec.style.display='';
+  const aheadEl=document.getElementById('lb-rev-ahead');
+  aheadEl.innerHTML='';
+  if(myPos===1){
+    aheadEl.innerHTML='<div class="lb-rev-top">Você está no topo do ranking! 🏆</div>';
+  }else{
+    const myScore=_revEffScore(myEntry);
+    filtered.slice(0,myPos-1).reverse().slice(0,5).forEach((e,i)=>{
+      const ts=_revEffScore(e);
+      const gapCR=+(ts-myScore+0.01).toFixed(2);
+      const neededPerAp=+(gapCR*2.5).toFixed(1);
+      const rank=myPos-1-i;
+      const rankStr=rank<=3?['🥇','🥈','🥉'][rank-1]:`#${rank}`;
+      const div=document.createElement('div');
+      div.className='lb-rev-need-item';
+      div.innerHTML=`<span class="lb-rev-need-name">${rankStr} ${e.displayName||'Anônimo'}</span><div><div class="lb-rev-need-pts">+${gapCR.toFixed(2)} no CR</div><div class="lb-rev-need-hint">≈ +${neededPerAp} pts/AP por disciplina</div></div>`;
+      aheadEl.appendChild(div);
+    });
+  }
+  _revAp1=0;_revAp2=0;
+  document.getElementById('lb-rev-ap1-val').textContent='0.0';
+  document.getElementById('lb-rev-ap2-val').textContent='0.0';
+  updateRevResult();
+}
+document.getElementById('lb-rev-ap1-dec').onclick=()=>{_revAp1=Math.max(0,+(_revAp1-0.5).toFixed(1));document.getElementById('lb-rev-ap1-val').textContent=_revAp1.toFixed(1);updateRevResult();};
+document.getElementById('lb-rev-ap1-inc').onclick=()=>{_revAp1=Math.min(5,+(_revAp1+0.5).toFixed(1));document.getElementById('lb-rev-ap1-val').textContent=_revAp1.toFixed(1);updateRevResult();};
+document.getElementById('lb-rev-ap2-dec').onclick=()=>{_revAp2=Math.max(0,+(_revAp2-0.5).toFixed(1));document.getElementById('lb-rev-ap2-val').textContent=_revAp2.toFixed(1);updateRevResult();};
+document.getElementById('lb-rev-ap2-inc').onclick=()=>{_revAp2=Math.min(5,+(_revAp2+0.5).toFixed(1));document.getElementById('lb-rev-ap2-val').textContent=_revAp2.toFixed(1);updateRevResult();};
+
 // LB event handlers
 document.getElementById('lb-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeLeaderboard()});
 document.getElementById('lb-close').onclick=closeLeaderboard;
