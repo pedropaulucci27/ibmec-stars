@@ -978,14 +978,21 @@
 <script type="module">
 
 // ─── FIREBASE ────────────────────────────────────────────────────────────────
+// No iOS com o app salvo na tela de início, o popup do Google abre num Safari com armazenamento
+// separado e o login nunca volta pro app. Ali o login vai por redirect, e o authDomain precisa
+// ser o próprio domínio do app (o Hosting serve /__/auth/handler nele), senão o Safari bloqueia
+// o retorno por ser de outro domínio.
+const IOS_STANDALONE=/iphone|ipad|ipod/i.test(navigator.userAgent)&&
+  (window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches);
+const SAME_ORIGIN_AUTH=IOS_STANDALONE&&/^ibmec-stars\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
 const firebaseConfig = {
-  apiKey:"AIzaSyBqwfYeFzUrK9aJzuWB_cn6IfimLHYjsXo",authDomain:"ibmec-stars.firebaseapp.com",
+  apiKey:"AIzaSyBqwfYeFzUrK9aJzuWB_cn6IfimLHYjsXo",authDomain:SAME_ORIGIN_AUTH?location.hostname:"ibmec-stars.firebaseapp.com",
   projectId:"ibmec-stars",storageBucket:"ibmec-stars.firebasestorage.app",
   messagingSenderId:"961950149197",appId:"1:961950149197:web:940f88fcc88c2a80f8ca04",
   measurementId:"G-1250NDBMBR"
 };
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import{getAuth,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut as fbSignOut}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import{getAuth,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,onAuthStateChanged,signOut as fbSignOut}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
 import{getFirestore,doc,setDoc,getDoc,deleteDoc,collection,getDocs,onSnapshot,serverTimestamp,arrayUnion}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-functions.js";
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app);
@@ -1297,8 +1304,14 @@ function show(id){
 }
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
+// Volta do redirect (iOS instalado): o onAuthStateChanged já pega o usuário, aqui só mostra erro.
+if(IOS_STANDALONE)getRedirectResult(auth).catch(e=>{
+  console.warn('[Auth redirect]',e.code,e.message);
+  toast('Erro ao entrar: '+e.code);
+});
 document.getElementById('btn-google-login').onclick=async()=>{
   try{
+    if(IOS_STANDALONE){await signInWithRedirect(auth,new GoogleAuthProvider());return}
     await signInWithPopup(auth,new GoogleAuthProvider());
   }catch(e){
     if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')return;
