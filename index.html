@@ -152,6 +152,13 @@
 
     /* CHECKLIST → chips compactos no summary card */
     .chk-chips{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+    .gt-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+    .gt-label{font-size:12px;color:var(--text2);min-width:0}
+    .gt-input{flex:0 0 auto;width:64px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:15px;font-weight:700;padding:7px 8px;text-align:center;transition:border-color .2s,box-shadow .2s}
+    .gt-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
+    .gt-input.need{border-color:rgba(251,191,36,.55)}
+    .gt-hint{font-size:11px;color:var(--text2);margin-top:6px;line-height:1.5}
+    .gt-hint strong{color:var(--text1)}
     .chk-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);background:rgba(10,18,38,.5);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px;transition:border-color .3s,background .3s}
     .chk-chip:has(.chk-icon.ok){border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.05)}
     .chk-chip:has(.chk-icon.fail){border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)}
@@ -172,6 +179,14 @@
     .tp-input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-bg)}
     .tp-select{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:13px;padding:9px 32px 9px 12px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%237a90c0' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:all .2s}
     .tp-select:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px var(--purple-bg)}
+    /* O select cresce até o nome mais comprido das opções e vazava da tela: agora ocupa só o
+       espaço que sobra na linha e corta o nome com "…". */
+    .tp-select{flex:1 1 auto;width:0;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .tp-label.tp-label-fit{flex:0 0 auto}
+    .orig-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:5px 11px;border-radius:20px;cursor:pointer;touch-action:manipulation;transition:background .2s,border-color .2s,color .2s;white-space:nowrap}
+    .orig-btn[aria-pressed="true"]{background:var(--blue-bg);border:1px solid rgba(56,189,248,.45);color:var(--blue)}
+    .orig-btn[aria-pressed="false"]{background:transparent;border:1px dashed rgba(122,144,192,.5);color:var(--text2)}
+    .orig-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
     .tp-hint{font-size:11px;color:var(--text2);line-height:1.6}
     .tp-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--purple-bg);color:var(--purple);border:1px solid rgba(192,132,252,.3);white-space:nowrap}
 
@@ -331,21 +346,6 @@
     #s-3d{background:#060e1f;overflow:hidden;position:fixed;inset:0;z-index:200}
     #three-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
     .back3d{position:absolute;top:16px;left:16px;z-index:30}
-    .legend3d{position:absolute;top:16px;right:16px;z-index:30;font-size:11px;color:var(--text2);text-align:right;line-height:2;pointer-events:none}
-    .l3-row{display:flex;align-items:center;gap:6px;justify-content:flex-end}
-    .l3-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-    .ov3d{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:30;
-      background:rgba(6,14,31,.96);border:1px solid var(--border);border-radius:18px;
-      padding:18px 28px;min-width:210px;text-align:center;backdrop-filter:var(--glass);
-      box-shadow:var(--shadow);display:none;transition:opacity .25s}
-    .ov3d.show{display:block}
-    .ov3d-name{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
-    .ov3d-grade{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums;transition:color .3s}
-    .ov3d-sub{font-size:12px;color:var(--text2);margin-top:6px}
-    .tip3d{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);color:var(--text2);font-size:12px;pointer-events:none;white-space:nowrap;opacity:.55}
-    .mode3d-tabs{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:5px;background:rgba(6,14,31,.85);border:1px solid var(--border);border-radius:20px;padding:4px;backdrop-filter:blur(16px)}
-    .mode3d-tab{padding:5px 14px;border-radius:14px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
-    .mode3d-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628}
     .city-tip{position:absolute;top:106px;left:50%;transform:translateX(-50%);color:var(--text2);font-size:11px;pointer-events:none;white-space:nowrap;opacity:.5;z-index:30}
     .city-bar{position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:31;display:flex;align-items:center;gap:6px;background:rgba(6,14,31,.85);border:1px solid var(--border);border-radius:14px;padding:4px;backdrop-filter:blur(16px);max-width:calc(100% - 24px)}
     .city-sel{background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:12px;font-weight:600;padding:6px 8px;cursor:pointer;min-width:0}
@@ -469,8 +469,17 @@
     /* GUIDED TOUR */
     #tour-wrap{position:fixed;inset:0;z-index:500;opacity:0;pointer-events:none;transition:opacity .3s}
     #tour-wrap.active{opacity:1;pointer-events:all}
-    #tour-hl{position:fixed;border-radius:12px;border:2px solid rgba(245,166,35,.9);box-shadow:0 0 0 9999px rgba(0,0,0,.75),0 0 0 5px rgba(245,166,35,.12),0 0 28px rgba(245,166,35,.5);pointer-events:none;z-index:501;transition:top .38s cubic-bezier(.34,1.56,.64,1),left .38s cubic-bezier(.34,1.56,.64,1),width .38s cubic-bezier(.34,1.56,.64,1),height .38s cubic-bezier(.34,1.56,.64,1)}
-    #tour-card{position:fixed;z-index:503;background:var(--bg1);border:1px solid rgba(245,166,35,.4);border-radius:18px;padding:16px 18px 18px;max-width:300px;box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 20px rgba(245,166,35,.12);transition:top .38s cubic-bezier(.34,1.56,.64,1),left .38s cubic-bezier(.34,1.56,.64,1)}
+    /* Moldura e cartão são posicionados por JS a cada quadro (seguem o item mesmo durante a
+       rolagem), por isso sem transition de posição aqui. */
+    #tour-hl{position:fixed;top:0;left:0;border-radius:12px;border:2px solid rgba(245,166,35,.9);box-shadow:0 0 0 9999px rgba(0,0,0,.75),0 0 0 5px rgba(245,166,35,.12),0 0 28px rgba(245,166,35,.5);pointer-events:none;z-index:501;box-sizing:border-box;will-change:transform,width,height}
+    #tour-card{position:fixed;top:0;left:0;z-index:503;background:var(--bg1);border:1px solid rgba(245,166,35,.4);border-radius:18px;padding:16px 18px 18px;max-width:300px;box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 20px rgba(245,166,35,.12);will-change:transform}
+    /* Durante o tutorial a página não rola nem recebe toques: só o cartão do tutorial responde. */
+    #tour-wrap{touch-action:none;overscroll-behavior:none}
+    /* Trava no html. O body volta a overflow visível: com o html travado, o overflow-x:hidden
+       do body deixaria de ir pra janela e o body viraria a área de rolagem, soltando o
+       cabeçalho fixo (sticky). O html já corta tudo, então não aparece rolagem lateral. */
+    html.tour-lock{overflow:hidden;overscroll-behavior:none}
+    html.tour-lock body{overflow:visible}
     .tc-prog-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
     .tc-step{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);white-space:nowrap}
     .tc-prog{flex:1;height:3px;background:rgba(80,110,180,.2);border-radius:2px;overflow:hidden}
@@ -597,10 +606,15 @@
         <div class="summary-msg" id="sum-msg"></div>
         <!-- Critérios integrados como chips -->
         <div class="chk-chips">
-          <div class="chk-chip"><span class="chk-icon" id="chk-min">?</span><span id="chk-min-txt">4+ disciplinas</span></div>
+          <div class="chk-chip"><span class="chk-icon" id="chk-min">?</span><span id="chk-min-txt">Período original ≥ 75%</span></div>
           <div class="chk-chip"><span class="chk-icon" id="chk-cr">?</span><span id="chk-cr-txt">CR ≥ 9,0</span></div>
           <div class="chk-chip"><span class="chk-icon" id="chk-disq">?</span><span id="chk-disq-txt">Sem AS/Sub</span></div>
         </div>
+        <div class="gt-row">
+          <label class="gt-label" for="grade-total">Quantas disciplinas o seu <strong>período original</strong> tem na grade?</label>
+          <input type="number" class="gt-input" id="grade-total" min="1" max="20" step="1" inputmode="numeric" placeholder="—" aria-describedby="grade-total-hint">
+        </div>
+        <div class="gt-hint" id="grade-total-hint"></div>
         <button class="share-wpp-btn" id="btn-share-wpp">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Compartilhar meu CR
@@ -619,7 +633,7 @@
             <input type="number" class="tp-input" id="tp-nota" min="0" max="10" step="0.1" placeholder="—">
           </div>
           <div class="tp-row">
-            <span class="tp-label">Aplicar em</span>
+            <span class="tp-label tp-label-fit">Aplicar em</span>
             <select class="tp-select" id="tp-select"><option value="">Nenhuma disciplina</option></select>
           </div>
           <p class="tp-hint">O TP vale até <strong>10 pts</strong> na nota final da disciplina escolhida. Realizado 1× por semestre.</p>
@@ -646,17 +660,6 @@
 
 <div id="s-3d" class="screen">
   <button class="btn btn-ghost btn-sm back3d" id="btn-back3d">← Voltar</button>
-  <div class="mode3d-tabs">
-    <button class="mode3d-tab active" id="tab-3d-tree">🌐 Meu Mapa</button>
-    <button class="mode3d-tab" id="tab-3d-city">🏙️ Cidade</button>
-  </div>
-  <div class="legend3d" id="legend3d">
-    <div class="l3-row"><span>Stars ≥9,0</span><span class="l3-dot" style="background:#f5a623"></span></div>
-    <div class="l3-row"><span>Aprovado</span><span class="l3-dot" style="background:#4ade80"></span></div>
-    <div class="l3-row"><span>Reprovado</span><span class="l3-dot" style="background:#f87171"></span></div>
-    <div class="l3-row"><span>Parcial</span><span class="l3-dot" style="background:#38bdf8"></span></div>
-    <div class="l3-row"><span>Sem nota</span><span class="l3-dot" style="background:#1a3060"></span></div>
-  </div>
   <div class="city-bar" id="city-bar" style="display:none">
     <select class="city-sel" id="city-year" aria-label="Ano"></select>
     <select class="city-sel" id="city-sem" aria-label="Semestre">
@@ -700,12 +703,6 @@
     <div class="loading-ring"></div>
     <p style="color:#7a90c0;font-size:13px;margin:0">Carregando cena 3D…</p>
   </div>
-  <div class="ov3d" id="ov3d">
-    <div class="ov3d-name" id="ov3d-name"></div>
-    <div class="ov3d-grade" id="ov3d-grade">—</div>
-    <div class="ov3d-sub" id="ov3d-sub"></div>
-  </div>
-  <p class="tip3d" id="tip3d">Toque num nó para ver detalhes · arraste para girar</p>
 </div>
 
 <div class="lb-modal" id="lb-modal">
@@ -792,7 +789,7 @@
 </div>
 
 <div id="tour-wrap">
-  <div id="tour-hl" style="top:50%;left:50%;width:0;height:0"></div>
+  <div id="tour-hl"></div>
   <div id="tour-card">
     <div class="tc-prog-row">
       <span class="tc-step" id="tc-step">1 / 8</span>
@@ -1588,8 +1585,8 @@ document.getElementById('import-confirm').onclick=async()=>{
     targetId=Object.keys(sems).find(id=>semPeriod(sems[id].name)===cp);
     if(!targetId){
       targetId='sem_'+Date.now();
-      sems[targetId]={name,tp_nota:'',tp_disc:'',discs:{}};
-      await setDoc(doc(db,'users',user.uid,'semestres',targetId),{name,tp_nota:'',tp_disc:''});
+      sems[targetId]={name,tp_nota:'',tp_disc:'',grade_total:'',discs:{}};
+      await setDoc(doc(db,'users',user.uid,'semestres',targetId),{name,tp_nota:'',tp_disc:'',grade_total:''});
     }
   }
 
@@ -1609,7 +1606,7 @@ document.getElementById('import-confirm').onclick=async()=>{
       updated++;
     }else{
       const id='disc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-      const disc={nome:s.nome,ac:s.ac??'',ap1:s.ap1??'',ap2:s.ap2??'',faltas:0,as:false,sub:false};
+      const disc={nome:s.nome,ac:s.ac??'',ap1:s.ap1??'',ap2:s.ap2??'',faltas:0,as:false,sub:false,orig:true};
       sems[targetId].discs[id]=disc;
       await setDoc(doc(db,'users',user.uid,'semestres',targetId,'disciplinas',id),disc);
       created++;
@@ -1747,11 +1744,11 @@ const TOUR_DEF=[
   {sel:'#btn-course',title:'🎓 Curso',text:'Toque aqui para selecionar seu curso. Os símbolos no fundo e as cores do app se adaptam à sua área.',pos:'bottom'},
   {sel:'main>.card:first-child',title:'📅 Semestres',text:'Crie um semestre (ex: "25.1") para organizar suas disciplinas. Você pode ter vários e alternar entre eles livremente.',pos:'bottom'},
   {sel:'#summary-card',title:'📊 CR em Tempo Real',text:'O Coeficiente de Rendimento é calculado aqui automaticamente conforme você lança as notas. Inclui também uma projeção do que pode acontecer com as notas que faltam.',pos:'bottom'},
-  {sel:'.chk-chips',title:'⭐ Critérios Ibmec Stars',text:'Esses indicadores mostram em tempo real o que falta para você ser elegível:\n• 4+ disciplinas completas\n• CR ≥ 9,0\n• Sem dependências (AS ou Sub)',pos:'top'},
+  {sel:'.chk-chips',title:'⭐ Critérios Ibmec Stars',text:'Esses indicadores mostram em tempo real o que falta para você ser elegível:\n• Pelo menos 75% das disciplinas do seu período original (marque em cada disciplina se ela é do período)\n• CR ≥ 9,0 com todas as notas fechadas\n• Sem dependências (AS ou Sub)',pos:'top'},
   {sel:'#btn-add-subj',title:'📚 Adicionar Disciplinas',text:'Toque aqui para cadastrar cada matéria do semestre. Você nomeia como quiser (ex: "Cálculo I") e depois lança as notas.',pos:'top'},
   {sel:'.grade-grid',title:'📝 Lançar Notas',text:'Cada disciplina tem 3 campos:\n• AC: Avaliação Continuada (0 a 20 pts)\n• AP1: 1ª Prova (0 a 10 pts)\n• AP2: 2ª Prova (0 a 10 pts)\n\nO app mostra o que você precisa tirar para passar e para os Stars.',pos:'top'},
   {sel:'#btn-user-menu',title:'📥 Importar do SIA',text:'Quer preencher as notas sem digitar?\n\nToque no seu avatar → "Importar notas do SIA" para buscar as notas direto do portal sia.ibmec.br com um clique.',pos:'bottom'},
-  {sel:'#btn-3d',title:'🏙️ Visualização 3D',text:'Veja suas notas como uma cidade de LEGO ou árvore de conhecimento. Cada prédio representa uma disciplina, toque para ver detalhes.',pos:'bottom'},
+  {sel:'#btn-3d',title:'🏙️ Visualização 3D',text:'Veja a cidade dos alunos do ranking: cada prédio é uma disciplina, e quanto maior a nota, maior o prédio. Toque num lote para ver detalhes ou dirija pela cidade.',pos:'bottom'},
   {sel:'#btn-ranking',title:'🏆 Ranking',text:'Compare seu CR com outros alunos do Ibmec de forma anônima ou exibindo seu nome.',pos:'bottom'},
 ];
 let _tourActive=[],_tourIdx=0;
@@ -1764,9 +1761,14 @@ function startTour(){
   });
   if(!_tourActive.length)return;
   _tourIdx=0;
+  document.documentElement.classList.add('tour-lock');
   document.getElementById('tour-wrap').classList.add('active');
+  _tourBox=null;_tourCardPos=null; // primeira posição entra sem animar
   _tourGo();
+  _tourFollow();
 }
+const tourOn=()=>document.getElementById('tour-wrap').classList.contains('active');
+let _tourEl=null,_tourPref='bottom',_tourBox=null,_tourCardPos=null,_tourRAF=null;
 function _tourGo(){
   const step=_tourActive[_tourIdx];
   const el=document.querySelector(step.sel);
@@ -1777,30 +1779,82 @@ function _tourGo(){
   document.getElementById('tc-title').textContent=step.title;
   document.getElementById('tc-text').textContent=step.text;
   document.getElementById('tc-next').textContent=_tourIdx===tot-1?'Concluir ✓':'Próximo →';
-  el.scrollIntoView({behavior:'smooth',block:'center'});
-  setTimeout(()=>_tourPos(el,step.pos),380);
+  _tourEl=el;_tourPref=step.pos;
+  // Rola a página só o necessário pra deixar o item visível abaixo do cabeçalho fixo,
+  // com espaço pro cartão. Itens do próprio cabeçalho já estão sempre visíveis.
+  if(!el.closest('header')){
+    const r=el.getBoundingClientRect(),hh=document.querySelector('header')?.offsetHeight||0;
+    const free=innerHeight-hh;
+    const target=r.height<free*0.55
+      ?scrollY+r.top-hh-(free-r.height)/2   // cabe com folga: centraliza na área visível
+      :scrollY+r.top-hh-16;                 // item grande: alinha o topo logo abaixo do cabeçalho
+    window.scrollTo({top:Math.max(0,target),behavior:REDUCED_MOTION?'auto':'smooth'});
+  }
+  document.getElementById('tc-next').focus({preventScroll:true});
 }
-function _tourPos(el,pref){
-  const r=el.getBoundingClientRect(),P=10,G=16;
+// A cada quadro: mede o item e leva moldura e cartão até ele, com suavização e sem passar
+// do ponto. Assim a moldura fica sempre em cima do item (durante a rolagem, ao girar o
+// celular, se algo muda de tamanho) e nunca sai da tela.
+function _tourFollow(){
+  if(!tourOn()){_tourRAF=null;return}
+  _tourRAF=requestAnimationFrame(_tourFollow);
+  if(!_tourEl?.isConnected)return;
+  const r=_tourEl.getBoundingClientRect(),P=8,M=6,G=14,vw=innerWidth,vh=innerHeight;
+  // alvo da moldura: item + margem, recortado nas bordas da tela
+  const t={x:Math.max(M,r.left-P),y:Math.max(M,r.top-P)};
+  t.w=Math.min(vw-M,r.right+P)-t.x;t.h=Math.min(vh-M,r.bottom+P)-t.y;
+  const k=REDUCED_MOTION?1:0.3;
+  const b=_tourBox||(_tourBox={...t});
+  for(const key of['x','y','w','h']){b[key]+=(t[key]-b[key])*k;if(Math.abs(t[key]-b[key])<0.3)b[key]=t[key]}
   const hl=document.getElementById('tour-hl');
+  hl.style.transform=`translate(${b.x}px,${b.y}px)`;hl.style.width=b.w+'px';hl.style.height=b.h+'px';
+  // cartão: abaixo ou acima da moldura (onde couber), dentro da tela
   const card=document.getElementById('tour-card');
-  hl.style.top=(r.top-P)+'px';hl.style.left=(r.left-P)+'px';
-  hl.style.width=(r.width+P*2)+'px';hl.style.height=(r.height+P*2)+'px';
-  const cW=Math.min(300,window.innerWidth-32);
+  const cW=Math.min(300,vw-32);card.style.width=cW+'px';
   const cH=card.offsetHeight||160;
-  let top=pref==='top'&&(r.top-P-G-cH)>=8?r.top-P-G-cH:r.bottom+P+G;
-  if(top+cH>window.innerHeight-8)top=r.top-P-G-cH;
-  if(top<8)top=r.bottom+P+G;
-  top=Math.max(8,Math.min(top,window.innerHeight-cH-8));
-  let left=r.left+r.width/2-cW/2;
-  left=Math.max(16,Math.min(left,window.innerWidth-cW-16));
-  card.style.top=top+'px';card.style.left=left+'px';card.style.width=cW+'px';
+  const below=t.y+t.h+G,above=t.y-G-cH;
+  let top=_tourPref==='top'&&above>=8?above:below;
+  if(top+cH>vh-8)top=above>=8?above:vh-cH-8;
+  top=Math.max(8,Math.min(top,vh-cH-8));
+  const left=Math.max(16,Math.min(t.x+t.w/2-cW/2,vw-cW-16));
+  const c=_tourCardPos||(_tourCardPos={x:left,y:top});
+  c.x+=(left-c.x)*k;c.y+=(top-c.y)*k;
+  card.style.transform=`translate(${c.x}px,${c.y}px)`;
+}
+function _tourStep(d){
+  const i=_tourIdx+d;
+  if(i<0)return;
+  if(i>=_tourActive.length){endTour();return}
+  _tourIdx=i;_tourGo();
 }
 function endTour(){
   document.getElementById('tour-wrap').classList.remove('active');
+  document.documentElement.classList.remove('tour-lock');
+  _tourEl=null;
 }
-document.getElementById('tc-next').onclick=()=>{if(_tourIdx<_tourActive.length-1){_tourIdx++;_tourGo();}else endTour();};
+document.getElementById('tc-next').onclick=()=>_tourStep(1);
 document.getElementById('tc-skip').onclick=endTour;
+// Trava de interação: sem rolar a página (dedo, roda, teclado) enquanto o tutorial está aberto.
+// Os listeners ficam só na camada do tutorial (que cobre a tela toda quando ativa), pra não
+// deixar a rolagem normal do app esperando JS.
+['wheel','touchmove'].forEach(type=>document.getElementById('tour-wrap').addEventListener(type,e=>e.preventDefault(),{passive:false}));
+document.addEventListener('keydown',e=>{
+  if(!tourOn())return;
+  const k=e.key;
+  if(k==='Escape'){e.preventDefault();endTour();return}
+  if(k==='ArrowRight'){e.preventDefault();_tourStep(1);return}
+  if(k==='ArrowLeft'){e.preventDefault();_tourStep(-1);return}
+  // Tab fica preso entre "Encerrar tour" e "Próximo"
+  if(k==='Tab'){
+    e.preventDefault();
+    const skip=document.getElementById('tc-skip'),next=document.getElementById('tc-next');
+    (document.activeElement===next?skip:next).focus({preventScroll:true});
+    return;
+  }
+  // teclas que rolam a página (espaço só vale como "clicar" num botão do tutorial)
+  const onBtn=e.target.closest?.('#tour-card button');
+  if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End'].includes(k)||(k===' '&&!onBtn))e.preventDefault();
+});
 
 // ─── FIRESTORE ───────────────────────────────────────────────────────────────
 // Busca todos os semestres e as disciplinas de cada um em paralelo (antes era um por vez).
@@ -1808,7 +1862,7 @@ async function fetchSems(fromCache){
   const get=fromCache?getDocsFromCache:getDocs;
   const ss=await get(collection(db,'users',user.uid,'semestres'));
   const out={};
-  for(const sd of ss.docs){const d=sd.data();out[sd.id]={name:d.name??sd.id,tp_nota:d.tp_nota??'',tp_disc:d.tp_disc??'',discs:{}}}
+  for(const sd of ss.docs){const d=sd.data();out[sd.id]={name:d.name??sd.id,tp_nota:d.tp_nota??'',tp_disc:d.tp_disc??'',grade_total:d.grade_total??'',discs:{}}}
   await Promise.all(ss.docs.map(async sd=>{
     const ds=await get(collection(db,'users',user.uid,'semestres',sd.id,'disciplinas'));
     ds.forEach(dd=>{out[sd.id].discs[dd.id]=dd.data()});
@@ -1820,7 +1874,7 @@ let _savedSnap={};
 function snapSems(data){
   _savedSnap={};
   for(const[sid,s]of Object.entries(data)){
-    _savedSnap[sid]=JSON.stringify({name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc});
+    _savedSnap[sid]=JSON.stringify({name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc,grade_total:s.grade_total??''});
     for(const[id,d]of Object.entries(s.discs))_savedSnap[sid+'/'+id]=JSON.stringify(d);
   }
 }
@@ -1853,7 +1907,7 @@ async function loadData(){
 async function saveSem(){
   if(!user||!semId||!sems[semId])return;
   const sid=semId,s=sems[sid],batch=writeBatch(db),done={};
-  const semJson=JSON.stringify({name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc});
+  const semJson=JSON.stringify({name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc,grade_total:s.grade_total??''});
   if(_savedSnap[sid]!==semJson){batch.set(doc(db,'users',user.uid,'semestres',sid),JSON.parse(semJson));done[sid]=semJson}
   for(const[id,disc]of Object.entries(s.discs)){
     const j=JSON.stringify(disc);
@@ -1919,8 +1973,8 @@ function closeSemPanel(){semAddWrap.style.display='none';semNameInput.value='';s
 async function addSem(){
   const name=validateSemInput();
   if(!name){gsap.fromTo(semNameInput,{x:-5},{x:0,duration:.35,ease:'elastic.out(1,.3)'});semNameInput.focus();return}
-  const id='sem_'+Date.now();sems[id]={name,tp_nota:'',tp_disc:'',discs:{}};semId=id;
-  await setDoc(doc(db,'users',user.uid,'semestres',id),{name,tp_nota:'',tp_disc:''});
+  const id='sem_'+Date.now();sems[id]={name,tp_nota:'',tp_disc:'',grade_total:'',discs:{}};semId=id;
+  await setDoc(doc(db,'users',user.uid,'semestres',id),{name,tp_nota:'',tp_disc:'',grade_total:''});
   closeSemPanel();renderAll();toast(`Semestre "${name}" criado!`);
 }
 async function deleteSem(id,e){
@@ -1957,7 +2011,7 @@ document.getElementById('tp-toggle').onclick=()=>{
 };
 function addDisc(){
   if(!semId)return;const id='disc_'+Date.now();
-  sems[semId].discs[id]={nome:'',ac:'',ap1:'',ap2:'',faltas:0,as:false,sub:false};
+  sems[semId].discs[id]={nome:'',ac:'',ap1:'',ap2:'',faltas:0,as:false,sub:false,orig:true};
   renderDiscs();updateTpSelect();queueSave();setTimeout(()=>document.getElementById('n_'+id)?.focus(),50);
 }
 async function removeDisc(id,cardEl){
@@ -2042,15 +2096,43 @@ function calcCR(sid=semId){
   return{cr,projCr,partialCr,disq:hasDisq,reasons,validN:vN,totalN:Object.keys(sems[sid].discs).length,partialN,allHaveBase};
 }
 
+// ─── PERÍODO ORIGINAL (MATRÍCULA MÍNIMA) ─────────────────────────────────────
+// Regra do Stars: estar matriculado em pelo menos 75% das disciplinas do seu período original.
+// O aluno informa quantas disciplinas o período tem na grade e marca, em cada disciplina,
+// se ela é do período original (atrasadas/adiantadas não contam). Sem marcação = do período.
+const isOrig=d=>d.orig!==false;
+function enrollInfo(sid=semId){
+  const s=sid&&sems[sid];
+  const total=s?parseInt(s.grade_total)||0:0;
+  const n=s?Object.values(s.discs).filter(isOrig).length:0;
+  const need=total?Math.ceil(total*0.75):0;
+  return{total,n,need,known:total>0,ok:total>0&&n>=need};
+}
+// Apto = matrícula ok + CR ≥ 9 com TODAS as disciplinas matriculadas com nota fechada.
+function starsEligible(c,en){return en.ok&&c.cr!==null&&c.cr>=9&&c.validN===c.totalN}
+document.getElementById('grade-total').addEventListener('input',function(){
+  if(!semId)return;
+  const v=parseInt(this.value);
+  sems[semId].grade_total=isNaN(v)?'':Math.min(20,Math.max(1,v));
+  updateSummary();queueSave();
+});
+
 // ─── SUMMARY ─────────────────────────────────────────────────────────────────
 function updateSummary(){
-  const{cr,projCr,partialCr,disq,reasons,validN,totalN,partialN}=calcCR();
+  const c=calcCR(),{cr,projCr,partialCr,disq,reasons,validN,totalN,partialN}=c;
+  const en=enrollInfo();
   const card=document.getElementById('summary-card'),badge=document.getElementById('sum-badge'),
         msg=document.getElementById('sum-msg'),crEl=document.getElementById('sum-cr');
-  setChk('chk-min',validN>=4,validN>0||totalN>0);
+  setChk('chk-min',en.ok,en.known);
   setChk('chk-cr',cr!==null&&cr>=9,cr!==null);
   setChk('chk-disq',!disq,totalN>0);
-  document.getElementById('chk-min-txt').textContent=`Mínimo de 4 disciplinas completas (${validN} completa${validN!==1?'s':''})`;
+  document.getElementById('chk-min-txt').textContent=en.known?`Período original ≥ 75% (${en.n} de ${en.total})`:'Período original ≥ 75%';
+  // Campo do total da grade + dica do que falta
+  const gt=document.getElementById('grade-total'),gtHint=document.getElementById('grade-total-hint');
+  if(document.activeElement!==gt)gt.value=semId&&sems[semId]?.grade_total!==undefined?sems[semId].grade_total:'';
+  gt.classList.toggle('need',!en.known);
+  gtHint.innerHTML=!en.known?'Veja na grade do seu curso quantas disciplinas o seu período tem. Depois marque, em cada disciplina abaixo, se ela é do período original.'
+    :`Para concorrer ao Stars, pelo menos <strong>${en.need} de ${en.total}</strong> (75%) precisam ser do período original. Você tem <strong>${en.n}</strong>${en.ok?' ✓':'.'}`;
   document.getElementById('chk-cr-txt').textContent=cr!==null?`CR ≥ 9,00 (atual: ${fmtG(cr)})`:'CR ≥ 9,00';
   // Parcial é só informativa: os chk-* acima continuam exigindo notas fechadas.
   const showingPartial=cr===null&&partialCr!==null;
@@ -2058,7 +2140,7 @@ function updateSummary(){
   if(!totalN){card.className='summary-card';crEl.className='summary-cr';badge.className='summary-badge';badge.style.display='none';msg.innerHTML='';return}
   badge.style.display='';
   if(disq){card.className='summary-card inapto';crEl.className='summary-cr inapto';badge.className='summary-badge inapto';badge.textContent='Desclassificado';msg.innerHTML=reasons.map(r=>`⚠️ ${r}`).join('<br>');wasApto=false;return}
-  if(cr!==null&&cr>=9&&validN>=4){
+  if(starsEligible(c,en)){
     card.className='summary-card apto';crEl.className='summary-cr apto';badge.className='summary-badge apto';badge.textContent='Apto para concorrer! 🏆';
     msg.innerHTML='<strong>Parabéns!</strong> Você está elegível para o Ibmec Stars 🏆';
     if(!wasApto){
@@ -2076,8 +2158,10 @@ function updateSummary(){
   wasApto=false;
   card.className='summary-card progress';crEl.className='summary-cr progress';badge.className='summary-badge progress';badge.textContent='Em andamento';
   const lines=[];
+  if(!en.known)lines.push(`Informe abaixo quantas disciplinas o seu período original tem na grade.`);
+  else if(!en.ok)lines.push(`Você tem <strong>${en.n}</strong> disciplina${en.n!==1?'s':''} do período original. Precisa de pelo menos <strong>${en.need} de ${en.total}</strong> (75%).`);
   if(showingPartial)lines.push(`Média parcial <strong>~${fmtG(partialCr)}</strong> com AC e AP1. Lance as AP2 para fechar o CR.`);
-  else if(validN<4)lines.push(`Preencha pelo menos <strong>4 disciplinas</strong> completas para calcular o CR.`);
+  else if(validN<totalN)lines.push(`Faltam notas em <strong>${totalN-validN} disciplina${totalN-validN!==1?'s':''}</strong> para fechar o CR.`);
   if(cr!==null&&cr<9)lines.push(`CR atual <strong>${fmtG(cr)}</strong>, meta: <strong>9,00</strong>.`);
   msg.innerHTML=lines.join('<br>');
 }
@@ -2167,12 +2251,17 @@ function renderDiscs(){
       <div class="grade-grid${tpPts>0?' has-tp':''}">
         ${buildSlotHTML('ac',id,d,a)}${buildSlotHTML('ap1',id,d,a)}${buildSlotHTML('ap2',id,d,a)}${tpSlot}
       </div>
-      <div class="subj-foot">
-        <label class="f-label"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Faltas<input type="number" class="f-input" id="f_${id}" min="0" value="${d.faltas??0}"></label>
-        ${gradePill}
-      </div>`;
+      <div class="subj-foot"><button type="button" class="orig-btn" id="o_${id}" aria-pressed="${isOrig(d)}"></button>${gradePill}</div>`;
     card.querySelector(`#n_${id}`).oninput=function(){sems[semId].discs[id].nome=this.value;updateTpSelect();queueSave()};
-    card.querySelector(`#f_${id}`).oninput=function(){sems[semId].discs[id].faltas=parseInt(this.value)||0;queueSave()};
+    // Do período original? Conta pros 75% do Stars. Toque alterna.
+    const ob=card.querySelector(`#o_${id}`);
+    const paintOrig=()=>{const on=isOrig(sems[semId].discs[id]);ob.setAttribute('aria-pressed',on);ob.innerHTML=on?'✓ Do período original':'↪ Fora do período original';ob.title=on?'Conta para os 75% do Stars. Toque se ela for de outro período.':'Não conta para os 75%. Toque se ela for do seu período original.'};
+    paintOrig();
+    ob.onclick=()=>{
+      const disc=sems[semId].discs[id];disc.orig=!isOrig(disc);
+      paintOrig();updateSummary();queueSave();
+      gsap.fromTo(ob,{scale:.92},{scale:1,duration:.3,ease:'back.out(2.5)'});
+    };
     const wire=(f,max)=>card.querySelector(`#${f}_${id}`).oninput=function(){
       const v=parseFloat(this.value);sems[semId].discs[id][f]=isNaN(v)?'':Math.min(max,Math.max(0,v));
       this.classList.toggle('has-val',sems[semId].discs[id][f]!=='');
@@ -2532,11 +2621,7 @@ document.getElementById('btn-back3d').onclick=()=>{exitFPSMode();show('s-app');}
 function open3D(){
   show('s-3d');
   if(!T3){ if(!_3dIniting) init3D(); }
-  else {
-    if(T3.cityMode) switchToTreeMode();
-    else { build3DScene(); if(!T3.running) loop3D(); }
-  }
-  updateModeTabsUI();
+  else { if(!T3.running) loop3D(); switchToCityMode(); } // recarrega a cidade com dados novos
 }
 
 async function init3D(){
@@ -2551,7 +2636,6 @@ async function init3D(){
     const W=innerWidth, H=innerHeight;
 
     const scene=new THREE.Scene();
-    scene.fog=new THREE.FogExp2(0x060e1f,0.016);
 
     const cam=new THREE.PerspectiveCamera(52,W/H,0.1,200);
     cam.position.set(0,8,20);
@@ -2565,7 +2649,6 @@ async function init3D(){
 
     const ctrl=new OrbitControls(cam,rend.domElement);
     ctrl.enableDamping=true; ctrl.dampingFactor=0.06;
-    ctrl.autoRotate=true; ctrl.autoRotateSpeed=0.65;
     ctrl.maxPolarAngle=Math.PI*0.62;
     ctrl.minDistance=6; ctrl.maxDistance=38;
     ctrl.target.set(0,3,0);
@@ -2575,14 +2658,6 @@ async function init3D(){
     const lG=new THREE.PointLight(0xf5a623,7,40); lG.position.set(0,14,0); scene.add(lG);
     const lB=new THREE.PointLight(0x38bdf8,4,25); lB.position.set(-8,5,6); scene.add(lB);
     const lP=new THREE.PointLight(0xc084fc,2.5,20); lP.position.set(8,3,-5); scene.add(lP);
-
-    // Floor plane (subtle glow so the grid has a base)
-    const fp=new THREE.Mesh(new THREE.PlaneGeometry(50,50),new THREE.MeshBasicMaterial({color:0x080f22,transparent:true,opacity:0.85}));
-    fp.rotation.x=-Math.PI/2; fp.position.y=-1.42; scene.add(fp);
-
-    // Floor grid (brighter lines)
-    const treeGrid=new THREE.GridHelper(36,30,0x1e3268,0x142244);
-    treeGrid.position.y=-1.4; scene.add(treeGrid);
 
     // Background star field (brighter & denser)
     const sg=new THREE.BufferGeometry();
@@ -2595,7 +2670,7 @@ async function init3D(){
     const ray=new THREE.Raycaster();
     const mouse=new THREE.Vector2();
 
-    T3={scene,cam,rend,ctrl,clock,nodes:{},conns:[],running:false,treeGrid,fp,cityMode:false,dirty:true};
+    T3={scene,cam,rend,ctrl,clock,running:false,cityMode:true,dirty:true};
     // Cidade só redesenha quando a câmera mexe (o OrbitControls avisa por 'change').
     ctrl.addEventListener('change',invalidate3D);
 
@@ -2613,17 +2688,8 @@ async function init3D(){
     const rc=cvs.getBoundingClientRect();
     mouse.set(((e.clientX-rc.left)/rc.width)*2-1,-((e.clientY-rc.top)/rc.height)*2+1);
     ray.setFromCamera(mouse,cam);
-    if(T3.cityMode){
-      const hit=cityPick(ray);
-      if(hit)zoomToPlayer(hit.player,hit.pos);
-      return;
-    }
-    const meshes=Object.values(T3.nodes).map(n=>n.mesh).filter(Boolean);
-    const hits=ray.intersectObjects(meshes);
-    if(hits.length){
-      const nd=Object.values(T3.nodes).find(n=>n.mesh===hits[0].object);
-      showOv3d(nd); document.getElementById('tip3d').style.display='none';
-    } else hideOv3d();
+    const hit=cityPick(ray);
+    if(hit)zoomToPlayer(hit.player,hit.pos);
   });
 
   // Computador: cursor de "clicável" ao passar sobre um lote da cidade.
@@ -2643,7 +2709,6 @@ async function init3D(){
     invalidate3D();
   });
 
-    build3DScene();
     loop3D();
   } catch(err){
     console.error('3D init failed',err);
@@ -2653,6 +2718,7 @@ async function init3D(){
   }
   _3dIniting=false;
   ld.style.display='none';
+  switchToCityMode();
 }
 
 // ─── MODO DIRIGIR (3ª pessoa) ─────────────────────────────────────────────────
@@ -2888,34 +2954,20 @@ function loop3D(){
   (function tick(){
     if(!document.getElementById('s-3d').classList.contains('active')){T3.running=false;return;}
     requestAnimationFrame(tick);
-    const t=T3.clock.getElapsedTime();
     if(_fps){
       const now=performance.now(),k=Math.min(3,(now-_fps.last)/16.667);_fps.last=now;
       driveStep(k);
     } else {
       T3.ctrl.update();
-      if(!T3.cityMode){
-        Object.values(T3.nodes).forEach((n,i)=>{
-          if(n.group) n.group.position.y=n.baseY+Math.sin(t*0.72+i*1.25)*0.1;
-          if(n.spin)  n.spin.rotation.y+=0.009;
-        });
-        if(T3.starsOk) T3.conns.forEach((c,i)=>{if(c.material)c.material.opacity=0.42+Math.sin(t*2.8+i*0.9)*0.38;});
-      }
     }
     if(_fps&&T3.cityMode&&++_fpsAimTick%8===0)updateFpsAim();
-    // "Meu Mapa" gira e flutua o tempo todo; a cidade parada não precisa redesenhar.
-    // Animações do GSAP (prédios subindo, voo da câmera, placa) mantêm os quadros rodando.
-    const busy=!T3.cityMode||_fps||T3.dirty||gsap.globalTimeline.getChildren(true,true,false).length>0;
+    // A cidade parada não precisa redesenhar. Animações do GSAP (prédios subindo,
+    // voo da câmera, placa) e o carro mantêm os quadros rodando.
+    const busy=_fps||T3.dirty||gsap.globalTimeline.getChildren(true,true,false).length>0;
     if(!busy)return;
     T3.dirty=false;
     T3.rend.render(T3.scene,T3.cam);
   })();
-}
-
-function hexPrism3D(h,col){
-  const g=new THREE.CylinderGeometry(0.60,0.60,h,6);
-  const m=new THREE.MeshBasicMaterial({color:col});
-  return new THREE.Mesh(g,m);
 }
 
 function labelSprite3D(line1,line2,col='#f0f4ff'){
@@ -2928,12 +2980,6 @@ function labelSprite3D(line1,line2,col='#f0f4ff'){
   const tex=new THREE.CanvasTexture(cv);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
   sp.scale.set(2.5,0.78,1); return sp;
-}
-
-function tube3D(a,b,color,opacity){
-  const mid=new THREE.Vector3((a.x+b.x)/2,Math.max(a.y,b.y)+1.4,(a.z+b.z)/2);
-  const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(a.x,a.y,a.z),mid,new THREE.Vector3(b.x,b.y,b.z));
-  return new THREE.Mesh(new THREE.TubeGeometry(curve,22,.042,8),new THREE.MeshBasicMaterial({color,transparent:true,opacity}));
 }
 
 // ─── LEGO ASSETS ─────────────────────────────────────────────────────────────
@@ -3233,25 +3279,14 @@ function buildCityScene(players){
 }
 
 function updateModeTabsUI(){
-  document.getElementById('tab-3d-tree').classList.toggle('active',!T3?.cityMode);
-  document.getElementById('tab-3d-city').classList.toggle('active',!!T3?.cityMode);
-  document.getElementById('legend3d').style.display=T3?.cityMode?'none':'';
-  document.getElementById('city-tip').style.display=T3?.cityMode?'block':'none';
-  document.getElementById('btn-fps').style.display=T3?.cityMode?'':'none';
-  document.getElementById('city-bar').style.display=T3?.cityMode?'flex':'none';
-  if(!T3?.cityMode){closeCitySearch();document.getElementById('city-empty').hidden=true}
+  document.getElementById('city-tip').style.display='block';
+  document.getElementById('btn-fps').style.display=_fps?'none':'';
+  document.getElementById('city-bar').style.display='flex';
 }
 
 async function switchToCityMode(){
   if(!T3){toast('Carregando 3D…');return;}
   T3.cityMode=true;
-  T3.scene.fog=null; // disable fog so distant buildings stay sharp
-  // Hide skill tree objects
-  Object.values(T3.nodes).forEach(n=>{if(n.group)n.group.visible=false});
-  T3.conns.forEach(c=>{c.visible=false});
-  if(T3.treeGrid) T3.treeGrid.visible=false;
-  if(T3.fp) T3.fp.visible=false;
-  T3.ctrl.autoRotate=false;
   updateModeTabsUI();
   syncCityFilterUI();
   await loadCity();
@@ -3360,28 +3395,6 @@ document.getElementById('city-search-input').addEventListener('keydown',e=>{
   if(e.key==='Enter')document.querySelector('#city-search-list .cs-item')?.click();
   if(e.key==='Escape')closeCitySearch();
 });
-
-function switchToTreeMode(){
-  if(!T3)return;
-  exitFPSMode();
-  T3.cityMode=false;
-  _cityLoadSeq++; // descarta um carregamento da cidade que ainda esteja em andamento
-  document.getElementById('3d-loading').style.display='none';
-  if(_reactionUnsub){_reactionUnsub();_reactionUnsub=null;}
-  T3.scene.fog=new THREE.FogExp2(0x060e1f,0.016); // restore fog for skill tree
-  clearCityObjs();
-  // Show skill tree
-  Object.values(T3.nodes).forEach(n=>{if(n.group)n.group.visible=true});
-  T3.conns.forEach(c=>{c.visible=true});
-  if(T3.treeGrid) T3.treeGrid.visible=true;
-  if(T3.fp) T3.fp.visible=true;
-  T3.ctrl.autoRotate=true;
-  T3.cam.position.set(0,8,20); T3.ctrl.target.set(0,3,0); T3.ctrl.update();
-  updateModeTabsUI();
-}
-
-document.getElementById('tab-3d-tree').onclick=()=>{if(T3?.cityMode)switchToTreeMode()};
-document.getElementById('tab-3d-city').onclick=()=>{if(!T3?.cityMode)switchToCityMode()};
 
 // Seleciona um aluno: destaca o lote, sobe a placa, abre o cartão e (fly) leva a câmera até lá.
 // Na 1ª pessoa a câmera não voa: o cartão abre e você continua onde está.
@@ -3599,126 +3612,7 @@ function updateReactionSprites(grouped){
   invalidate3D();
 }
 
-function build3DScene(){
-  if(!T3)return;
-  Object.values(T3.nodes).forEach(n=>{if(n.group)T3.scene.remove(n.group)});
-  T3.conns.forEach(c=>T3.scene.remove(c));
-  (T3._streets||[]).forEach(m=>T3.scene.remove(m));
-  T3.nodes={}; T3.conns=[]; T3._streets=[];
-
-  if(!semId||!sems[semId])return;
-  const discs=Object.entries(sems[semId]?.discs??{});
-  const count=discs.length;
-  const{cr,partialCr,validN,partialN}=calcCR();
-  T3.starsOk=cr!==null&&cr>=9&&validN>=4;
-
-  // ── Subject nodes (arc layout) ──
-  discs.forEach(([id,d],i)=>{
-    const arc=Math.min(Math.PI*1.3,count*0.58+0.4);
-    const angle=count>1?-arc/2+(arc/(count-1))*i:0;
-    const R=Math.min(3.8+count*0.38,7.5);
-    const x=Math.sin(angle)*R, z=Math.cos(angle)*R*0.55;
-
-    const a=analyseDisc(d,getTpPts(id));
-    const isPartial=a.grade===null&&a.partialGrade!==null&&a.partialGrade>0;
-    const col=
-      a.type==='ok'    ?0xf5a623:
-      isPartial        ?0x38bdf8:
-      a.type==='warn'  ?0x4ade80:
-      (a.type==='bad'||a.type==='disq')?0xf87171:
-                        0x4a6adc;
-
-    const h=a.grade!==null?Math.max(0.65,a.grade*0.28):
-            isPartial?Math.max(0.5,a.partialGrade*0.28):0.9;
-    const mesh=hexPrism3D(h,col);
-    const grp=new THREE.Group();
-    grp.position.set(x,h/2-1,z);
-
-    const lblVal=a.grade!==null?fmtG(a.grade):isPartial?'~'+fmtG(a.partialGrade):'—';
-    const lblCol=a.type==='ok'?'#f5a623':isPartial?'#38bdf8':a.type==='warn'?'#4ade80':a.type==='bad'||a.type==='disq'?'#f87171':'#7a90c0';
-    const lbl=labelSprite3D(d.nome||`Disc. ${i+1}`,lblVal,lblCol);
-    lbl.position.set(0,h/2+0.72,0);
-
-    if(a.type==='ok'){
-      const ring=new THREE.Mesh(new THREE.TorusGeometry(0.66,0.055,8,32),new THREE.MeshBasicMaterial({color:0xf5a623}));
-      ring.rotation.x=Math.PI/2; ring.position.y=h/2+0.04; grp.add(ring);
-    } else if(isPartial){
-      const ring=new THREE.Mesh(new THREE.TorusGeometry(0.66,0.04,8,32),new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.5}));
-      ring.rotation.x=Math.PI/2; ring.position.y=h/2+0.04; grp.add(ring);
-    }
-
-    grp.add(mesh); grp.add(lbl); T3.scene.add(grp);
-    T3.nodes[id]={group:grp,mesh,baseY:h/2-1,spin:null,disc:d,ana:a,isPartial,pos:{x,y:h/2-1,z}};
-  });
-
-  // ── CR node ──
-  const crVal=cr!==null?fmtG(cr):partialCr!==null?'~'+fmtG(partialCr):'—';
-  const crCol=cr!==null&&cr>=9?0xf5a623:cr!==null||partialCr!==null?0x38bdf8:0x4a6adc;
-  const crLblCol=cr!==null&&cr>=9?'#f5a623':'#38bdf8';
-  const crH=1.5;
-  const crMesh=hexPrism3D(crH,crCol); crMesh.scale.set(1.5,1,1.5);
-  const crLbl=labelSprite3D('CR',crVal,crLblCol);
-  crLbl.position.set(0,crH/2+0.75,0);
-  const crGrp=new THREE.Group(); crGrp.position.set(0,2,-1);
-  crGrp.add(crMesh); crGrp.add(crLbl); T3.scene.add(crGrp);
-  const crP={x:0,y:2,z:-1};
-  T3.nodes['__cr']={group:crGrp,mesh:crMesh,spin:crMesh,baseY:2,pos:crP};
-
-  // ── Stars node ──
-  const stCol=T3.starsOk?0xf5a623:0x4a6adc;
-  const stH=1.8;
-  const stMesh=hexPrism3D(stH,stCol); stMesh.scale.set(1.7,1,1.7);
-  const crDisplay=cr!==null?`CR ${fmtG(cr)}`:partialCr!==null?`~${fmtG(partialCr)}`:'—';
-  const stLbl=labelSprite3D(T3.starsOk?'⭐ STARS':'🔒 STARS',T3.starsOk?'APTO!':crDisplay,T3.starsOk?'#f5a623':'#7a90c0');
-  stLbl.position.set(0,stH/2+0.8,0);
-  if(T3.starsOk){
-    const halo=new THREE.Mesh(new THREE.TorusGeometry(1.1,0.09,8,40),new THREE.MeshBasicMaterial({color:0xf5a623,transparent:true,opacity:0.7}));
-    halo.rotation.x=Math.PI/2; stMesh.add(halo);
-  }
-  const stGrp=new THREE.Group(); stGrp.position.set(0,6,-1);
-  stGrp.add(stMesh); stGrp.add(stLbl); T3.scene.add(stGrp);
-  const stP={x:0,y:6,z:-1};
-  T3.nodes['__stars']={group:stGrp,mesh:stMesh,spin:stMesh,baseY:6,pos:stP};
-
-  // ── Connection tubes ──
-  discs.forEach(([id])=>{
-    const n=T3.nodes[id]; if(!n)return;
-    const a=n.ana;
-    const lc=a.type==='ok'?0xf5a623:n.isPartial?0x38bdf8:a.type==='warn'?0x4ade80:0x4a6adc;
-    const lo=a.type==='ok'?0.7:a.grade!==null?0.5:n.isPartial?0.4:0.3;
-    const tb=tube3D(n.pos,crP,lc,lo); T3.scene.add(tb); T3.conns.push(tb);
-  });
-  const tb2=tube3D(crP,stP,T3.starsOk?0xf5a623:0x4a6adc,T3.starsOk?0.8:0.35);
-  T3.scene.add(tb2); T3.conns.push(tb2);
-}
-
-function showOv3d(n){
-  if(!n)return;
-  const ov=document.getElementById('ov3d');
-  const nm=document.getElementById('ov3d-name');
-  const gr=document.getElementById('ov3d-grade');
-  const sb=document.getElementById('ov3d-sub');
-  if(n.disc){
-    nm.textContent=n.disc.nome||'Sem nome';
-    const a=n.ana;
-    const isPartial=a.grade===null&&a.partialGrade!==null&&a.partialGrade>0;
-    gr.textContent=a.grade!==null?fmtG(a.grade):isPartial?'~'+fmtG(a.partialGrade):'—';
-    gr.style.color=a.type==='ok'?'var(--gold)':isPartial?'var(--blue)':a.type==='warn'?'var(--green)':a.type==='bad'||a.type==='disq'?'var(--red)':'var(--text2)';
-    sb.textContent=a.type==='ok'?'⭐ Stars elegível':isPartial?'📊 Nota parcial':a.type==='warn'?'📘 Aprovado':a.type==='bad'||a.type==='disq'?'✗ Desclassificado':'Sem notas';
-  } else {
-    const{cr,partialCr,validN,partialN}=calcCR();
-    nm.textContent=n===T3.nodes['__stars']?'IBMEC Stars':'Coef. de Rendimento';
-    const dispCr=cr!==null?fmtG(cr):partialCr!==null?'~'+fmtG(partialCr):null;
-    gr.textContent=n===T3.nodes['__stars']?(T3.starsOk?'APTO':'INAPTO'):dispCr||'—';
-    gr.style.color=n===T3.nodes['__stars']?(T3.starsOk?'var(--gold)':'var(--red)'):(cr!==null&&cr>=9?'var(--gold)':cr!==null||partialCr!==null?'var(--blue)':'var(--text2)');
-    sb.textContent=n===T3.nodes['__stars']?(T3.starsOk?`${validN} disciplinas ≥ 9,0`:`Faltam ${Math.max(0,4-validN)} disc. completas`):(cr!==null?`${validN} disc. completa${validN!==1?'s':''}`:partialCr!==null?`${partialN} disc. parcial${partialN!==1?'s':''}` :'');
-  }
-  ov.classList.add('show');
-}
-function hideOv3d(){document.getElementById('ov3d').classList.remove('show')}
-
 function refresh3D(){
-  if(T3&&document.getElementById('s-3d').classList.contains('active')) build3DScene();
   const btn=document.getElementById('btn-3d');
   if(btn) btn.style.display=semId&&sems[semId]?'':'none';
 }
