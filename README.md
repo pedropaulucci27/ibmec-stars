@@ -20,7 +20,7 @@ PWA para alunos do Ibmec acompanharem o **CR (Coeficiente de Rendimento)** ao lo
 ## Stack
 
 **Frontend**
-- HTML5 + CSS3 + JavaScript puro (ES Modules), sem framework nem build step: o app inteiro roda a partir de um único `index.html`.
+- HTML5 + CSS3 + JavaScript puro (ES Modules), sem framework nem build step: o app inteiro roda a partir de um único `public/index.html`.
 - [GSAP](https://gsap.com/) 3.12 (core + plugins `TextPlugin` e `ScrollTrigger`) para animações de UI.
 - [Three.js](https://threejs.org/) 0.160 (WebGL), carregado sob demanda, para o "modo cidade" 3D em primeira pessoa.
 - Canvas API (2D) para o fundo animado e o efeito de confete.
@@ -46,11 +46,13 @@ PWA para alunos do Ibmec acompanharem o **CR (Coeficiente de Rendimento)** ao lo
 ## Estrutura
 
 ```
-index.html                   # app inteiro (UI + lógica)
-404.html                     # página de erro
-manifest.json                # manifest do PWA
-firebase-messaging-sw.js     # service worker do Firebase Cloud Messaging
-OneSignalSDKWorker.js        # service worker do OneSignal
+public/                      # tudo o que vai para o ar (só esta pasta é publicada)
+  index.html                 # app inteiro (UI + lógica)
+  404.html                   # página de erro
+  manifest.json              # manifest do PWA
+  firebase-messaging-sw.js   # service worker do Firebase Cloud Messaging
+  OneSignalSDKWorker.js      # service worker do OneSignal
+  icon-*.png, icon.svg       # ícones do PWA
 firestore.rules              # regras de segurança do Firestore
 firebase.json / .firebaserc  # config do projeto Firebase
 functions/                   # Cloud Functions (push notifications)
@@ -59,7 +61,7 @@ gen_icon.py                  # script auxiliar de geração dos ícones
 
 ## Rodando localmente
 
-Não há build step, é só abrir/servir o `index.html`. Para simular hosting + functions:
+Não há build step, é só servir a pasta `public/` (o Live Server do VS Code já está configurado para ela em `.vscode/settings.json`). Para simular hosting + functions:
 
 ```bash
 npm install -g firebase-tools

@@ -1,24 +1,85 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isUser(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Reações que existem no app (as mesmas da Cloud Function)
+    function validEmoji(e) { return e in ['🔥', '👏', '😮', '💀']; }
+    function shortText(v, max) { return v is string && v.size() <= max; }
+    function optGrade(v) { return v == null || (v is number && v >= 0 && v <= 10); }
+
+    // Dados do próprio aluno: só ele lê e escreve
     match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isUser(userId);
     }
+
+    // Entrada pública do ranking/cidade: exatamente os campos que o app grava (lbEntryData),
+    // com tipos e limites. Impede gravar qualquer coisa ou valores fora da escala.
+    function validEntry() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['displayName', 'anonymous', 'cr', 'partialCr', 'validN', 'buildings', 'curso', 'semName', 'updatedAt', 'periodo'])
+        && shortText(d.displayName, 40)
+        && d.anonymous is bool
+        && optGrade(d.cr)
+        && optGrade(d.partialCr)
+        && d.validN is int && d.validN >= 0 && d.validN <= 40
+        && d.buildings is list && d.buildings.size() <= 40
+        && shortText(d.curso, 60)
+        && shortText(d.semName, 20)
+        && d.updatedAt == request.time;
+    }
+
     match /leaderboard/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read: if signedIn();
+      allow delete: if isUser(uid);
+      allow create, update: if isUser(uid) && validEntry() && !('periodo' in request.resource.data);
     }
+
     match /ranking/{periodo}/alunos/{uid} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow read: if signedIn();
+      allow delete: if isUser(uid);
+      allow create, update: if isUser(uid) && validEntry() && request.resource.data.periodo == periodo;
     }
+
+    // Reação: o id é "<quem reagiu>_<alvo>_<emoji>", então cada um só mexe nas próprias
     match /cityReactions/{reactionId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.resource.data.fromUid == request.auth.uid;
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.resource.data.keys().hasOnly(['targetUid', 'emoji', 'fromUid', 'fromName', 'ts'])
+        && request.resource.data.fromUid == request.auth.uid
+        && shortText(request.resource.data.targetUid, 128)
+        && request.resource.data.targetUid != request.auth.uid
+        && validEmoji(request.resource.data.emoji)
+        && shortText(request.resource.data.fromName, 40)
+        && request.resource.data.ts == request.time
+        && reactionId == request.auth.uid + '_' + request.resource.data.targetUid + '_' + request.resource.data.emoji;
+      allow delete: if signedIn() && resource.data.fromUid == request.auth.uid;
     }
+
+    // Avisos de reação de um aluno: o dono lê e limpa; os outros só podem ACRESCENTAR um aviso
+    // no fim da lista (sem apagar, editar ou trocar os que já estão lá), com tamanho máximo.
+    function validNotifItem(n) {
+      return n is map && n.keys().hasOnly(['fromName', 'emoji', 'ts'])
+        && shortText(n.fromName, 40)
+        && validEmoji(n.emoji)
+        && n.ts is number;
+    }
+    function validNotifAppend() {
+      let p = request.resource.data.pending;
+      let old = resource == null ? [] : resource.data.get('pending', []);
+      return signedIn()
+        && request.resource.data.keys().hasOnly(['pending'])
+        && p is list && p.size() <= 30
+        && p.size() == old.size() + 1
+        && (old.size() == 0 || p[0:old.size()] == old) // fatia vazia p[0:0] dá erro nas regras
+        && validNotifItem(p[old.size()]);
+    }
+
     match /notifs/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null;
+      allow read, delete: if isUser(uid);
+      allow create, update: if isUser(uid) || validNotifAppend();
     }
   }
 }

@@ -1700,11 +1700,26 @@ document.getElementById('sia-copy-btn').onclick=()=>{
 // ─── SIA IMPORT ──────────────────────────────────────────────────────────────
 let _importData=null,_importSemTarget=null;
 
+// O link ?import= pode ser montado por qualquer pessoa, então nada dele é confiável: só passa
+// uma lista de até 30 disciplinas, com nome em texto (até 80 caracteres) e notas numéricas
+// dentro da escala de cada prova. Todo o resto é descartado.
+function sanitizeImport(raw){
+  if(!raw||!Array.isArray(raw.subjects))return null;
+  const grade=(v,max)=>{if(v===''||v==null)return'';const n=typeof v==='number'?v:parseFloat(String(v).replace(',','.'));return Number.isFinite(n)&&n>=0&&n<=max?Math.round(n*100)/100:''};
+  const subjects=raw.subjects.slice(0,30).map(x=>{
+    if(!x||typeof x!=='object')return null;
+    const nome=String(x.nome??'').replace(/[\u0000-\u001f\u007f]/g,'').replace(/\s+/g,' ').trim().slice(0,80);
+    if(!nome)return null;
+    return{nome,ac:grade(x.ac,SLOTS.ac.inputMax),ap1:grade(x.ap1,SLOTS.ap1.inputMax),ap2:grade(x.ap2,SLOTS.ap2.inputMax)};
+  }).filter(Boolean);
+  return subjects.length?{subjects}:null;
+}
 function checkImportParam(){
   const p=new URLSearchParams(location.search).get('import');
   if(!p)return;
   try{
-    const data=JSON.parse(decodeURIComponent(escape(atob(p))));
+    const data=p.length<20000?sanitizeImport(JSON.parse(decodeURIComponent(escape(atob(p))))):null;
+    if(!data)history.replaceState(null,'',location.pathname);
     if(data?.subjects?.length){
       _importData=data;
       history.replaceState(null,'',location.pathname);
@@ -1724,7 +1739,7 @@ function openImportModal(data){
   const mkOpt=(id,icon,label)=>{
     const btn=document.createElement('button');
     btn.className='import-sem-opt'+(id===_importSemTarget?' selected':'');
-    btn.innerHTML=`<span style="font-size:16px">${icon}</span>${label}`;
+    btn.innerHTML=`<span style="font-size:16px">${icon}</span>${escHtml(label)}`;
     btn.onclick=()=>{
       _importSemTarget=id;
       semList.querySelectorAll('.import-sem-opt').forEach(b=>b.classList.remove('selected'));
@@ -1746,11 +1761,11 @@ function openImportModal(data){
   const preview=document.getElementById('import-preview');
   preview.innerHTML=data.subjects.map(s=>{
     const grades=[
-      s.ac!==''?`<span class="import-grade">AC <span>${s.ac}</span></span>`:'',
-      s.ap1!==''?`<span class="import-grade">AP1 <span>${s.ap1}</span></span>`:'',
-      s.ap2!==''?`<span class="import-grade">AP2 <span>${s.ap2}</span></span>`:'',
+      s.ac!==''?`<span class="import-grade">AC <span>${escHtml(s.ac)}</span></span>`:'',
+      s.ap1!==''?`<span class="import-grade">AP1 <span>${escHtml(s.ap1)}</span></span>`:'',
+      s.ap2!==''?`<span class="import-grade">AP2 <span>${escHtml(s.ap2)}</span></span>`:'',
     ].filter(Boolean).join('');
-    return`<div class="import-subj-row"><span class="import-subj-name">${s.nome}</span><div class="import-grades">${grades||'<span class="import-grade">sem notas</span>'}</div></div>`;
+    return`<div class="import-subj-row"><span class="import-subj-name">${escHtml(s.nome)}</span><div class="import-grades">${grades||'<span class="import-grade">sem notas</span>'}</div></div>`;
   }).join('');
 
   document.getElementById('import-modal').classList.add('open');
@@ -3828,7 +3843,7 @@ function cityStep(uid,dir){
   const c=_cityIndex[next.uid];
   if(_fps)selectCityPlayer(c.player,c.pos,false);else zoomToPlayer(c.player,c.pos);
 }
-const escHtml=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function escHtml(s){return String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 
 function showCityInspectCard(player){
   const isMe=player.uid===user?.uid;
