@@ -159,6 +159,16 @@
     .summary-badge.inapto{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.3)}
     .summary-badge.progress{background:var(--blue-bg);color:var(--blue);border-color:rgba(56,189,248,.3)}
     .summary-msg{font-size:13px;color:var(--text2);line-height:1.7}
+    /* Meta do Stars: a média que falta tirar somando TODAS as matérias (o Stars é pelo CR) */
+    .stars-goal{margin-top:12px;padding:11px 14px;border-radius:14px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.24);display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:3px;align-items:center}
+    .stg-k{font-size:13px;font-weight:700;color:var(--gold)}
+    .stg-v{grid-row:span 2;font-family:system-ui,-apple-system,sans-serif;font-size:28px;font-weight:900;line-height:1;color:var(--text1);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+    .stg-d{font-size:11.5px;line-height:1.5;color:var(--text2)}
+    .stg-d strong{color:var(--text1)}
+    .stars-goal.ok .stg-v,.stars-goal.bad .stg-v{font-family:inherit;font-size:13px;font-weight:800;letter-spacing:0}
+    .stars-goal.ok .stg-v{color:var(--green)}
+    .stars-goal.bad{background:var(--red-bg);border-color:rgba(242,139,139,.3)}
+    .stars-goal.bad .stg-v{color:var(--red)}
     .summary-msg strong{color:var(--text1)}
     .proj-row{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
     .proj-label{font-size:11px;color:var(--text2);flex:1}
@@ -282,27 +292,26 @@
     .sg-title{font-size:12.5px;font-weight:700;color:var(--text1);letter-spacing:.1px;line-height:1.3}
     .sg-title em{font-style:normal;font-weight:800;color:var(--gold)}
     .sg-title span{color:var(--text2);font-weight:500}
-    /* Barra 0 → máx da prova: marcador azul (passar) e dourado (Stars). O título fica colado
-       em cima da barra; os dois rótulos ficam na mesma linha embaixo dela (e se encostarem,
-       o do passar desce uma linha: ver fitGoalLabels). */
+    /* Barra 0 → máx da prova com o marcador de passar. O título fica colado em cima da barra
+       e o rótulo logo embaixo, alinhado ao marcador. */
     .sg-bar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:3px;align-items:center;padding:0 0 4px;margin-top:-3px}
     .sg-end{font-size:10px;font-weight:700;color:var(--text2);opacity:.6;font-variant-numeric:tabular-nums}
     .sg-lane{grid-column:2;position:relative;height:16px}
-    /* Rótulos encostando (metas próximas): o do passar desce uma linha */
-    .sg-bar.stack .sg-lane{height:33px}
-    .sg-bar.stack .sg-lbl.pass{top:17px}
     .sg-lbl{position:absolute;top:0;white-space:nowrap;font-size:11px;font-weight:700;line-height:16px;font-variant-numeric:tabular-nums}
     .sg-lbl b{font-size:13.5px;font-weight:800;color:var(--text1)}
     .sg-lbl small{font-size:9.5px;font-weight:600;color:var(--text2);margin-left:1px}
-    .sg-lbl.stars{color:var(--gold)}
     .sg-lbl.pass{color:var(--blue)}
     .sg-lbl.ok b{color:var(--green);font-size:11.5px}
     .sg-lbl.bad b{color:var(--red);font-size:11.5px}
+    /* Faltam várias provas: frase com a nota de cada uma (no lugar da barra) */
+    .sg-say{font-size:13px;line-height:1.55;color:var(--text2);padding-bottom:4px;margin-top:-3px}
+    .sg-say strong{color:var(--text1);font-family:system-ui,-apple-system,sans-serif;font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums}
+    .sg-say .sg-ok{color:var(--green);font-weight:600}
+    .sg-say .sg-bad{color:var(--red);font-weight:600}
     .sg-track{position:relative;height:6px;border-radius:3px;background:rgba(138,147,200,.16)}
-    .sg-fill{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,rgba(56,189,248,.45),rgba(245,166,35,.55))}
+    .sg-fill{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,rgba(116,185,245,.12),rgba(116,185,245,.5))}
     .sg-dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--card)}
-    .sg-dot.pass{background:var(--blue)}
-    .sg-dot.stars{background:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.18)}
+    .sg-dot.pass{background:var(--blue);box-shadow:0 0 0 3px rgba(116,185,245,.18)}
     .sg-dot.ok{background:var(--green);box-shadow:none}
     .h-stars{color:var(--amber)}.h-stars.ok{color:var(--green)}.h-stars.bad{color:var(--red)}
     .h-pass{color:var(--blue)}.h-pass.ok{color:var(--green)}.h-pass.bad{color:var(--red)}
@@ -687,6 +696,7 @@
           <div class="summary-badge" id="sum-badge">Adicione disciplinas</div>
         </div>
         <div class="summary-msg" id="sum-msg"></div>
+        <div class="stars-goal" id="stars-goal" hidden aria-live="polite"></div>
         <!-- Critérios integrados como chips -->
         <div class="gt-row">
           <label class="gt-label" for="grade-total">Disciplinas do <strong>período original</strong> na grade</label>
@@ -1529,12 +1539,14 @@ function animParticles(){
 }
 
 // ─── REVELAR AO ROLAR (fade nos dois sentidos) ───────────────────────────────
-// Rolando pra baixo, o que entra pela borda de baixo sobe 18px e aparece. Rolando pra cima,
-// o que sai pela borda de baixo desce e some (o mesmo efeito ao contrário). O que sai pelo
+// Rolando pra baixo, o que entra pela borda de baixo chega desfocado, 2% menor e 24px abaixo,
+// e entra em foco enquanto sobe (desacelera no fim). Rolando pra cima, o que sai pela borda de
+// baixo faz o caminho inverso. O desfoque só existe durante a animação (o filtro é limpo no fim). O que sai pelo
 // topo fica como está. O gatilho é o IntersectionObserver nativo: não escuta a rolagem quadro
-// a quadro como um scroll listener, então não pesa. Só opacity/transform (baratos de animar),
-// e o estilo inline é limpo ao aparecer. Com "reduzir movimento" nada é escondido nem animado.
+// a quadro como um scroll listener, então não pesa. O estilo inline é limpo ao aparecer. Com "reduzir movimento" nada é escondido nem animado.
 // A linha do gatilho fica 10% acima da borda de baixo, para o sumiço acontecer à vista.
+const REVEAL_OUT={opacity:0,y:24,scale:.98,filter:'blur(8px)'},REVEAL_IN={opacity:1,y:0,scale:1,filter:'blur(0px)'};
+const REVEAL_CLEAR='opacity,transform,filter,willChange';
 const _revealSeen=new WeakSet();
 const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new IntersectionObserver(entries=>{
   const show=[],hide=[];
@@ -1545,8 +1557,8 @@ const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new Int
     // (e nunca some o cartão em que você está digitando, ex. quando o teclado sobe)
     else if(!first&&el.dataset.shown&&!el.contains(document.activeElement)&&e.rootBounds&&e.boundingClientRect.top>=e.rootBounds.bottom-1){el.dataset.shown='';hide.push(el)}
   }
-  if(show.length)gsap.to(show,{opacity:1,y:0,duration:.55,ease:'power3.out',stagger:.07,overwrite:'auto',clearProps:'opacity,transform,willChange'});
-  if(hide.length)gsap.to(hide,{opacity:0,y:18,duration:.35,ease:'power2.in',overwrite:'auto'});
+  if(show.length)gsap.to(show,{...REVEAL_IN,duration:.75,ease:'expo.out',stagger:.08,overwrite:'auto',clearProps:REVEAL_CLEAR});
+  if(hide.length)gsap.to(hide,{...REVEAL_OUT,duration:.4,ease:'power2.in',overwrite:'auto'});
 },{rootMargin:'0px 0px -10% 0px',threshold:0});
 function inView(el){const r=el.getBoundingClientRect();return r.height>0&&r.top<innerHeight&&r.bottom>0}
 // Passa a acompanhar um elemento que já está visível (pra ele sumir se sair por baixo)
@@ -1557,7 +1569,7 @@ function reveal(els){
     if(el.dataset.revealed)continue;
     if(inView(el)){trackShown(el);continue} // já na tela: fica como está
     el.dataset.revealed='1';
-    gsap.set(el,{opacity:0,y:18,willChange:'opacity,transform'});
+    gsap.set(el,{...REVEAL_OUT,willChange:'opacity,transform,filter'});
     _revealIO.observe(el);
   }
 }
@@ -1601,7 +1613,7 @@ function show(id){
     // Entrada em sequência só pro que está na tela; o resto aparece ao rolar (reveal)
     const kids=[...document.querySelectorAll('#s-app main > *')],vis=kids.filter(inView);
     vis.forEach(trackShown);
-    gsap.fromTo(vis,{opacity:0,y:18},{opacity:1,y:0,stagger:.06,duration:.45,ease:'power3.out',delay:.15,overwrite:'auto',clearProps:'opacity,transform,willChange'});
+    gsap.fromTo(vis,REVEAL_OUT,{...REVEAL_IN,stagger:.07,duration:.75,ease:'expo.out',delay:.15,overwrite:'auto',clearProps:REVEAL_CLEAR});
     reveal(kids.filter(k=>!vis.includes(k)));
   }
 }
@@ -1888,7 +1900,7 @@ const TOUR_DEF=[
   {sel:'#summary-card',title:'📊 CR em Tempo Real',text:'O Coeficiente de Rendimento é calculado aqui automaticamente conforme você lança as notas. Inclui também uma projeção do que pode acontecer com as notas que faltam.',pos:'bottom'},
   {sel:'#rules-more',title:'⭐ Critérios Ibmec Stars',text:'Toque aqui para ver o regulamento e se você cumpre cada requisito:\n• Pelo menos 75% das disciplinas do seu período original\n• Todas as notas fechadas\n• CR ≥ 9,0\n• Sem AS ou Sub',pos:'top'},
   {sel:'#btn-add-subj',title:'📚 Adicionar Disciplinas',text:'Toque aqui para cadastrar cada matéria do semestre. Você nomeia como quiser (ex: "Cálculo I") e depois lança as notas.',pos:'top'},
-  {sel:'.grade-grid',title:'📝 Lançar Notas',text:'Cada disciplina tem 3 campos:\n• AC: Avaliação Continuada (0 a 20 pts)\n• AP1: 1ª Prova (0 a 10 pts)\n• AP2: 2ª Prova (0 a 10 pts)\n\nO app mostra o que você precisa tirar para passar e para os Stars.',pos:'top'},
+  {sel:'.grade-grid',title:'📝 Lançar Notas',text:'Cada disciplina tem 3 campos:\n• AC: Avaliação Continuada (0 a 20 pts)\n• AP1: 1ª Prova (0 a 10 pts)\n• AP2: 2ª Prova (0 a 10 pts)\n\nEm cada disciplina, a barra mostra o que você precisa tirar para passar. A média para o Stars, somando todas as matérias, fica no cartão do CR.',pos:'top'},
   {sel:'#btn-user-menu',title:'📥 Importar do SIA',text:'Quer preencher as notas sem digitar?\n\nToque no seu avatar → "Importar notas do SIA" para buscar as notas direto do portal sia.ibmec.br com um clique.',pos:'bottom'},
   {sel:'#btn-3d',title:'🏙️ Visualização 3D',text:'Veja a cidade dos alunos do ranking: cada prédio é uma disciplina, e quanto maior a nota, maior o prédio. Toque num lote para ver detalhes ou dirija pela cidade.',pos:'bottom'},
   {sel:'#btn-ranking',title:'🏆 Ranking',text:'Compare seu CR com outros alunos do Ibmec de forma anônima ou exibindo seu nome.',pos:'bottom'},
@@ -2200,6 +2212,9 @@ async function clearSem(){
 
 // ─── CALC ────────────────────────────────────────────────────────────────────
 function pv(v){if(v===''||v==null)return null;const n=parseFloat(v);return isNaN(n)?null:n}
+// Corta em 2 casas (nota e CR são truncados, não arredondados). A folguinha evita erro de
+// ponto flutuante: 92/10*100 dá 919,999… e virava 9,19 em vez de 9,20.
+function floor2(v){return Math.floor(v*100+1e-7)/100}
 function inp2pts(f,v){return v===null?0:v*SLOTS[f].weight}
 function analyseDisc(d,tpPts){
   if(d.as)return{type:'disq',stars:{txt:'Desclassificada: Média AS',cls:'bad'},pass:{txt:'',cls:''},grade:null,projGrade:null,partialGrade:null,knownPts:0,slotStars:{},slotPass:{}};
@@ -2220,7 +2235,7 @@ function analyseDisc(d,tpPts){
     });
   }
   if(allFilled){
-    const totalPts=Math.min(100,knownPts),grade=Math.floor(totalPts/10*100)/100,gf=fmtG(grade);
+    const totalPts=Math.min(100,knownPts),grade=floor2(totalPts/10),gf=fmtG(grade);
     const starsOk=grade>=9,passOk=grade>=7;
     return{type:starsOk?'ok':passOk?'warn':'bad',
       stars:{txt:starsOk?`Nota ${gf} ✓`:`Nota ${gf}, faltam ${Math.max(0,TARGET_STARS-Math.min(100,knownPts))} pts`,cls:starsOk?'ok':'bad'},
@@ -2235,7 +2250,7 @@ function analyseDisc(d,tpPts){
   // Somá-lo inteiro aqui inflava a parcial (AC 18 + AP1 8 + TP 10 dava 10,00 em vez de 9,33).
   const maxFilledPts=(ac!==null?20:0)+(ap1!==null?40:0)+(ap2!==null?40:0);
   const filledPts=knownPts-tpPts+tpPts*(maxFilledPts/100);
-  const partialGrade=maxFilledPts>0?Math.floor(Math.min(100,filledPts/maxFilledPts*100)/10*100)/100:null;
+  const partialGrade=maxFilledPts>0?floor2(Math.min(100,filledPts/maxFilledPts*100)/10):null;
   return{type:impS?'bad':'warn',
     stars:{txt:nS<=0?'Nota 9,0 já garantida! 🎉':impS?`Impossível (máx ${fmtG(maxGrade)})`:tpPts>0?`Faltam ${nS} pts (TP incluso)`:`Faltam ${nS} pts para nota 9,0`,cls:nS<=0?'ok':impS?'bad':'warn'},
     pass:{txt:nP<=0?'Aprovação já garantida ✓':impP?'Impossível atingir 7,0':`Faltam ${nP} pts para aprovação`,cls:nP<=0?'ok':impP?'bad':'warn'},
@@ -2248,20 +2263,22 @@ function getTpPts(id,sid=semId){
 }
 function calcCR(sid=semId){
   if(!sid||!sems[sid])return{cr:null,projCr:null,partialCr:null,disq:false,reasons:[],validN:0,totalN:0,partialN:0};
-  const reasons=[],grades=[],proj=[],allGrades=[];let hasDisq=false,partialN=0,allHaveBase=true;
+  const reasons=[],grades=[],proj=[],allGrades=[];let hasDisq=false,partialN=0,allHaveBase=true,allHaveNote=true;
   for(const[id,d]of Object.entries(sems[sid].discs)){
     const a=analyseDisc(d,getTpPts(id,sid));
     if(a.type==='disq'){hasDisq=true;reasons.push(`"${d.nome||'Sem nome'}": ${d.as?'AS':'sub AP1'}`);continue}
     if(pv(d.ac)===null||pv(d.ap1)===null)allHaveBase=false;
+    if(Object.keys(SLOTS).every(k=>pv(d[k])===null))allHaveNote=false;
     if(a.grade!==null){grades.push(a.grade);allGrades.push(a.grade);}
-    else if(a.partialGrade!==null&&a.partialGrade>0){allGrades.push(a.partialGrade);partialN++;}
+    else if(a.partialGrade!==null){allGrades.push(a.partialGrade);partialN++;}
     if(a.projGrade!==null)proj.push(a.projGrade);
   }
-  const vN=grades.length,cr=vN?Math.floor(grades.reduce((a,b)=>a+b,0)/vN*100)/100:null;
-  const pN=proj.length,projCr=pN?Math.floor(proj.reduce((a,b)=>a+b,0)/pN*100)/100:null;
-  // Só expõe a parcial quando TODAS as disciplinas já têm AC e AP1: com matéria em branco
-  // a média sairia calculada em cima de meia turma de notas e enganaria.
-  const aN=allGrades.length,partialCr=aN&&partialN>0&&allHaveBase?Math.floor(allGrades.reduce((a,b)=>a+b,0)/aN*100)/100:null;
+  const vN=grades.length,cr=vN?floor2(grades.reduce((a,b)=>a+b,0)/vN):null;
+  const pN=proj.length,projCr=pN?floor2(proj.reduce((a,b)=>a+b,0)/pN):null;
+  // Só expõe a parcial quando TODAS as disciplinas já têm alguma nota: com matéria em branco
+  // a média sairia calculada em cima de meia turma e enganaria. Com só a AP1 (que costuma
+  // sair antes da AC) já mostra, mas como prévia (allHaveBase=false muda o texto no cartão).
+  const aN=allGrades.length,partialCr=aN&&partialN>0&&allHaveNote?floor2(allGrades.reduce((a,b)=>a+b,0)/aN):null;
   return{cr,projCr,partialCr,disq:hasDisq,reasons,validN:vN,totalN:Object.keys(sems[sid].discs).length,partialN,allHaveBase};
 }
 
@@ -2329,6 +2346,7 @@ document.getElementById('grade-total').addEventListener('input',function(){
 function updateSummary(){
   const c=calcCR(),{cr,projCr,partialCr,disq,reasons,validN,totalN,partialN}=c;
   const en=enrollInfo();
+  renderStarsGoal(c);
   renderStarsRules(); // painel do regulamento (se aberto) acompanha as notas
   const card=document.getElementById('summary-card'),badge=document.getElementById('sum-badge'),
         msg=document.getElementById('sum-msg'),crEl=document.getElementById('sum-cr');
@@ -2366,12 +2384,54 @@ function updateSummary(){
   msg.innerHTML=
     !en.known?'Informe abaixo quantas disciplinas o seu período tem.'
     :!en.ok?`Faltam <strong>${pl(falta,'disciplina','disciplinas')}</strong> do período original para os 75%.`
-    :showingPartial?`Média parcial <strong>~${fmtG(partialCr)}</strong>. Lance as AP2 para fechar o CR.`
+    :showingPartial?(c.allHaveBase?`Média parcial <strong>~${fmtG(partialCr)}</strong>. Lance as AP2 para fechar o CR.`:`Prévia com as notas lançadas até agora: <strong>~${fmtG(partialCr)}</strong>. Ainda muda bastante até fechar.`)
     :semNota>0?`Faltam notas em <strong>${pl(semNota,'disciplina','disciplinas')}</strong>.`
     :cr!==null&&cr<9?`Faltam <strong>${fmtG(9-cr)}</strong> no CR para chegar a 9,00.`
     :'';
 }
 function fmtG(n){return n.toFixed(2).replace('.',',')}
+// ─── META DO STARS (pelo CR) ─────────────────────────────────────────────────
+// O Stars pede CR ≥ 9,00, e o CR é a média das notas finais. Então a meta não é tirar 9 em
+// cada matéria: é a MÉDIA (0 a 10) que precisa tirar em todas as notas que ainda faltam,
+// somando todas as matérias. Cada matéria vai no máximo a 100 pts (10,00), por isso a conta
+// é feita por busca: o menor x tal que o CR, tirando x em tudo que falta, chega a 9,00.
+function starsNeed(sid=semId){
+  const s=sid&&sems[sid];if(!s)return null;
+  const list=[],full=[];let miss=0,missAC=false,missAP=false;
+  for(const[id,d]of Object.entries(s.discs)){
+    if(d.as||d.sub)return null; // desclassificado: o cartão já avisa
+    const known=Object.keys(SLOTS).reduce((t,k)=>t+inp2pts(k,pv(d[k])),0)+getTpPts(id,sid);
+    const rem=Object.keys(SLOTS).reduce((t,k)=>t+(pv(d[k])===null?(miss++,SLOTS[k].pts):0),0);
+    const noAC=pv(d.ac)===null;if(noAC)missAC=true;if(pv(d.ap1)===null||pv(d.ap2)===null)missAP=true;
+    list.push({known,rem});
+    full.push(noAC?{known:known+SLOTS.ac.pts,rem:rem-SLOTS.ac.pts}:{known,rem}); // cenário: 20 em toda AC que falta
+  }
+  if(!list.length||!miss)return null; // sem matérias, ou todas fechadas (aí vale o CR)
+  const T=TARGET_STARS/10-1e-9; // folga de ponto flutuante na soma das notas
+  const solve=L=>{
+    const crAt=x=>L.reduce((t,d)=>t+floor2(Math.min(100,d.known+d.rem*x/10)/10),0)/L.length;
+    if(crAt(0)>=T)return{type:'ok'};
+    if(crAt(10)<T)return{type:'bad'};
+    let lo=0,hi=10;for(let i=0;i<40;i++){const m=(lo+hi)/2;crAt(m)>=T?hi=m:lo=m}
+    let x=Math.ceil(hi*10-1e-9)/10;while(x<10&&crAt(x)<T)x=Math.round(x*10+1)/10; // arredonda pra cima: é o mínimo
+    return{type:'warn',x};
+  };
+  const r=solve(list);
+  // Cenário "AC cheia" só faz sentido se falta alguma AC e ainda sobra AP pra tirar
+  if(r.type==='warn'&&missAC&&missAP)r.fullAC=solve(full);
+  return{...r,miss,missAC};
+}
+function renderStarsGoal(c){
+  const box=document.getElementById('stars-goal'),g=c.disq?null:starsNeed();
+  box.hidden=!g;if(!g)return;
+  const n=g.miss===1?'na nota que falta':`nas <strong>${g.miss} notas</strong> que faltam`;
+  box.className='stars-goal '+g.type;
+  box.innerHTML=g.type==='ok'
+    ?`<div class="stg-k">⭐ Para o Stars</div><div class="stg-v">CR garantido</div><div class="stg-d">Mesmo tirando 0 ${n}, seu CR fica em 9,00 ou mais.</div>`
+    :g.type==='bad'
+    ?`<div class="stg-k">⭐ Para o Stars</div><div class="stg-v">impossível</div><div class="stg-d">Mesmo tirando 10 ${n}, o CR não chega a 9,00.</div>`
+    :`<div class="stg-k">⭐ Para o Stars</div><div class="stg-v">${fmtI(g.x)}</div><div class="stg-d">Média ${n}, em todas as matérias, para o CR chegar a 9,00.${g.missAC&&g.x>0?` Na AC (até 20): <strong>${fmtI(Math.min(20,Math.round(g.x*20)/10))}</strong>.`:''}${g.fullAC?`<br>Com 20 em todas as AC: ${g.fullAC.type==='ok'?'<strong>já chega a 9,00</strong>.':`<strong>${fmtI(g.fullAC.x)}</strong> de média nas APs.`}`:''}</div>`;
+}
 function fmtI(n){return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
@@ -2408,9 +2468,10 @@ function updateTpSelect(){
   });
 }
 // Faixa "quanto precisa tirar" embaixo das notas de cada disciplina.
-// Falta 1 prova: a nota exata nela (na escala dela: AC até 20, APs até 10).
-// Faltam várias: a MÉDIA (0 a 10) que precisa tirar nas que faltam. O "mín" por prova supunha
-// tirar 10 nas outras, o que não dá pra resumir numa frase só sem enganar.
+// Falta 1 prova: barra com a nota exata nela (na escala dela: AC até 20, APs até 10).
+// Faltam AP1 e AP2: barra com a média nas duas (mesma escala, 0 a 10).
+// Falta a AC e alguma AP: frase com a nota de cada uma, dividindo por igual (a mesma fração
+// da nota máxima em todas), e o caminho "AC cheia".
 function goalStripHTML(d,a){
   if(a.type==='disq'||a.grade!==null)return'';
   const miss=Object.keys(SLOTS).filter(k=>pv(d[k])===null);
@@ -2428,31 +2489,38 @@ function goalStripHTML(d,a){
   const names=miss.map(k=>SLOTS[k].label);
   const title=(one?`Precisa tirar na <em>${one.label}</em>`:`Média que precisa tirar em <em>${names.slice(0,-1).join(', ')} e ${names.at(-1)}</em>`)
     +(max=>max!==10?` <span>(de 0 a ${max})</span>`:'')(one?one.inputMax:10);
-  // Barra de 0 até o máximo da prova (AC: 20; APs e média: 10)
+  // Barra de 0 até o máximo da prova (AC: 20; APs e média: 10). Só a meta de passar: o Stars
+  // depende do CR (média de todas as matérias) e aparece no cartão do CR (starsNeed).
   const max=one?one.inputMax:10; // a escala (ex. "de 0 a 20") já aparece no título
-  const s=goal(TARGET_STARS),p=goal(TARGET_PASS);
-  const pos=o=>o.type==='ok'?0:o.type==='bad'?100:Math.min(100,o.n/max*100);
-  const lbl=(cls,icon,name,o)=>{const x=pos(o);return`<span class="sg-lbl ${cls} ${o.type}" style="left:${x}%;transform:translateX(-${x}%)"><span aria-hidden="true">${icon}</span> ${name}: <b>${o.txt}</b></span>`};
-  const dot=(cls,o)=>o.type==='bad'?'':`<span class="sg-dot ${cls}${o.type==='ok'?' ok':''}" style="left:${pos(o)}%"></span>`;
-  const fill=p.type!=='bad'&&s.type!=='bad'&&pos(s)>pos(p)?`<span class="sg-fill" style="left:${pos(p)}%;width:${pos(s)-pos(p)}%"></span>`:'';
-  const sr=o=>o.type==='warn'?`${o.txt}${max!==10?` de ${max}`:''}`:o.txt;
+  const p=goal(TARGET_PASS);
+  // Falta a AC junto com alguma AP: em vez da barra (que mostraria uma média abstrata, com AC
+  // até 20 e APs até 10 misturadas), uma frase com a nota concreta de cada prova e o caminho
+  // "AC cheia", porque a AC costuma vir alta. Faltando só AP1 e AP2 (mesma escala), fica a barra.
+  if(!one&&miss.includes('ac')){
+    const B=v=>`<strong>${v}</strong>`,lista=ks=>ks.length===1?ks[0]:ks.slice(0,-1).join(', ')+' e '+ks.at(-1);
+    let body;
+    if(p.type==='ok')body='<p class="sg-ok">✓ Já garantido, mesmo tirando 0 no que falta.</p>';
+    else if(p.type==='bad')body='<p class="sg-bad">Não dá mais: mesmo tirando a nota máxima em tudo, não chega a 7,0.</p>';
+    else{
+      const igual=miss.map(k=>`${B(fmtI(Math.round(p.n*SLOTS[k].inputMax)/10))} na ${SLOTS[k].label}`);
+      const aps=miss.filter(k=>k!=='ac'),apPts=aps.reduce((t,k)=>t+SLOTS[k].pts,0),need=TARGET_PASS-a.knownPts-SLOTS.ac.pts;
+      const apN=aps.map(k=>SLOTS[k].label);
+      body=`<p>Tire ${lista(igual)}.</p>`
+        +(need<=0?'<p>Com <strong>20</strong> na AC, você já passa.</p>'
+          :`<p>Com ${B(20)} na AC, basta ${B(fmtI(Math.ceil(need/apPts*100-1e-9)/10))} ${apN.length===1?'na':'de média na'} ${lista(apN)}.</p>`);
+    }
+    return`<div class="sg-title">Para passar</div><div class="sg-say">${body}</div>`;
+  }
+  const x=p.type==='ok'?0:p.type==='bad'?100:Math.min(100,p.n/max*100);
+  const dot=p.type==='bad'?'':`<span class="sg-dot pass${p.type==='ok'?' ok':''}" style="left:${x}%"></span>`;
+  const fill=p.type==='warn'?`<span class="sg-fill" style="left:0;width:${x}%"></span>`:'';
+  const sr=p.type==='warn'?`${p.txt}${max!==10?` de ${max}`:''}`:p.txt;
   return`<div class="sg-title">${title}</div>`
-    +`<div class="sg-bar" role="img" aria-label="Para Stars: ${sr(s)}. Para passar: ${sr(p)}.">`
-    +`<span class="sg-end">0</span><div class="sg-track">${fill}${dot('pass',p)}${dot('stars',s)}</div><span class="sg-end">${max}</span>`
-    +`<span></span><div class="sg-lane">${lbl('stars','⭐','Para Stars',s)}${lbl('pass','✓','Para passar',p)}</div><span></span></div>`;
+    +`<div class="sg-bar" role="img" aria-label="Para passar: ${sr}.">`
+    +`<span class="sg-end">0</span><div class="sg-track">${fill}${dot}</div><span class="sg-end">${max}</span>`
+    +`<span></span><div class="sg-lane"><span class="sg-lbl pass ${p.type}" style="left:${x}%;transform:translateX(-${x}%)"><span aria-hidden="true">✓</span> Para passar: <b>${p.txt}</b></span></div><span></span></div>`
+    ;
 }
-// Os dois rótulos ficam na mesma linha embaixo da barra; se encostarem, o do passar desce.
-// Precisa medir na tela (a largura da barra muda com o celular).
-function fitGoalLabels(root){
-  root?.querySelectorAll('.sg-bar').forEach(bar=>{
-    bar.classList.remove('stack');
-    const a=bar.querySelector('.sg-lbl.stars')?.getBoundingClientRect(),b=bar.querySelector('.sg-lbl.pass')?.getBoundingClientRect();
-    if(a&&b&&a.width&&a.left<b.right+10&&b.left<a.right+10)bar.classList.add('stack');
-  });
-}
-let _fitT;const refitGoals=()=>fitGoalLabels(document.getElementById('subj-list'));
-addEventListener('resize',()=>{clearTimeout(_fitT);_fitT=setTimeout(refitGoals,120)});
-document.fonts?.ready.then(refitGoals); // a fonte do texto chega depois e muda a largura dos rótulos
 function buildSlotHTML(field,id,d,a){
   const s=SLOTS[field],val=d[field],filled=val!==''&&val!=null;
   return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><span class="g-label-sub">${s.fullName}</span><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="0-${s.inputMax}" value="${filled?val:''}" aria-label="${s.label} (${s.fullName}), de 0 a ${s.inputMax}" aria-describedby="goals_${id}"><div class="g-hint"></div></div>`;
@@ -2518,7 +2586,7 @@ function renderDiscs(){
       animatedDiscs.add(id);
       // Na tela: entrada com stagger como antes (só entre os visíveis). Fora da tela: aparece
       // quando você rolar até ele, em vez de animar escondido sem ninguém ver.
-      if(inView(card)){trackShown(card);gsap.fromTo(card,{opacity:0,y:22,scale:.96},{opacity:1,y:0,scale:1,duration:.45,ease:'back.out(1.6)',delay:(visIdx++)*.05,clearProps:'opacity,transform'})}
+      if(inView(card)){trackShown(card);gsap.fromTo(card,REVEAL_OUT,{...REVEAL_IN,duration:.75,ease:'expo.out',delay:(visIdx++)*.06,clearProps:REVEAL_CLEAR})}
       else reveal([card]);
     }
     // Card recriado (já animou antes): na tela ou acima dela fica visível, abaixo espera a rolagem.
@@ -2526,7 +2594,6 @@ function renderDiscs(){
     else if(card.getBoundingClientRect().top<innerHeight)trackShown(card);
     else reveal([card]);
   });
-  fitGoalLabels(list);
   if(focusedId){const el=document.getElementById(focusedId);if(el){el.focus();if(el.type==='text')el.setSelectionRange(el.value.length,el.value.length)}}
 }
 function refreshCard(id,card){
@@ -2554,7 +2621,7 @@ function refreshCard(id,card){
   }
   // Faixa "quanto precisa tirar" acompanha as notas digitadas
   const goals=card.querySelector('.subj-goals');
-  if(goals){goals.innerHTML=goalStripHTML(sems[semId].discs[id],a);fitGoalLabels(goals)}
+  if(goals)goals.innerHTML=goalStripHTML(sems[semId].discs[id],a);
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 let toastTimer;
@@ -2737,7 +2804,7 @@ function simulateCR(dAp1,dAp2){
     if(a.grade!==null)grades.push(a.grade);
   }
   if(!grades.length)return null;
-  return Math.floor(grades.reduce((a,b)=>a+b,0)/grades.length*100)/100;
+  return floor2(grades.reduce((a,b)=>a+b,0)/grades.length);
 }
 let _revAp1=0,_revAp2=0,_revFiltered=[],_revMyEntry=null,_revMyPos=-1;
 function _revEffScore(e){return e.cr!==null?e.cr:(e.partialCr!==null?e.partialCr-0.01:-1);}
