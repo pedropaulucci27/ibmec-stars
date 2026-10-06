@@ -158,51 +158,50 @@
     .proj-cr.ok{color:var(--green)}.proj-cr.bad{color:var(--red)}
 
     /* CHECKLIST → chips compactos no summary card */
-    .chk-chips{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
     .gt-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
-    .gt-label{font-size:12px;color:var(--text2);min-width:0}
+    .gt-label{font-size:12.5px;color:var(--text2);min-width:0}
     .gt-input{flex:0 0 auto;width:64px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:15px;font-weight:700;padding:7px 8px;text-align:center;transition:border-color .2s,box-shadow .2s}
     .gt-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
     .gt-input.need{border-color:rgba(251,191,36,.55)}
     .gt-hint{font-size:11px;color:var(--text2);margin-top:6px;line-height:1.5}
     .gt-hint strong{color:var(--text1)}
     .gt-hint:empty{display:none}
-    .gt-text{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
-    .gt-more{background:none;border:none;padding:2px 0;color:var(--gold);font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(245,166,35,.4);text-underline-offset:3px;touch-action:manipulation}
-    .gt-more::after{content:'';display:inline-block;width:5px;height:5px;margin-left:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
-    .gt-more[aria-expanded="true"]::after{transform:translateY(1px) rotate(-135deg)}
-    .gt-more:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:4px}
-    .gt-info{margin-top:10px;padding:12px 14px;border-radius:12px;background:rgba(247,197,72,.06);border:1px solid rgba(247,197,72,.2);font-size:12px;line-height:1.55;color:var(--text2);display:flex;flex-direction:column;gap:8px}
-    .gt-info strong{color:var(--text1)}
-    .gt-info ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
-    .gt-info-src{font-size:11px;opacity:.85}
     /* Regulamento do Stars: checklist com o status de cada requisito do aluno */
-    .rules-btn{display:block;margin-top:12px}
-    .stars-rules{margin-top:10px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:12px;line-height:1.5;color:var(--text2)}
-    .rq-sum{font-size:12.5px;margin-bottom:10px}
+    /* Linhas que abrem painéis (regulamento / período original): mesmo visual e comportamento */
+    .disc-group{margin-top:14px;border-top:1px solid var(--border)}
+    .disc-row{display:flex;align-items:center;gap:10px;width:100%;padding:12px 2px;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text1);font:inherit;font-size:13px;font-weight:600;text-align:left;cursor:pointer;touch-action:manipulation;transition:color .2s}
+    .disc-row:hover .disc-txt,.disc-row[aria-expanded="true"] .disc-txt{color:var(--gold)}
+    .disc-row:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
+    .disc-ico{flex:0 0 28px;height:28px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);color:var(--gold)}
+    .disc-svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .disc-txt{flex:1;min-width:0;transition:color .2s}
+    .disc-chev{flex:0 0 auto;width:7px;height:7px;margin-right:4px;border-right:1.6px solid var(--text2);border-bottom:1.6px solid var(--text2);transform:translateY(-2px) rotate(45deg);transition:transform .25s}
+    .disc-row[aria-expanded="true"] .disc-chev{transform:translateY(2px) rotate(-135deg);border-color:var(--gold)}
+    .disc-panel{margin:10px 0 12px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--border);font-size:12.5px;line-height:1.6;color:var(--text2)}
+    .disc-panel strong{color:var(--text1);font-weight:700}
+    .dp-lead{margin-bottom:10px}
+    .dp-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+    .dp-list li{position:relative;padding-left:16px}
+    .dp-list li::before{content:'';position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:.8}
+    .dp-note{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;opacity:.85}
+    .rq-sum{font-size:12.5px;margin-bottom:12px}
     .rq-sum strong{color:var(--text1)}
     .rq-sum.ok{color:var(--green);font-weight:700}
-    .rq-items{list-style:none;display:flex;flex-direction:column;gap:11px}
+    .rq-items{list-style:none;display:flex;flex-direction:column;gap:12px}
     .rq-item{display:flex;gap:10px;align-items:flex-start}
     .rq-ico{flex:0 0 20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:1px solid var(--border);margin-top:1px}
     .rq-item.ok .rq-ico{color:var(--green);background:var(--green-bg);border-color:rgba(95,211,154,.4)}
     .rq-item.fail .rq-ico{color:var(--red);background:var(--red-bg);border-color:rgba(242,139,139,.4)}
     .rq-item.pend .rq-ico{color:var(--text2)}
-    .rq-t{color:var(--text1);font-weight:700;font-size:12.5px}
+    .rq-t{color:var(--text1);font-weight:700;font-size:12.5px;margin-bottom:1px}
     .rq-d strong{color:var(--text1)}
     .rq-list{margin-top:5px;font-size:11.5px;line-height:1.6}
-    .rq-note{margin-top:12px;font-size:10.5px;opacity:.8}
+    .rq-note{margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;opacity:.85}
     /* Selo do período original: no topo do cartão da disciplina e na lista do regulamento */
     .orig-tag,.rq-tag{display:inline-block;flex-shrink:0;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:8px;white-space:nowrap;line-height:1.2}
     .rq-tag{margin-right:4px;padding:1px 7px}
     .orig-tag.on,.rq-tag.on{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(116,185,245,.4)}
     .orig-tag.off,.rq-tag.off{color:var(--text2);border:1px dashed rgba(138,147,200,.55)}
-    .chk-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);background:rgba(10,18,38,.5);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px;transition:border-color .3s,background .3s}
-    .chk-chip:has(.chk-icon.ok){border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.05)}
-    .chk-chip:has(.chk-icon.fail){border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)}
-    .chk-icon{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border);transition:all .3s}
-    .chk-icon.ok{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.4)}
-    .chk-icon.fail{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.4)}
     .share-wpp-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;margin-top:12px;padding:10px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.3);border-radius:12px;color:#25d366;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
     .share-wpp-btn:hover{background:rgba(37,211,102,.18);border-color:rgba(37,211,102,.5);transform:translateY(-1px)}
     .share-wpp-btn:active{transform:scale(.97)}
@@ -656,29 +655,28 @@
         </div>
         <div class="summary-msg" id="sum-msg"></div>
         <!-- Critérios integrados como chips -->
-        <div class="chk-chips">
-          <div class="chk-chip"><span class="chk-icon" id="chk-min">?</span><span id="chk-min-txt">75% do período</span></div>
-          <div class="chk-chip"><span class="chk-icon" id="chk-cr">?</span><span id="chk-cr-txt">CR ≥ 9</span></div>
-          <div class="chk-chip"><span class="chk-icon" id="chk-disq">?</span><span id="chk-disq-txt">Sem AS/Sub</span></div>
-        </div>
-        <button type="button" class="gt-more rules-btn" id="rules-more" aria-expanded="false" aria-controls="stars-rules">Regulamento do Stars e meus requisitos</button>
-        <div class="stars-rules" id="stars-rules" hidden aria-live="polite"></div>
         <div class="gt-row">
-          <div class="gt-text">
-            <label class="gt-label" for="grade-total">Disciplinas do <strong>período original</strong> na grade</label>
-            <button type="button" class="gt-more" id="gt-more" aria-expanded="false" aria-controls="gt-info">Saiba mais</button>
-          </div>
+          <label class="gt-label" for="grade-total">Disciplinas do <strong>período original</strong> na grade</label>
           <input type="number" class="gt-input" id="grade-total" min="1" max="20" step="1" inputmode="numeric" placeholder="—" aria-describedby="grade-total-hint">
         </div>
         <div class="gt-hint" id="grade-total-hint"></div>
-        <div class="gt-info" id="gt-info" hidden>
-          <p><strong>Período original</strong> são as disciplinas que a grade do seu curso prevê para o período que você está cursando. Exemplo: as 6 matérias do 3º período.</p>
-          <ul>
-            <li>Disciplinas <strong>atrasadas</strong> (de períodos anteriores) ou <strong>adiantadas</strong> não contam.</li>
-            <li>Para concorrer ao Stars, você precisa estar matriculado em <strong>pelo menos 75%</strong> delas. Com 6 na grade, são no mínimo 5.</li>
-            <li>Em cada disciplina abaixo, marque se ela é <strong>do período original</strong> ou <strong>fora</strong> dele.</li>
-          </ul>
-          <p class="gt-info-src">O número está na grade curricular (matriz) do seu curso.</p>
+        <div class="disc-group">
+          <button type="button" class="disc-row" id="rules-more" aria-expanded="false" aria-controls="stars-rules">
+            <span class="disc-ico"><svg class="disc-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.15 1 5.85L12 16.9l-5.25 2.8 1-5.85L3.5 9.7l5.9-.9z"/></svg></span><span class="disc-txt">Regulamento do Stars e meus requisitos</span><span class="disc-chev" aria-hidden="true"></span>
+          </button>
+          <div class="disc-panel" id="stars-rules" hidden aria-live="polite"></div>
+          <button type="button" class="disc-row" id="gt-more" aria-expanded="false" aria-controls="gt-info">
+            <span class="disc-ico"><svg class="disc-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></svg></span><span class="disc-txt">O que é o período original?</span><span class="disc-chev" aria-hidden="true"></span>
+          </button>
+          <div class="disc-panel" id="gt-info" hidden>
+            <p class="dp-lead">São as disciplinas que a <strong>grade do seu curso</strong> prevê para o período que você está cursando. Exemplo: as 6 matérias do 3º período.</p>
+            <ul class="dp-list">
+              <li>Matérias <strong>atrasadas</strong> ou <strong>adiantadas</strong> não contam.</li>
+              <li>Para concorrer ao Stars, é preciso cursar <strong>pelo menos 75%</strong> delas. Com 6 na grade, no mínimo 5.</li>
+              <li>Em cada disciplina abaixo, marque se ela é <strong>original</strong> ou <strong>fora do período</strong>.</li>
+            </ul>
+            <p class="dp-note">O número está na grade curricular (matriz) do seu curso.</p>
+          </div>
         </div>
         <button class="share-wpp-btn" id="btn-share-wpp">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -1826,7 +1824,7 @@ const TOUR_DEF=[
   {sel:'#btn-course',title:'🎓 Curso',text:'Toque aqui para selecionar seu curso. Os símbolos no fundo e as cores do app se adaptam à sua área.',pos:'bottom'},
   {sel:'main>.card:first-child',title:'📅 Semestres',text:'Crie um semestre (ex: "25.1") para organizar suas disciplinas. Você pode ter vários e alternar entre eles livremente.',pos:'bottom'},
   {sel:'#summary-card',title:'📊 CR em Tempo Real',text:'O Coeficiente de Rendimento é calculado aqui automaticamente conforme você lança as notas. Inclui também uma projeção do que pode acontecer com as notas que faltam.',pos:'bottom'},
-  {sel:'.chk-chips',title:'⭐ Critérios Ibmec Stars',text:'Esses indicadores mostram em tempo real o que falta para você ser elegível:\n• Pelo menos 75% das disciplinas do seu período original (marque em cada disciplina se ela é do período)\n• CR ≥ 9,0 com todas as notas fechadas\n• Sem dependências (AS ou Sub)',pos:'top'},
+  {sel:'#rules-more',title:'⭐ Critérios Ibmec Stars',text:'Toque aqui para ver o regulamento e se você cumpre cada requisito:\n• Pelo menos 75% das disciplinas do seu período original\n• Todas as notas fechadas\n• CR ≥ 9,0\n• Sem AS ou Sub',pos:'top'},
   {sel:'#btn-add-subj',title:'📚 Adicionar Disciplinas',text:'Toque aqui para cadastrar cada matéria do semestre. Você nomeia como quiser (ex: "Cálculo I") e depois lança as notas.',pos:'top'},
   {sel:'.grade-grid',title:'📝 Lançar Notas',text:'Cada disciplina tem 3 campos:\n• AC: Avaliação Continuada (0 a 20 pts)\n• AP1: 1ª Prova (0 a 10 pts)\n• AP2: 2ª Prova (0 a 10 pts)\n\nO app mostra o que você precisa tirar para passar e para os Stars.',pos:'top'},
   {sel:'#btn-user-menu',title:'📥 Importar do SIA',text:'Quer preencher as notas sem digitar?\n\nToque no seu avatar → "Importar notas do SIA" para buscar as notas direto do portal sia.ibmec.br com um clique.',pos:'bottom'},
@@ -2245,18 +2243,12 @@ function updateSummary(){
   renderStarsRules(); // painel do regulamento (se aberto) acompanha as notas
   const card=document.getElementById('summary-card'),badge=document.getElementById('sum-badge'),
         msg=document.getElementById('sum-msg'),crEl=document.getElementById('sum-cr');
-  setChk('chk-min',en.ok,en.known);
-  setChk('chk-cr',cr!==null&&cr>=9,cr!==null);
-  setChk('chk-disq',!disq,totalN>0);
-  // Critérios curtos: o detalhe já está no número grande e na frase de cima
-  document.getElementById('chk-min-txt').textContent=en.known?`75% do período · ${en.n}/${en.total}`:'75% do período';
   // Campo do total da grade: explicação só enquanto está vazio
   const gt=document.getElementById('grade-total'),gtHint=document.getElementById('grade-total-hint');
   if(document.activeElement!==gt)gt.value=semId&&sems[semId]?.grade_total!==undefined?sems[semId].grade_total:'';
   gt.classList.toggle('need',!en.known);
   gtHint.innerHTML=en.known?'':'Veja na grade do curso. Depois marque em cada disciplina se ela é do período original.';
-  document.getElementById('chk-cr-txt').textContent='CR ≥ 9';
-  // Parcial é só informativa: os chk-* acima continuam exigindo notas fechadas.
+  // Parcial é só informativa: os requisitos do Stars (painel do regulamento) exigem notas fechadas.
   const showingPartial=cr===null&&partialCr!==null;
   animateCR(cr??partialCr,showingPartial);
   if(!totalN){card.className='summary-card';crEl.className='summary-cr';badge.className='summary-badge';badge.style.display='none';msg.innerHTML='';return}
@@ -2289,13 +2281,6 @@ function updateSummary(){
     :semNota>0?`Faltam notas em <strong>${pl(semNota,'disciplina','disciplinas')}</strong>.`
     :cr!==null&&cr<9?`Faltam <strong>${fmtG(9-cr)}</strong> no CR para chegar a 9,00.`
     :'';
-}
-function setChk(id,ok,hasData){
-  const el=document.getElementById(id);
-  if(!hasData){el.className='chk-icon';el.textContent='?';return}
-  const was=el.classList.contains('ok');
-  el.className='chk-icon '+(ok?'ok':'fail');el.textContent=ok?'✓':'✕';
-  if(ok&&!was) gsap.fromTo(el,{scale:0},{scale:1,duration:.4,ease:'back.out(2.2)'});
 }
 function fmtG(n){return n.toFixed(2).replace('.',',')}
 function fmtI(n){return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
