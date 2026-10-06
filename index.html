@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Edu Stars">
   <meta name="theme-color" content="#060e1f">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -35,7 +38,8 @@
       --lift-2:0 2px 4px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.3);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg0);color:var(--text1);min-height:100dvh;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden;scrollbar-gutter:stable}
+    input,button,select,textarea{font-family:inherit;letter-spacing:inherit}
+    body{font-family:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;letter-spacing:-.01em;background:var(--bg0);color:var(--text1);min-height:100dvh;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden;scrollbar-gutter:stable}
     body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
       background:radial-gradient(ellipse 90% 55% at 20% -5%,rgba(247,180,60,.10) 0%,transparent 60%),
         radial-gradient(ellipse 80% 70% at 100% 100%,rgba(110,90,255,.14) 0%,transparent 65%),
@@ -83,7 +87,7 @@
     /* HEADER */
     header{background:rgba(6,14,31,.85);border-bottom:1px solid var(--border);padding:calc(11px + env(safe-area-inset-top,0px)) 16px 11px;position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px;backdrop-filter:blur(24px);overflow:hidden}
     .header-left{display:flex;align-items:center;gap:8px;min-width:0;flex-shrink:1}
-    .header-left h1{font-size:15px;font-weight:900;color:var(--gold);letter-spacing:.3px;white-space:nowrap}
+    .header-left h1{font-size:15px;font-weight:800;color:var(--gold);white-space:nowrap}
     .header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
     .avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid rgba(245,166,35,.5)}
     @media(max-width:480px){
@@ -109,7 +113,7 @@
 
     /* CARD */
     .card{background:linear-gradient(var(--card),var(--card)) padding-box,var(--edge-grad) border-box,linear-gradient(var(--border),var(--border)) border-box;border:1px solid transparent;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);transition:border-color .3s,box-shadow .3s}
-    .card-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:14px}
+    .card-label{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:14px}
 
     /* SEMESTER */
     .sem-row{display:flex;align-items:center;gap:8px}
@@ -141,7 +145,9 @@
     .summary-card.progress{border-color:rgba(116,185,245,.3)}
     .summary-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
     .summary-cr-block{flex:1}
-    .summary-cr-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:4px}
+    .summary-cr-label{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:4px}
+    /* Números com algarismos de largura fixa: o CR animado e as notas não "tremem" ao mudar */
+    .g-input,.g-val,.sg-lbl b,.grade-pill,.lb-rank{font-variant-numeric:tabular-nums}
     .summary-cr{font-size:56px;font-weight:900;letter-spacing:-3px;line-height:1;color:var(--text2);transition:color .5s,text-shadow .5s;font-variant-numeric:tabular-nums}
     .summary-cr.apto{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
     .summary-cr.inapto{background:linear-gradient(135deg,#f28b8b,#f4a7c9);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -170,7 +176,18 @@
     /* Linhas que abrem painéis (regulamento / período original): mesmo visual e comportamento */
     .disc-group{margin-top:14px;border-top:1px solid var(--border)}
     .disc-row{display:flex;align-items:center;gap:10px;width:100%;padding:12px 2px;background:none;border:none;border-bottom:1px solid var(--border);color:var(--text1);font:inherit;font-size:13px;font-weight:600;text-align:left;cursor:pointer;touch-action:manipulation;transition:color .2s}
-    .disc-row:hover .disc-txt,.disc-row[aria-expanded="true"] .disc-txt{color:var(--gold)}
+    /* :hover só onde existe mouse: no toque o :hover "gruda" depois do toque e a linha ficava dourada fechada */
+    .disc-row[aria-expanded="true"] .disc-txt{color:var(--gold)}
+    @media (hover:hover){.disc-row:hover .disc-txt{color:var(--gold)}}
+    .disc-row.tp-more{margin-top:2px;border-top:1px solid var(--border)}
+    .disc-row.tp-more .disc-ico{background:var(--purple-bg);border-color:rgba(183,156,251,.3);color:var(--purple)}
+    .disc-row.tp-more[aria-expanded="true"] .disc-txt{color:var(--purple)}
+    .disc-row.tp-more[aria-expanded="true"] .disc-chev{border-color:var(--purple)}
+    @media (hover:hover){.disc-row.tp-more:hover .disc-txt{color:var(--purple)}}
+    .tp-panel .dp-list li::before{background:var(--purple)}
+    .tp-ex{display:grid;grid-template-columns:auto auto auto;justify-content:start;column-gap:10px;row-gap:4px;margin-top:10px;font-variant-numeric:tabular-nums}
+    .tp-ex span:nth-child(3n+2){color:var(--text2);opacity:.6}
+    .tp-ex strong{color:var(--text1)}
     .disc-row:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
     .disc-ico{flex:0 0 28px;height:28px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.25);color:var(--gold)}
     .disc-svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -198,7 +215,7 @@
     .rq-list{margin-top:5px;font-size:11.5px;line-height:1.6}
     .rq-note{margin-top:14px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;opacity:.85}
     /* Selo do período original: no topo do cartão da disciplina e na lista do regulamento */
-    .orig-tag,.rq-tag{display:inline-block;flex-shrink:0;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:8px;white-space:nowrap;line-height:1.2}
+    .orig-tag,.rq-tag{display:inline-block;flex-shrink:0;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;line-height:1.2}
     .rq-tag{margin-right:4px;padding:1px 7px}
     .orig-tag.on,.rq-tag.on{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(116,185,245,.4)}
     .orig-tag.off,.rq-tag.off{color:var(--text2);border:1px dashed rgba(138,147,200,.55)}
@@ -244,7 +261,7 @@
     .g-slot{background:rgba(10,18,38,.7);display:flex;flex-direction:column;align-items:center;padding:11px 6px 8px;gap:2px;position:relative;transition:background .2s}
     .g-slot:focus-within{background:rgba(245,166,35,.05)}
     .g-slot.tp-slot{background:rgba(192,132,252,.06)}
-    .g-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);display:flex;align-items:center;gap:2px}
+    .g-label{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--text2);display:flex;align-items:center;gap:2px}
     .g-label em{font-style:normal;font-size:8px;opacity:.45;font-weight:600}
     .g-label.tp-lbl{color:var(--purple)}
     .g-input{background:transparent;border:none;color:var(--text1);font-size:26px;font-weight:900;text-align:center;width:100%;padding:2px 0;transition:color .2s}
@@ -259,18 +276,28 @@
        Número grande e legível; "garantido" em verde e "impossível" em vermelho. */
     .subj-goals{padding:12px 16px 2px;display:flex;flex-direction:column;gap:7px}
     .subj-goals:empty{display:none}
-    .sg-title{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text2)}
-    .sg-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
-    .sg-item{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:6px;row-gap:3px;min-width:0;min-height:40px;padding:8px 12px;border-radius:12px;border:1px solid transparent}
-    .sg-item.stars{background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.22)}
-    .sg-item.pass{background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.2)}
-    .sg-k{font-size:12px;font-weight:700;white-space:nowrap}
-    .sg-item.stars .sg-k{color:var(--gold)}
-    .sg-item.pass .sg-k{color:var(--blue)}
-    .sg-v{margin-left:auto;font-size:18px;font-weight:800;line-height:1;color:var(--text1);font-variant-numeric:tabular-nums;white-space:nowrap}
-    .sg-v small{font-size:10px;font-weight:600;color:var(--text2);margin-left:1px}
-    .sg-item.ok .sg-v{font-size:12px;color:var(--green)}
-    .sg-item.bad .sg-v{font-size:12px;color:var(--red)}
+    /* Título da barra, logo acima dela, pra ficar claro que a barra é "o que falta tirar" */
+    .sg-title{font-size:12.5px;font-weight:700;color:var(--text1);letter-spacing:.1px;line-height:1.3}
+    .sg-title em{font-style:normal;font-weight:800;color:var(--gold)}
+    .sg-title span{color:var(--text2);font-weight:500}
+    /* Barra 0 → máx da prova: marcador azul (passar) e dourado (Stars). Rótulo do Stars em cima,
+       do passar embaixo, então nunca se sobrepõem mesmo com metas próximas. */
+    .sg-bar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:5px;align-items:center;padding:0 0 4px;margin-top:-6px}
+    .sg-end{font-size:10px;font-weight:700;color:var(--text2);opacity:.6;font-variant-numeric:tabular-nums}
+    .sg-lane{grid-column:2;position:relative;height:16px}
+    .sg-lbl{position:absolute;top:0;white-space:nowrap;font-size:11px;font-weight:700;line-height:16px;font-variant-numeric:tabular-nums}
+    .sg-lbl b{font-size:13.5px;font-weight:800;color:var(--text1)}
+    .sg-lbl small{font-size:9.5px;font-weight:600;color:var(--text2);margin-left:1px}
+    .sg-lbl.stars{color:var(--gold)}
+    .sg-lbl.pass{color:var(--blue)}
+    .sg-lbl.ok b{color:var(--green);font-size:11.5px}
+    .sg-lbl.bad b{color:var(--red);font-size:11.5px}
+    .sg-track{position:relative;height:6px;border-radius:3px;background:rgba(138,147,200,.16)}
+    .sg-fill{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,rgba(56,189,248,.45),rgba(245,166,35,.55))}
+    .sg-dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid var(--card)}
+    .sg-dot.pass{background:var(--blue)}
+    .sg-dot.stars{background:var(--gold);box-shadow:0 0 0 3px rgba(245,166,35,.18)}
+    .sg-dot.ok{background:var(--green);box-shadow:none}
     .h-stars{color:var(--amber)}.h-stars.ok{color:var(--green)}.h-stars.bad{color:var(--red)}
     .h-pass{color:var(--blue)}.h-pass.ok{color:var(--green)}.h-pass.bad{color:var(--red)}
     .g-slot::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;background:var(--gold);border-radius:1px;transform:scaleX(0);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
@@ -299,7 +326,7 @@
     .lb-close{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);color:var(--text2);width:30px;height:30px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0}
     .lb-close:hover{background:rgba(255,255,255,.14);color:var(--text1)}
     .lb-section{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
-    .lb-section-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:12px}
+    .lb-section-title{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:12px}
     .lb-toggle-row{display:flex;align-items:center;gap:12px}
     .lb-toggle-info{flex:1}
     .lb-toggle-label{font-size:13px;font-weight:600;color:var(--text1)}
@@ -328,17 +355,17 @@
     .lb-pos{text-align:center;font-size:12px;color:var(--text2);padding:10px 0 0}
     .lb-pos strong{color:var(--text1)}
     .lb-rev-section{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
-    .lb-rev-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:10px}
+    .lb-rev-title{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:10px}
     .lb-rev-need-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px;background:rgba(10,18,38,.5);border:1px solid var(--border);margin-bottom:5px;gap:8px}
     .lb-rev-need-name{font-size:12px;font-weight:600;color:var(--text1);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .lb-rev-need-pts{font-size:12px;font-weight:900;color:var(--gold);text-align:right;white-space:nowrap}
     .lb-rev-need-hint{font-size:10px;color:var(--text2);text-align:right;white-space:nowrap}
     .lb-rev-top{text-align:center;font-size:13px;color:var(--text2);padding:8px 0}
     .lb-rev-sim{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(10,18,38,.6);border:1px solid var(--border)}
-    .lb-rev-sim-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:10px}
+    .lb-rev-sim-label{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:10px}
     .lb-rev-inputs{display:flex;gap:10px;margin-bottom:10px}
     .lb-rev-inp-grp{flex:1;display:flex;flex-direction:column;gap:5px}
-    .lb-rev-inp-label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+    .lb-rev-inp-label{font-size:11.5px;font-weight:600;color:var(--text2)}
     .lb-rev-stepper{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden}
     .lb-rev-stepper button{background:rgba(255,255,255,.05);border:none;color:var(--text1);font-size:18px;width:34px;height:36px;cursor:pointer;flex-shrink:0;line-height:1}
     .lb-rev-stepper button:active{background:rgba(255,255,255,.14)}
@@ -532,9 +559,9 @@
     html.tour-lock{overflow:hidden;overscroll-behavior:none}
     html.tour-lock body{overflow:visible}
     .tc-prog-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-    .tc-step{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);white-space:nowrap}
+    .tc-step{font-size:11.5px;font-weight:600;color:var(--text2);white-space:nowrap}
     .tc-prog{flex:1;height:3px;background:rgba(80,110,180,.2);border-radius:2px;overflow:hidden}
-    .tc-prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .38s}
+    .tc-prog-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .6s cubic-bezier(.22,1,.36,1)}
     .tc-title{font-size:15px;font-weight:900;color:var(--gold);margin-bottom:6px}
     .tc-text{font-size:12.5px;color:var(--text2);line-height:1.65;margin-bottom:14px;white-space:pre-line}
     .tc-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -692,14 +719,33 @@
         </div>
         <div class="tp-body" id="tp-body" style="display:none;margin-top:14px">
           <div class="tp-row">
-            <span class="tp-label">Nota obtida (0 a 10 pts)</span>
-            <input type="number" class="tp-input" id="tp-nota" min="0" max="10" step="0.1" placeholder="—">
+            <label class="tp-label" for="tp-nota">Nota no TP (0 a 1)</label>
+            <input type="number" class="tp-input" id="tp-nota" min="0" max="1" step="0.01" inputmode="decimal" placeholder="—" aria-describedby="tp-hint">
           </div>
           <div class="tp-row">
             <span class="tp-label tp-label-fit">Aplicar em</span>
             <select class="tp-select" id="tp-select"><option value="">Nenhuma disciplina</option></select>
           </div>
-          <p class="tp-hint">O TP vale até <strong>10 pts</strong> na nota final da disciplina escolhida. Realizado 1× por semestre.</p>
+          <p class="tp-hint" id="tp-hint"></p>
+          <div>
+            <button type="button" class="disc-row tp-more" id="tp-more" aria-expanded="false" aria-controls="tp-info">
+              <span class="disc-ico"><svg class="disc-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></svg></span><span class="disc-txt">Como a nota do TP funciona?</span><span class="disc-chev" aria-hidden="true"></span>
+            </button>
+            <div class="disc-panel tp-panel" id="tp-info" hidden>
+              <ul class="dp-list">
+                <li>A nota do TP vai de <strong>0 a 1</strong>.</li>
+                <li>Ela é arredondada para <strong>uma casa decimal</strong>: de 0,05 para cima sobe, abaixo de 0,05 desce.</li>
+                <li>Cada décimo vale <strong>1 ponto</strong> na nota da disciplina escolhida, que vai de 0 a 100. Ou seja, o TP vale até <strong>10 pts</strong>.</li>
+              </ul>
+              <div class="tp-ex" aria-label="Exemplos de arredondamento">
+                <span>0,55</span><span>→</span><span><strong>0,6</strong> = 6 pts</span>
+                <span>0,64</span><span>→</span><span><strong>0,6</strong> = 6 pts</span>
+                <span>0,65</span><span>→</span><span><strong>0,7</strong> = 7 pts</span>
+                <span>1,00</span><span>→</span><span><strong>1,0</strong> = 10 pts</span>
+              </div>
+              <p class="dp-note">O TP é feito 1× por semestre e os pontos entram em uma disciplina só.</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1078,7 +1124,7 @@
       Encontramos <strong id="import-count" style="color:var(--gold)">0</strong> disciplinas. Escolha o semestre de destino:
     </p>
     <div id="import-sem-list" style="display:flex;flex-direction:column;gap:6px"></div>
-    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-top:2px">Prévia das notas</div>
+    <div style="font-size:12.5px;font-weight:600;color:var(--text2);margin-top:2px">Prévia das notas</div>
     <div id="import-preview" style="display:flex;flex-direction:column;gap:5px;max-height:35dvh;overflow-y:auto"></div>
     <button class="btn btn-primary" id="import-confirm" style="width:100%;padding:13px;margin-top:4px">Importar disciplinas</button>
   </div>
@@ -1476,25 +1522,35 @@ function animParticles(){
   if(particles.length)requestAnimationFrame(animParticles);
 }
 
-// ─── REVELAR AO ROLAR (fade-in) ──────────────────────────────────────────────
-// O que entra na tela pela primeira vez sobe 18px e aparece (GSAP). O gatilho é o
-// IntersectionObserver nativo: não escuta a rolagem quadro a quadro como um scroll listener,
-// então não pesa. Só opacity/transform (baratos de animar), uma vez por elemento, e o estilo
-// inline é limpo no fim (sem camadas extras sobrando). O que já está visível não é escondido
-// (sem piscar), e com "reduzir movimento" nada é escondido nem animado.
+// ─── REVELAR AO ROLAR (fade nos dois sentidos) ───────────────────────────────
+// Rolando pra baixo, o que entra pela borda de baixo sobe 18px e aparece. Rolando pra cima,
+// o que sai pela borda de baixo desce e some (o mesmo efeito ao contrário). O que sai pelo
+// topo fica como está. O gatilho é o IntersectionObserver nativo: não escuta a rolagem quadro
+// a quadro como um scroll listener, então não pesa. Só opacity/transform (baratos de animar),
+// e o estilo inline é limpo ao aparecer. Com "reduzir movimento" nada é escondido nem animado.
+// A linha do gatilho fica 10% acima da borda de baixo, para o sumiço acontecer à vista.
+const _revealSeen=new WeakSet();
 const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new IntersectionObserver(entries=>{
-  const vis=entries.filter(e=>e.isIntersecting).map(e=>e.target);
-  if(!vis.length)return;
-  vis.forEach(el=>_revealIO.unobserve(el));
-  gsap.to(vis,{opacity:1,y:0,duration:.55,ease:'power3.out',stagger:.07,overwrite:'auto',clearProps:'opacity,transform,willChange'});
-},{rootMargin:'0px 0px -6% 0px',threshold:.06});
+  const show=[],hide=[];
+  for(const e of entries){
+    const el=e.target,first=!_revealSeen.has(el);_revealSeen.add(el);
+    if(e.isIntersecting){if(!el.dataset.shown){el.dataset.shown='1';show.push(el)}}
+    // 1ª leitura de quem já estava visível na faixa de baixo: não some do nada ao carregar
+    // (e nunca some o cartão em que você está digitando, ex. quando o teclado sobe)
+    else if(!first&&el.dataset.shown&&!el.contains(document.activeElement)&&e.rootBounds&&e.boundingClientRect.top>=e.rootBounds.bottom-1){el.dataset.shown='';hide.push(el)}
+  }
+  if(show.length)gsap.to(show,{opacity:1,y:0,duration:.55,ease:'power3.out',stagger:.07,overwrite:'auto',clearProps:'opacity,transform,willChange'});
+  if(hide.length)gsap.to(hide,{opacity:0,y:18,duration:.35,ease:'power2.in',overwrite:'auto'});
+},{rootMargin:'0px 0px -10% 0px',threshold:0});
 function inView(el){const r=el.getBoundingClientRect();return r.height>0&&r.top<innerHeight&&r.bottom>0}
+// Passa a acompanhar um elemento que já está visível (pra ele sumir se sair por baixo)
+function trackShown(el){if(!_revealIO)return;el.dataset.revealed='1';el.dataset.shown='1';_revealIO.observe(el)}
 function reveal(els){
   if(!_revealIO)return;
   for(const el of els){
     if(el.dataset.revealed)continue;
+    if(inView(el)){trackShown(el);continue} // já na tela: fica como está
     el.dataset.revealed='1';
-    if(inView(el))continue; // já na tela: fica como está
     gsap.set(el,{opacity:0,y:18,willChange:'opacity,transform'});
     _revealIO.observe(el);
   }
@@ -1538,7 +1594,7 @@ function show(id){
     gsap.fromTo('header',{opacity:0,y:-16},{opacity:1,y:0,duration:.4,ease:'power3.out'});
     // Entrada em sequência só pro que está na tela; o resto aparece ao rolar (reveal)
     const kids=[...document.querySelectorAll('#s-app main > *')],vis=kids.filter(inView);
-    vis.forEach(k=>{k.dataset.revealed='1';_revealIO?.unobserve(k)});
+    vis.forEach(trackShown);
     gsap.fromTo(vis,{opacity:0,y:18},{opacity:1,y:0,stagger:.06,duration:.45,ease:'power3.out',delay:.15,overwrite:'auto',clearProps:'opacity,transform,willChange'});
     reveal(kids.filter(k=>!vis.includes(k)));
   }
@@ -1856,9 +1912,16 @@ function _tourGo(){
   const n=_tourIdx+1,tot=_tourActive.length;
   document.getElementById('tc-step').textContent=`${n} / ${tot}`;
   document.getElementById('tc-fill').style.width=`${(n/tot)*100}%`;
-  document.getElementById('tc-title').textContent=step.title;
-  document.getElementById('tc-text').textContent=step.text;
   document.getElementById('tc-next').textContent=_tourIdx===tot-1?'Concluir ✓':'Próximo →';
+  // Troca do texto: o antigo some de leve e o novo sobe aparecendo (no 1º passo entra direto)
+  const txt=[document.getElementById('tc-title'),document.getElementById('tc-text')];
+  const put=()=>{txt[0].textContent=step.title;txt[1].textContent=step.text};
+  gsap.killTweensOf(txt);
+  if(_tourCardPos&&!REDUCED_MOTION){
+    gsap.to(txt,{opacity:0,y:-4,duration:.2,ease:'power1.in',onComplete:()=>{
+      put();gsap.fromTo(txt,{opacity:0,y:8},{opacity:1,y:0,duration:.5,ease:'power2.out',stagger:.06,clearProps:'opacity,transform'});
+    }});
+  }else{put();gsap.set(txt,{clearProps:'opacity,transform'})}
   _tourEl=el;_tourPref=step.pos;
   // Rola a página só o necessário pra deixar o item visível abaixo do cabeçalho fixo,
   // com espaço pro cartão. Itens do próprio cabeçalho já estão sempre visíveis.
@@ -1875,15 +1938,19 @@ function _tourGo(){
 // A cada quadro: mede o item e leva moldura e cartão até ele, com suavização e sem passar
 // do ponto. Assim a moldura fica sempre em cima do item (durante a rolagem, ao girar o
 // celular, se algo muda de tamanho) e nunca sai da tela.
-function _tourFollow(){
-  if(!tourOn()){_tourRAF=null;return}
+// Suavização por tempo (não por quadro): o mesmo deslize em 60 Hz ou 120 Hz.
+// TOUR_TAU é a "inércia": ~0,6 s pra chegar no lugar, desacelerando no fim.
+const TOUR_TAU=150;let _tourLastT=0;
+function _tourFollow(now=performance.now()){
+  if(!tourOn()){_tourRAF=null;_tourLastT=0;return}
   _tourRAF=requestAnimationFrame(_tourFollow);
+  const dt=_tourLastT?Math.min(64,now-_tourLastT):16;_tourLastT=now;
   if(!_tourEl?.isConnected)return;
   const r=_tourEl.getBoundingClientRect(),P=8,M=6,G=14,vw=innerWidth,vh=innerHeight;
   // alvo da moldura: item + margem, recortado nas bordas da tela
   const t={x:Math.max(M,r.left-P),y:Math.max(M,r.top-P)};
   t.w=Math.min(vw-M,r.right+P)-t.x;t.h=Math.min(vh-M,r.bottom+P)-t.y;
-  const k=REDUCED_MOTION?1:0.3;
+  const k=REDUCED_MOTION?1:1-Math.exp(-dt/TOUR_TAU);
   const b=_tourBox||(_tourBox={...t});
   for(const key of['x','y','w','h']){b[key]+=(t[key]-b[key])*k;if(Math.abs(t[key]-b[key])<0.3)b[key]=t[key]}
   const hl=document.getElementById('tour-hl');
@@ -2072,12 +2139,28 @@ async function deleteSem(id,e){
 function selectSem(id){semId=id;animatedDiscs.clear();renderAll()}
 
 // ─── TP ──────────────────────────────────────────────────────────────────────
+// O aluno digita a nota do TP (0 a 1). Arredonda pra 1 casa (0,55 → 0,6; 0,64 → 0,6) e cada
+// décimo vale 1 pt na escala de 100. tp_nota continua guardando PONTOS (0 a 10), como antes.
+function tpGradeToPts(g){return Math.round(Math.min(1,Math.max(0,g))*10+1e-9)}
+function updateTpHint(raw){
+  const h=document.getElementById('tp-hint'),s=semId&&sems[semId];
+  const g=raw!==undefined?pv(String(raw).replace(',','.')):s&&s.tp_nota!==''&&s.tp_nota!=null?pv(s.tp_nota)/10:null;
+  if(g===null){h.innerHTML='O TP vale até <strong>10 pts</strong> na nota final da disciplina escolhida.';return}
+  const pts=tpGradeToPts(g),fx=n=>n.toFixed(2).replace('.',',');
+  h.innerHTML=`${fx(Math.min(1,Math.max(0,g)))} arredonda para <strong>${(pts/10).toFixed(1).replace('.',',')}</strong>: <strong>+${pts} pts</strong> na disciplina${s?.tp_disc?'':'. Escolha qual em "Aplicar em"'}.`;
+}
 document.getElementById('tp-nota').oninput=function(){
-  if(!semId)return;sems[semId].tp_nota=this.value===''?'':Math.min(10,Math.max(0,parseFloat(this.value)||0));
-  renderDiscs();updateSummary();queueSave();
+  if(!semId)return;const g=pv(this.value.replace(',','.'));
+  sems[semId].tp_nota=g===null?'':tpGradeToPts(g);
+  updateTpHint(this.value);renderDiscs();updateSummary();queueSave();
+};
+document.getElementById('tp-more').onclick=function(){
+  const info=document.getElementById('tp-info'),open=info.hidden;
+  info.hidden=!open;this.setAttribute('aria-expanded',open);
+  if(open)gsap.fromTo(info,{opacity:0,y:-6},{opacity:1,y:0,duration:.25,ease:'power2.out'});
 };
 document.getElementById('tp-select').onchange=function(){
-  if(!semId)return;sems[semId].tp_disc=this.value;renderDiscs();updateSummary();queueSave();
+  if(!semId)return;sems[semId].tp_disc=this.value;updateTpHint(document.getElementById('tp-nota').value);renderDiscs();updateSummary();queueSave();
 };
 
 // ─── SUBJECT OPS ─────────────────────────────────────────────────────────────
@@ -2301,7 +2384,10 @@ function renderSems(){
 }
 function renderContent(){
   if(!semId||!sems[semId])return;
-  const tpEl=document.getElementById('tp-nota');if(tpEl)tpEl.value=sems[semId].tp_nota??'';
+  // Guardado em pontos (0 a 10); o campo mostra a nota do TP (0 a 1)
+  const tpEl=document.getElementById('tp-nota'),tp=pv(sems[semId].tp_nota);
+  if(tpEl)tpEl.value=tp===null?'':String(tp/10);
+  updateTpHint();
   updateTpSelect();
 }
 function updateTpSelect(){
@@ -2330,13 +2416,25 @@ function goalStripHTML(d,a){
     if(need<=0)return{txt:'garantido',type:'ok'};
     if(need>remPts)return{txt:'impossível',type:'bad'};
     const g=one?need/one.weight:need/remPts*10;
-    const v=fmtI(Math.ceil(g*10-1e-9)/10); // arredonda pra cima: é o mínimo
-    return{txt:v,type:'warn',scale:one&&one.inputMax!==10?`/${one.inputMax}`:''};
+    const n=Math.ceil(g*10-1e-9)/10; // arredonda pra cima: é o mínimo
+    return{txt:fmtI(n),type:'warn',n};
   };
   const names=miss.map(k=>SLOTS[k].label);
-  const title=one?`Precisa tirar na ${one.label}`:`Média que precisa tirar em ${names.slice(0,-1).join(', ')} e ${names.at(-1)}`;
-  const item=(cls,icon,name,o)=>`<div class="sg-item ${cls} ${o.type}"><span class="sg-k"><span aria-hidden="true">${icon}</span> ${name}</span><span class="sg-v">${o.txt}${o.scale?`<small>${o.scale}</small>`:''}</span></div>`;
-  return`<div class="sg-title">${title}</div><div class="sg-row">${item('stars','⭐','Para Stars',goal(TARGET_STARS))}${item('pass','✓','Para passar',goal(TARGET_PASS))}</div>`;
+  const title=(one?`Precisa tirar na <em>${one.label}</em>`:`Média que precisa tirar em <em>${names.slice(0,-1).join(', ')} e ${names.at(-1)}</em>`)
+    +(max=>max!==10?` <span>(de 0 a ${max})</span>`:'')(one?one.inputMax:10);
+  // Barra de 0 até o máximo da prova (AC: 20; APs e média: 10)
+  const max=one?one.inputMax:10; // a escala (ex. "de 0 a 20") já aparece no título
+  const s=goal(TARGET_STARS),p=goal(TARGET_PASS);
+  const pos=o=>o.type==='ok'?0:o.type==='bad'?100:Math.min(100,o.n/max*100);
+  const lbl=(cls,icon,name,o)=>{const x=pos(o);return`<div class="sg-lane"><span class="sg-lbl ${cls} ${o.type}" style="left:${x}%;transform:translateX(-${x}%)"><span aria-hidden="true">${icon}</span> ${name}: <b>${o.txt}</b></span></div>`};
+  const dot=(cls,o)=>o.type==='bad'?'':`<span class="sg-dot ${cls}${o.type==='ok'?' ok':''}" style="left:${pos(o)}%"></span>`;
+  const fill=p.type!=='bad'&&s.type!=='bad'&&pos(s)>pos(p)?`<span class="sg-fill" style="left:${pos(p)}%;width:${pos(s)-pos(p)}%"></span>`:'';
+  const sr=o=>o.type==='warn'?`${o.txt}${max!==10?` de ${max}`:''}`:o.txt;
+  return`<div class="sg-title">${title}</div>`
+    +`<div class="sg-bar" role="img" aria-label="Para Stars: ${sr(s)}. Para passar: ${sr(p)}.">`
+    +`<span></span>${lbl('stars','⭐','Para Stars',s)}<span></span>`
+    +`<span class="sg-end">0</span><div class="sg-track">${fill}${dot('pass',p)}${dot('stars',s)}</div><span class="sg-end">${max}</span>`
+    +`<span></span>${lbl('pass','✓','Para passar',p)}<span></span></div>`;
 }
 function buildSlotHTML(field,id,d,a){
   const s=SLOTS[field],val=d[field],filled=val!==''&&val!=null;
@@ -2403,9 +2501,13 @@ function renderDiscs(){
       animatedDiscs.add(id);
       // Na tela: entrada com stagger como antes (só entre os visíveis). Fora da tela: aparece
       // quando você rolar até ele, em vez de animar escondido sem ninguém ver.
-      if(inView(card)){card.dataset.revealed='1';gsap.fromTo(card,{opacity:0,y:22,scale:.96},{opacity:1,y:0,scale:1,duration:.45,ease:'back.out(1.6)',delay:(visIdx++)*.05,clearProps:'opacity,transform'})}
+      if(inView(card)){trackShown(card);gsap.fromTo(card,{opacity:0,y:22,scale:.96},{opacity:1,y:0,scale:1,duration:.45,ease:'back.out(1.6)',delay:(visIdx++)*.05,clearProps:'opacity,transform'})}
       else reveal([card]);
     }
+    // Card recriado (já animou antes): na tela ou acima dela fica visível, abaixo espera a rolagem.
+    // Em ambos os casos segue sumindo/aparecendo ao rolar.
+    else if(card.getBoundingClientRect().top<innerHeight)trackShown(card);
+    else reveal([card]);
   });
   if(focusedId){const el=document.getElementById(focusedId);if(el){el.focus();if(el.type==='text')el.setSelectionRange(el.value.length,el.value.length)}}
 }
