@@ -117,6 +117,13 @@
     .sem-add-form{display:flex;gap:8px;margin-top:12px}
     .sem-add-form input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text1);font-size:14px;padding:9px 13px;transition:border-color .2s}
     .sem-add-form input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
+    .sem-add-form input{font-variant-numeric:tabular-nums;letter-spacing:.5px}
+    .sem-add-form input.invalid{border-color:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+    .sem-add-form .btn:disabled{opacity:.4;cursor:not-allowed;filter:grayscale(.4)}
+    .sem-add-hint{font-size:11px;line-height:1.5;color:var(--text2);margin-top:7px;padding-left:2px;min-height:16px}
+    .sem-add-hint strong{color:var(--text1)}
+    .sem-add-hint.ok{color:var(--green)}.sem-add-hint.ok strong{color:var(--green)}
+    .sem-add-hint.err{color:var(--red)}
 
     /* SUMMARY */
     .summary-card{border-radius:20px;padding:20px 16px 18px;border:1px solid var(--border);background:var(--bg2);backdrop-filter:var(--glass);box-shadow:var(--shadow);transition:border-color .5s,box-shadow .5s;position:relative;overflow:hidden}
@@ -273,6 +280,7 @@
     .lb-rev-result .na{color:var(--text2)}
     .lb-filter-tabs{display:flex;gap:5px;background:rgba(10,18,38,.6);border:1px solid var(--border);border-radius:12px;padding:3px}
     .lb-filter-tab{flex:1;padding:6px 12px;border-radius:9px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+    .lb-period-row{display:flex;gap:8px;margin-top:-6px}
     .lb-filter-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628}
     .lb-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--text2);font-size:13px}
 
@@ -515,10 +523,13 @@
         <div class="sem-scroll" id="sem-list"></div>
         <button class="btn btn-primary btn-sm" id="btn-new-sem">+ Novo</button>
       </div>
-      <div class="sem-add-form" id="sem-add-panel" style="display:none">
-        <input id="sem-name-input" type="text" placeholder="Ex: 25.1, 24.2…" maxlength="12" autocomplete="off">
-        <button class="btn btn-primary btn-sm" id="btn-confirm-sem">Criar</button>
-        <button class="btn btn-ghost btn-sm" id="btn-cancel-sem">✕</button>
+      <div id="sem-add-wrap" style="display:none">
+        <div class="sem-add-form" id="sem-add-panel">
+          <input id="sem-name-input" type="text" inputmode="numeric" placeholder="AA.S  (ex: 26.2)" maxlength="4" autocomplete="off" aria-describedby="sem-add-hint">
+          <button class="btn btn-primary btn-sm" id="btn-confirm-sem" disabled>Criar</button>
+          <button class="btn btn-ghost btn-sm" id="btn-cancel-sem">✕</button>
+        </div>
+        <div class="sem-add-hint" id="sem-add-hint" aria-live="polite"></div>
       </div>
     </div>
 
@@ -646,6 +657,13 @@
     <div class="lb-filter-tabs">
       <button class="lb-filter-tab active" id="lb-tab-all">🌍 Geral</button>
       <button class="lb-filter-tab" id="lb-tab-course">🎓 Meu Curso</button>
+    </div>
+    <div class="lb-period-row">
+      <select class="tp-select" id="lb-year" aria-label="Ano"></select>
+      <select class="tp-select" id="lb-sem" aria-label="Semestre">
+        <option value="1">1º semestre</option>
+        <option value="2">2º semestre</option>
+      </select>
     </div>
 
     <div class="lb-section">
@@ -1359,7 +1377,9 @@ function openImportModal(data){
   };
 
   Object.entries(sems).forEach(([id,s])=>mkOpt(id,'📅',s.name));
-  mkOpt('__new__','✨','Criar novo semestre');
+  const[_cy,_cs]=currentPeriod().split('-'),_curName=`${_cy.slice(2)}.${_cs}`;
+  if(!Object.values(sems).some(s=>semPeriod(s.name)===currentPeriod()))
+    mkOpt('__new__','✨',`Criar semestre ${_curName}`);
   if(!_importSemTarget&&Object.keys(sems).length===0)_importSemTarget='__new__';
   semList.querySelectorAll('.import-sem-opt').forEach(b=>{
     const id=b===semList.lastChild?'__new__':null;
@@ -1385,11 +1405,15 @@ document.getElementById('import-confirm').onclick=async()=>{
   let targetId=_importSemTarget;
 
   if(targetId==='__new__'||!targetId){
-    const now=new Date();
-    const name=`${now.getMonth()<6?'1':'2'}/${String(now.getFullYear()).slice(2)}`;
-    targetId='sem_'+Date.now();
-    sems[targetId]={name,tp_nota:'',tp_disc:'',discs:{}};
-    await setDoc(doc(db,'users',user.uid,'semestres',targetId),{name,tp_nota:'',tp_disc:''});
+    // Mesmo padrão "AA.S" do cadastro manual; se o semestre atual já existe, importa nele
+    // em vez de criar um duplicado no mesmo período.
+    const cp=currentPeriod(),[y,s]=cp.split('-'),name=`${y.slice(2)}.${s}`;
+    targetId=Object.keys(sems).find(id=>semPeriod(sems[id].name)===cp);
+    if(!targetId){
+      targetId='sem_'+Date.now();
+      sems[targetId]={name,tp_nota:'',tp_disc:'',discs:{}};
+      await setDoc(doc(db,'users',user.uid,'semestres',targetId),{name,tp_nota:'',tp_disc:''});
+    }
   }
 
   semId=targetId;
@@ -1606,19 +1630,62 @@ async function saveSem(){
   await setDoc(doc(db,'users',user.uid,'semestres',semId),{name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc});
   for(const[id,disc]of Object.entries(s.discs))
     await setDoc(doc(db,'users',user.uid,'semestres',semId,'disciplinas',id),disc);
-  if(lbPrefs.optin) updateLeaderboard();
+  if(lbPrefs.optin) updateLeaderboard(semId);
 }
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveSem,900)}
 
 // ─── SEMESTER OPS ─────────────────────────────────────────────────────────────
-const semAddPanel=document.getElementById('sem-add-panel'),semNameInput=document.getElementById('sem-name-input');
-document.getElementById('btn-new-sem').onclick=()=>{semAddPanel.style.display='flex';gsap.fromTo(semAddPanel,{opacity:0,y:-8},{opacity:1,y:0,duration:.3,ease:'back.out(1.6)'});semNameInput.focus()};
+// O nome do semestre é sempre "AA.S" (ano com 2 dígitos + semestre 1 ou 2): é dele que sai
+// o período do ranking. A máscara monta o ponto sozinha e só aceita 1 ou 2 no fim.
+const semAddWrap=document.getElementById('sem-add-wrap'),semNameInput=document.getElementById('sem-name-input');
+const semAddHint=document.getElementById('sem-add-hint'),semConfirmBtn=document.getElementById('btn-confirm-sem');
+const SEM_HINT_DEFAULT='Ano com 2 dígitos + semestre <strong>1</strong> ou <strong>2</strong>. Ex: <strong>26.2</strong> = 2º semestre de 2026';
+function semYearRange(){const y=new Date().getFullYear()%100;return{min:y-10,max:y+1}}
+function setSemHint(html,state){semAddHint.innerHTML=html;semAddHint.className='sem-add-hint'+(state?' '+state:'');semNameInput.classList.toggle('invalid',state==='err')}
+// Valida o texto já mascarado e devolve o nome final ("26.2") ou null.
+function validateSemInput(){
+  const v=semNameInput.value,{min,max}=semYearRange();
+  semConfirmBtn.disabled=true;
+  if(!v){setSemHint(SEM_HINT_DEFAULT);return null}
+  if(v.length<4){setSemHint(v.length<2?SEM_HINT_DEFAULT:'Agora o semestre: <strong>1</strong> ou <strong>2</strong>');return null}
+  const yy=+v.slice(0,2),s=v[3];
+  if(yy<min||yy>max){setSemHint(`Ano fora do intervalo: use de <strong>${String(min).padStart(2,'0')}</strong> a <strong>${max}</strong>`,'err');return null}
+  if(Object.values(sems).some(x=>semPeriod(x.name)===semPeriod(v))){setSemHint(`Você já tem o semestre <strong>${v}</strong>`,'err');return null}
+  setSemHint(`✓ <strong>${s}º semestre de 20${v.slice(0,2)}</strong>`,'ok');
+  semConfirmBtn.disabled=false;
+  return v;
+}
+semNameInput.addEventListener('input',()=>{
+  let d=semNameInput.value.replace(/\D/g,'');
+  // 3º dígito é o semestre: qualquer coisa fora de 1/2 é barrada na hora, com aviso.
+  if(d.length>=3&&d[2]!=='1'&&d[2]!=='2'){
+    d=d.slice(0,2);
+    semNameInput.value=`${d}.`;
+    setSemHint('O semestre só pode ser <strong>1</strong> ou <strong>2</strong>','err');
+    semConfirmBtn.disabled=true;
+    gsap.fromTo(semNameInput,{x:-5},{x:0,duration:.35,ease:'elastic.out(1,.3)'});
+    return;
+  }
+  d=d.slice(0,3);
+  semNameInput.value=d.length===3?`${d.slice(0,2)}.${d[2]}`:d.length===2&&semNameInput.value.endsWith('.')?`${d}.`:d;
+  validateSemInput();
+});
+document.getElementById('btn-new-sem').onclick=()=>{
+  semAddWrap.style.display='';
+  // Já sugere o semestre atual (se ainda não existir): na maioria das vezes é só tocar em Criar.
+  const[y,s]=currentPeriod().split('-');
+  semNameInput.value=`${y.slice(2)}.${s}`;
+  if(!validateSemInput()){semNameInput.value='';validateSemInput()}
+  gsap.fromTo(semAddWrap,{opacity:0,y:-8},{opacity:1,y:0,duration:.3,ease:'back.out(1.6)'});
+  semNameInput.focus();semNameInput.select();
+};
 document.getElementById('btn-cancel-sem').onclick=closeSemPanel;
-document.getElementById('btn-confirm-sem').onclick=addSem;
+semConfirmBtn.onclick=addSem;
 semNameInput.addEventListener('keydown',e=>{if(e.key==='Enter')addSem();if(e.key==='Escape')closeSemPanel()});
-function closeSemPanel(){semAddPanel.style.display='none';semNameInput.value=''}
+function closeSemPanel(){semAddWrap.style.display='none';semNameInput.value='';setSemHint('')}
 async function addSem(){
-  const name=semNameInput.value.trim();if(!name){toast('Digite um nome');return}
+  const name=validateSemInput();
+  if(!name){gsap.fromTo(semNameInput,{x:-5},{x:0,duration:.35,ease:'elastic.out(1,.3)'});semNameInput.focus();return}
   const id='sem_'+Date.now();sems[id]={name,tp_nota:'',tp_disc:'',discs:{}};semId=id;
   await setDoc(doc(db,'users',user.uid,'semestres',id),{name,tp_nota:'',tp_disc:''});
   closeSemPanel();renderAll();toast(`Semestre "${name}" criado!`);
@@ -1627,7 +1694,12 @@ async function deleteSem(id,e){
   e.stopPropagation();if(!confirm(`Excluir "${sems[id]?.name}"?`))return;
   const snap=await getDocs(collection(db,'users',user.uid,'semestres',id,'disciplinas'));
   await Promise.all(snap.docs.map(d=>deleteDoc(doc(db,'users',user.uid,'semestres',id,'disciplinas',d.id))));
-  await deleteDoc(doc(db,'users',user.uid,'semestres',id));delete sems[id];
+  await deleteDoc(doc(db,'users',user.uid,'semestres',id));
+  // Tira a entrada do ranking desse período, a menos que outro semestre caia no mesmo.
+  const p=semPeriod(sems[id]?.name);
+  if(p&&!Object.entries(sems).some(([sid,s])=>sid!==id&&semPeriod(s.name)===p))
+    try{await deleteDoc(doc(db,'ranking',p,'alunos',user.uid))}catch{}
+  delete sems[id];
   semId=Object.keys(sems)[0]??null;renderAll();toast('Semestre excluído');
 }
 function selectSem(id){semId=id;animatedDiscs.clear();renderAll()}
@@ -1713,16 +1785,16 @@ function analyseDisc(d,tpPts){
     pass:{txt:nP<=0?'Aprovação já garantida ✓':impP?'Impossível atingir 7,0':`Faltam ${nP} pts para aprovação`,cls:nP<=0?'ok':impP?'bad':'warn'},
     grade:null,projGrade:impS?maxGrade:9.0,partialGrade,knownPts,slotStars,slotPass};
 }
-function getTpPts(id){
-  if(!semId)return 0;const s=sems[semId];
+function getTpPts(id,sid=semId){
+  if(!sid||!sems[sid])return 0;const s=sems[sid];
   if(s.tp_disc!==id||s.tp_nota===''||s.tp_nota==null)return 0;
   return Math.min(10,Math.max(0,parseFloat(s.tp_nota)||0));
 }
-function calcCR(){
-  if(!semId)return{cr:null,projCr:null,partialCr:null,disq:false,reasons:[],validN:0,totalN:0,partialN:0};
+function calcCR(sid=semId){
+  if(!sid||!sems[sid])return{cr:null,projCr:null,partialCr:null,disq:false,reasons:[],validN:0,totalN:0,partialN:0};
   const reasons=[],grades=[],proj=[],allGrades=[];let hasDisq=false,partialN=0,allHaveBase=true;
-  for(const[id,d]of Object.entries(sems[semId].discs)){
-    const a=analyseDisc(d,getTpPts(id));
+  for(const[id,d]of Object.entries(sems[sid].discs)){
+    const a=analyseDisc(d,getTpPts(id,sid));
     if(a.type==='disq'){hasDisq=true;reasons.push(`"${d.nome||'Sem nome'}": ${d.as?'AS':'sub AP1'}`);continue}
     if(pv(d.ac)===null||pv(d.ap1)===null)allHaveBase=false;
     if(a.grade!==null){grades.push(a.grade);allGrades.push(a.grade);}
@@ -1734,7 +1806,7 @@ function calcCR(){
   // Só expõe a parcial quando TODAS as disciplinas já têm AC e AP1: com matéria em branco
   // a média sairia calculada em cima de meia turma de notas e enganaria.
   const aN=allGrades.length,partialCr=aN&&partialN>0&&allHaveBase?Math.floor(allGrades.reduce((a,b)=>a+b,0)/aN*100)/100:null;
-  return{cr,projCr,partialCr,disq:hasDisq,reasons,validN:vN,totalN:Object.keys(sems[semId].discs).length,partialN,allHaveBase};
+  return{cr,projCr,partialCr,disq:hasDisq,reasons,validN:vN,totalN:Object.keys(sems[sid].discs).length,partialN,allHaveBase};
 }
 
 // ─── SUMMARY ─────────────────────────────────────────────────────────────────
@@ -1936,27 +2008,68 @@ async function lbSavePrefs(){
   try{await setDoc(doc(db,'users',user.uid,'prefs','settings'),
     {lbOptin:lbPrefs.optin,lbNamed:lbPrefs.named,lbDisplayName:lbPrefs.displayName},{merge:true})}catch{}
 }
-async function updateLeaderboard(){
-  if(!user)return;
-  if(!lbPrefs.optin){try{await deleteDoc(doc(db,'leaderboard',user.uid))}catch{};return}
-  if(!semId||!sems[semId])return;
-  const{cr,partialCr,validN}=calcCR();
+// ─── PERÍODOS DO RANKING ─────────────────────────────────────────────────────
+// O período vem do nome do semestre ("25.1", "2025.2", "25/1"...) e vira a chave "2025-1".
+// Semestre com nome fora desse padrão não entra no ranking por período.
+function semPeriod(name){
+  const m=String(name||'').match(/(?:^|\D)(\d{4}|\d{2})\s*[.\/\-]\s*([12])(?!\d)/);
+  if(!m)return null;
+  return `${m[1].length===2?2000+(+m[1]):+m[1]}-${m[2]}`;
+}
+function currentPeriod(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()<6?1:2}`}
+function periodLabel(p){const[y,s]=p.split('-');return `${y}.${s}`}
+let lbPeriod=currentPeriod();
+function lbEntryData(sid){
+  const{cr,partialCr,validN}=calcCR(sid);
   const dn=lbPrefs.named?(lbPrefs.displayName||user.displayName?.split(' ')[0]||'Usuário'):'Anônimo';
-  const buildings=Object.entries(sems[semId].discs).map(([id,d])=>{
-    const a=analyseDisc(d,getTpPts(id));
+  const buildings=Object.entries(sems[sid].discs).map(([id,d])=>{
+    const a=analyseDisc(d,getTpPts(id,sid));
     if(a.grade!==null)return{v:a.grade,t:a.grade>=9?'ok':a.grade>=7?'pass':'bad',n:d.nome||id};
     if(a.partialGrade!==null&&a.partialGrade>0)return{v:a.partialGrade,t:'partial',n:d.nome||id};
     return null;
   });
-  try{await setDoc(doc(db,'leaderboard',user.uid),{
+  return{
     displayName:dn,anonymous:!lbPrefs.named,
     cr:cr??null,partialCr:partialCr??null,validN,
     buildings,curso:currentCourse??'',
-    semName:sems[semId].name,updatedAt:serverTimestamp()
-  })}catch(e){console.error('lb',e)}
+    semName:sems[sid].name,updatedAt:serverTimestamp()
+  };
+}
+// onlySid: publica só esse semestre (salvamento de notas); sem ele, republica todos
+// (login, troca de curso/nome/participação).
+async function updateLeaderboard(onlySid){
+  if(!user)return;
+  const periods=[...new Set(Object.values(sems).map(s=>semPeriod(s.name)).filter(Boolean))];
+  if(!lbPrefs.optin){
+    await Promise.all([
+      deleteDoc(doc(db,'leaderboard',user.uid)),
+      ...periods.map(p=>deleteDoc(doc(db,'ranking',p,'alunos',user.uid)))
+    ].map(pr=>pr.catch(()=>{})));
+    return;
+  }
+  // leaderboard/{uid} segue com o semestre selecionado: é o que alimenta o modo cidade.
+  const writes=[];
+  if(semId&&sems[semId])writes.push(setDoc(doc(db,'leaderboard',user.uid),lbEntryData(semId)));
+  for(const sid of onlySid?[onlySid]:Object.keys(sems)){
+    const p=sems[sid]&&semPeriod(sems[sid].name);
+    if(p)writes.push(setDoc(doc(db,'ranking',p,'alunos',user.uid),{...lbEntryData(sid),periodo:p}));
+  }
+  try{await Promise.all(writes)}catch(e){console.error('lb',e)}
+}
+function lbFillPeriodSelects(){
+  const thisYear=new Date().getFullYear();
+  const years=Object.values(sems).map(s=>semPeriod(s.name)).filter(Boolean).map(p=>+p.split('-')[0]);
+  const minYear=Math.min(thisYear-5,...years),maxYear=Math.max(thisYear,...years);
+  const [y,s]=lbPeriod.split('-');
+  const ySel=document.getElementById('lb-year');
+  ySel.innerHTML='';
+  for(let yr=maxYear;yr>=minYear;yr--)ySel.add(new Option(yr,yr));
+  ySel.value=y;
+  document.getElementById('lb-sem').value=s;
 }
 async function openLeaderboard(){
   lbSyncUI();
+  lbFillPeriodSelects();
   document.getElementById('lb-modal').classList.add('open');
   await renderLeaderboard();
 }
@@ -1966,7 +2079,9 @@ async function renderLeaderboard(){
   list.innerHTML='<div class="lb-loading"><div class="loading-ring" style="width:28px;height:28px"></div><span>Carregando…</span></div>';
   posEl.textContent='';
   try{
-    const snap=await getDocs(collection(db,'leaderboard'));
+    const period=lbPeriod,pLabel=periodLabel(period);
+    const snap=await getDocs(collection(db,'ranking',period,'alunos'));
+    if(period!==lbPeriod)return; // usuário trocou de período enquanto carregava
     const all=snap.docs.map(d=>({...d.data(),uid:d.id}));
     const filtered=lbCourseFilter&&currentCourse?all.filter(e=>e.curso===currentCourse):all;
     filtered.sort((a,b)=>{
@@ -1974,11 +2089,16 @@ async function renderLeaderboard(){
       const bs=b.cr!==null?b.cr:(b.partialCr!==null?b.partialCr-0.01:-1);
       return bs-as;
     });
+    const baseTitle=lbCourseFilter&&currentCourse?`Top ${currentCourse} · ${pLabel}`:`Top alunos · ${pLabel}`;
+    const mySemInPeriod=Object.values(sems).some(s=>semPeriod(s.name)===period);
     if(!filtered.length){
-      list.innerHTML='<div class="lb-empty">Nenhum aluno no ranking ainda.<br>Seja o primeiro a participar! 🚀</div>';
-      title.textContent=lbCourseFilter&&currentCourse?`Top ${currentCourse}`:'Top alunos';return;
+      list.innerHTML=`<div class="lb-empty">Nenhum aluno no ranking de ${pLabel} ainda.${period===currentPeriod()?'<br>Seja o primeiro a participar! 🚀':''}</div>`;
+      title.textContent=baseTitle;
+      posEl.innerHTML=lbPrefs.optin&&!mySemInPeriod?`Você não tem um semestre "${pLabel.slice(2)}" cadastrado.`:'';
+      document.getElementById('lb-rev-section').style.display='none';
+      return;
     }
-    title.textContent=lbCourseFilter&&currentCourse?`Top ${currentCourse} (${filtered.length})`:`Top alunos (${filtered.length})`;
+    title.textContent=`${baseTitle} (${filtered.length})`;
     list.innerHTML='';
     const medals=['🥇','🥈','🥉'];
     let myPos=-1,myEntry=null;
@@ -2004,9 +2124,13 @@ async function renderLeaderboard(){
     });
     if(!lbPrefs.optin){posEl.innerHTML='Ative a participação para aparecer no ranking!';}
     else if(myPos>0){posEl.innerHTML=myPos<=3?`Você está no <strong>top ${myPos}</strong>! 🎉`:`Você está na posição <strong>#${myPos}</strong>`;}
+    else if(!mySemInPeriod){posEl.innerHTML=`Você não tem um semestre "${pLabel.slice(2)}" cadastrado.`;}
     else{posEl.innerHTML='Seu CR ainda não foi publicado. Salve uma nota para aparecer.';}
 
-    renderRevSection(filtered,myEntry,myPos);
+    // O simulador mexe nas notas do semestre aberto, então só faz sentido no período dele.
+    const selPeriod=semId&&sems[semId]?semPeriod(sems[semId].name):null;
+    if(selPeriod===period)renderRevSection(filtered,myEntry,myPos);
+    else document.getElementById('lb-rev-section').style.display='none';
   }catch(e){
     console.error('lb render',e);
     list.innerHTML='<div class="lb-empty">Erro ao carregar o ranking.<br>Verifique sua conexão.</div>';
@@ -2095,6 +2219,10 @@ document.getElementById('lb-tab-course').onclick=()=>{
   lbCourseFilter=true;
   document.getElementById('lb-tab-course').classList.add('active');
   document.getElementById('lb-tab-all').classList.remove('active');
+  renderLeaderboard();
+};
+document.getElementById('lb-year').onchange=document.getElementById('lb-sem').onchange=()=>{
+  lbPeriod=`${document.getElementById('lb-year').value}-${document.getElementById('lb-sem').value}`;
   renderLeaderboard();
 };
 document.getElementById('btn-ranking').onclick=openLeaderboard;
