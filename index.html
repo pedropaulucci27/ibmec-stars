@@ -176,6 +176,27 @@
     .gt-info strong{color:var(--text1)}
     .gt-info ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
     .gt-info-src{font-size:11px;opacity:.85}
+    /* Regulamento do Stars: checklist com o status de cada requisito do aluno */
+    .rules-btn{display:block;margin-top:12px}
+    .stars-rules{margin-top:10px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);font-size:12px;line-height:1.5;color:var(--text2)}
+    .rq-sum{font-size:12.5px;margin-bottom:10px}
+    .rq-sum strong{color:var(--text1)}
+    .rq-sum.ok{color:var(--green);font-weight:700}
+    .rq-items{list-style:none;display:flex;flex-direction:column;gap:11px}
+    .rq-item{display:flex;gap:10px;align-items:flex-start}
+    .rq-ico{flex:0 0 20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:1px solid var(--border);margin-top:1px}
+    .rq-item.ok .rq-ico{color:var(--green);background:var(--green-bg);border-color:rgba(95,211,154,.4)}
+    .rq-item.fail .rq-ico{color:var(--red);background:var(--red-bg);border-color:rgba(242,139,139,.4)}
+    .rq-item.pend .rq-ico{color:var(--text2)}
+    .rq-t{color:var(--text1);font-weight:700;font-size:12.5px}
+    .rq-d strong{color:var(--text1)}
+    .rq-list{margin-top:5px;font-size:11.5px;line-height:1.6}
+    .rq-note{margin-top:12px;font-size:10.5px;opacity:.8}
+    /* Selo do período original: no topo do cartão da disciplina e na lista do regulamento */
+    .orig-tag,.rq-tag{display:inline-block;flex-shrink:0;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:8px;white-space:nowrap;line-height:1.2}
+    .rq-tag{margin-right:4px;padding:1px 7px}
+    .orig-tag.on,.rq-tag.on{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(116,185,245,.4)}
+    .orig-tag.off,.rq-tag.off{color:var(--text2);border:1px dashed rgba(138,147,200,.55)}
     .chk-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);background:rgba(10,18,38,.5);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px;transition:border-color .3s,background .3s}
     .chk-chip:has(.chk-icon.ok){border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.05)}
     .chk-chip:has(.chk-icon.fail){border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)}
@@ -640,6 +661,8 @@
           <div class="chk-chip"><span class="chk-icon" id="chk-cr">?</span><span id="chk-cr-txt">CR ≥ 9</span></div>
           <div class="chk-chip"><span class="chk-icon" id="chk-disq">?</span><span id="chk-disq-txt">Sem AS/Sub</span></div>
         </div>
+        <button type="button" class="gt-more rules-btn" id="rules-more" aria-expanded="false" aria-controls="stars-rules">Regulamento do Stars e meus requisitos</button>
+        <div class="stars-rules" id="stars-rules" hidden aria-live="polite"></div>
         <div class="gt-row">
           <div class="gt-text">
             <label class="gt-label" for="grade-total">Disciplinas do <strong>período original</strong> na grade</label>
@@ -685,7 +708,7 @@
       <!-- Disciplinas sem card wrapper externo -->
       <div>
         <div class="card-label" style="padding:0 2px;margin-bottom:10px">Disciplinas</div>
-        <div id="subj-list" style="display:flex;flex-direction:column;gap:10px">
+        <div id="subj-list" style="display:flex;flex-direction:column;gap:22px">
           <div class="empty-msg">Nenhuma disciplina adicionada</div>
         </div>
         <button class="add-btn" id="btn-add-subj" style="margin-top:10px">
@@ -1455,7 +1478,36 @@ function animParticles(){
   if(particles.length)requestAnimationFrame(animParticles);
 }
 
-// ─── GSAP CR COUNTER ─────────────────────────────────────────────────────────
+// ─── REVELAR AO ROLAR (fade-in) ──────────────────────────────────────────────
+// O que entra na tela pela primeira vez sobe 18px e aparece (GSAP). O gatilho é o
+// IntersectionObserver nativo: não escuta a rolagem quadro a quadro como um scroll listener,
+// então não pesa. Só opacity/transform (baratos de animar), uma vez por elemento, e o estilo
+// inline é limpo no fim (sem camadas extras sobrando). O que já está visível não é escondido
+// (sem piscar), e com "reduzir movimento" nada é escondido nem animado.
+const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new IntersectionObserver(entries=>{
+  const vis=entries.filter(e=>e.isIntersecting).map(e=>e.target);
+  if(!vis.length)return;
+  vis.forEach(el=>_revealIO.unobserve(el));
+  gsap.to(vis,{opacity:1,y:0,duration:.55,ease:'power3.out',stagger:.07,overwrite:'auto',clearProps:'opacity,transform,willChange'});
+},{rootMargin:'0px 0px -6% 0px',threshold:.06});
+function inView(el){const r=el.getBoundingClientRect();return r.height>0&&r.top<innerHeight&&r.bottom>0}
+function reveal(els){
+  if(!_revealIO)return;
+  for(const el of els){
+    if(el.dataset.revealed)continue;
+    el.dataset.revealed='1';
+    if(inView(el))continue; // já na tela: fica como está
+    gsap.set(el,{opacity:0,y:18,willChange:'opacity,transform'});
+    _revealIO.observe(el);
+  }
+}
+// Antes de recriar uma lista, para de observar os itens velhos (evita guardar nós removidos)
+function unreveal(container){
+  if(!_revealIO||!container)return;
+  container.querySelectorAll('[data-revealed]').forEach(el=>_revealIO.unobserve(el));
+}
+
+// ─── GSAP CR COUNTER─────────────────────────────────────────────────────────
 let currentDisplayCR=null,crProxy={val:0},crTween=null;
 function animateCR(target,partial){
   const el=document.getElementById('sum-cr');
@@ -1486,7 +1538,11 @@ function show(id){
   if(id==='s-login') gsap.fromTo('#login-card',{opacity:0,y:40,scale:.95},{opacity:1,y:0,scale:1,duration:.65,ease:'back.out(1.4)'});
   if(id==='s-app'){
     gsap.fromTo('header',{opacity:0,y:-16},{opacity:1,y:0,duration:.4,ease:'power3.out'});
-    gsap.fromTo('main > *',{opacity:0,y:18},{opacity:1,y:0,stagger:.06,duration:.45,ease:'power3.out',delay:.15});
+    // Entrada em sequência só pro que está na tela; o resto aparece ao rolar (reveal)
+    const kids=[...document.querySelectorAll('#s-app main > *')],vis=kids.filter(inView);
+    vis.forEach(k=>{k.dataset.revealed='1';_revealIO?.unobserve(k)});
+    gsap.fromTo(vis,{opacity:0,y:18},{opacity:1,y:0,stagger:.06,duration:.45,ease:'power3.out',delay:.15,overwrite:'auto',clearProps:'opacity,transform,willChange'});
+    reveal(kids.filter(k=>!vis.includes(k)));
   }
 }
 
@@ -2136,6 +2192,39 @@ function enrollInfo(sid=semId){
 }
 // Apto = matrícula ok + CR ≥ 9 com TODAS as disciplinas matriculadas com nota fechada.
 function starsEligible(c,en){return en.ok&&c.cr!==null&&c.cr>=9&&c.validN===c.totalN}
+// ─── REGULAMENTO DO STARS ────────────────────────────────────────────────────
+// Painel com os requisitos que o app considera e se o aluno cumpre cada um, no semestre aberto.
+function renderStarsRules(){
+  const box=document.getElementById('stars-rules');if(box.hidden)return;
+  if(!semId||!sems[semId]){box.innerHTML='<p>Crie um semestre para ver seus requisitos.</p>';return}
+  const c=calcCR(),en=enrollInfo(),entries=Object.entries(sems[semId].discs),discs=entries.map(([,d])=>d);
+  const name=d=>escHtml(d.nome||'Sem nome');
+  const orig=discs.filter(isOrig).map(name),fora=discs.filter(d=>!isOrig(d)).map(name);
+  const semNota=entries.filter(([id,d])=>{const a=analyseDisc(d,getTpPts(id));return a.type!=='disq'&&a.grade===null}).map(([,d])=>name(d));
+  const st=(ok,known)=>!known?'pend':ok?'ok':'fail';
+  const items=[
+    {s:st(en.ok,en.known),t:'Pelo menos 75% das disciplinas do período original',
+     d:en.known?`Você tem <strong>${en.n} de ${en.total}</strong> (mínimo ${en.need}).`:'Informe abaixo quantas disciplinas o seu período tem na grade.',
+     x:`<div class="rq-list"><span class="rq-tag on">Originais</span>${orig.join(', ')||'nenhuma'}</div>`+(fora.length?`<div class="rq-list"><span class="rq-tag off">Fora do período</span>${fora.join(', ')}</div>`:'')},
+    {s:st(discs.length>0&&!semNota.length,discs.length>0),t:'Todas as disciplinas com nota fechada (AC, AP1 e AP2)',
+     d:!discs.length?'Adicione suas disciplinas.':semNota.length?`Faltam notas em: ${semNota.join(', ')}.`:'Todas com nota fechada.'},
+    {s:st(c.cr!==null&&c.cr>=9,c.cr!==null),t:'CR do semestre de pelo menos 9,00',
+     d:c.cr!==null?`Seu CR: <strong>${fmtG(c.cr)}</strong>.`:c.partialCr!==null?`Parcial: ~${fmtG(c.partialCr)}. O CR fecha quando saírem todas as notas.`:'Aparece quando houver notas fechadas.'},
+    {s:st(!c.disq,discs.length>0),t:'Nenhuma disciplina com média AS ou Sub AP1',
+     d:c.disq?c.reasons.map(escHtml).join('; '):'Nenhuma até agora.'}
+  ];
+  const okN=items.filter(i=>i.s==='ok').length;
+  const label={ok:'cumprido',fail:'não cumprido',pend:'pendente'};
+  box.innerHTML=(okN===items.length?'<p class="rq-sum ok">✓ Você cumpre todos os requisitos.</p>':`<p class="rq-sum">Você cumpre <strong>${okN} de ${items.length}</strong> requisitos.</p>`)
+    +'<ul class="rq-items">'+items.map(i=>`<li class="rq-item ${i.s}"><span class="rq-ico" aria-hidden="true">${i.s==='ok'?'✓':i.s==='fail'?'✕':'?'}</span><div><div class="rq-t">${i.t}<span class="sr-only">: ${label[i.s]}</span></div><div class="rq-d">${i.d}</div>${i.x||''}</div></li>`).join('')+'</ul>'
+    +'<p class="rq-note">Estes são os requisitos que o app confere. Consulte sempre o regulamento oficial do Ibmec Stars.</p>';
+}
+document.getElementById('rules-more').onclick=function(){
+  const box=document.getElementById('stars-rules'),open=box.hidden;
+  box.hidden=!open;this.setAttribute('aria-expanded',open);
+  if(open){renderStarsRules();gsap.fromTo(box,{opacity:0,y:-6},{opacity:1,y:0,duration:.25,ease:'power2.out'})}
+};
+
 // "Saiba mais" do período original: abre/fecha a explicação logo abaixo
 document.getElementById('gt-more').onclick=function(){
   const info=document.getElementById('gt-info'),open=info.hidden;
@@ -2153,6 +2242,7 @@ document.getElementById('grade-total').addEventListener('input',function(){
 function updateSummary(){
   const c=calcCR(),{cr,projCr,partialCr,disq,reasons,validN,totalN,partialN}=c;
   const en=enrollInfo();
+  renderStarsRules(); // painel do regulamento (se aberto) acompanha as notas
   const card=document.getElementById('summary-card'),badge=document.getElementById('sum-badge'),
         msg=document.getElementById('sum-msg'),crEl=document.getElementById('sum-cr');
   setChk('chk-min',en.ok,en.known);
@@ -2211,7 +2301,7 @@ function fmtG(n){return n.toFixed(2).replace('.',',')}
 function fmtI(n){return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
-function renderAll(){renderSems();renderContent();renderDiscs();updateSummary();refresh3D()}
+function renderAll(){renderSems();renderContent();renderDiscs();updateSummary();refresh3D();reveal(document.querySelectorAll('#s-app main > *'))}
 function renderSems(){
   const list=document.getElementById('sem-list');list.innerHTML='';
   const ids=Object.keys(sems);
@@ -2270,6 +2360,8 @@ function buildSlotHTML(field,id,d,a){
 function renderDiscs(){
   if(!semId)return;
   const discs=sems[semId]?.discs??{},list=document.getElementById('subj-list');
+  unreveal(list);
+  let visIdx=0;
   const entries=Object.entries(discs);
   const hasDiscs=entries.length>0;
   const tpWrap=document.getElementById('tp-card-wrap');
@@ -2294,6 +2386,7 @@ function renderDiscs(){
       <div class="subj-head">
         <span class="subj-num">${String(i+1).padStart(2,'0')}</span>
         <input type="text" class="name-input" id="n_${id}" placeholder="Ex: Cálculo I, Direito Civil…" value="${esc(d.nome??'')}" autocomplete="off" spellcheck="false">
+        <span id="ot_${id}"></span>
         ${tpPts>0?`<span class="tp-badge">🔬</span>`:''}
         <button class="icon-btn" title="Remover"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
@@ -2305,7 +2398,8 @@ function renderDiscs(){
     card.querySelector(`#n_${id}`).oninput=function(){sems[semId].discs[id].nome=this.value;updateTpSelect();queueSave()};
     // Do período original? Conta pros 75% do Stars. Toque alterna.
     const ob=card.querySelector(`#o_${id}`);
-    const paintOrig=()=>{const on=isOrig(sems[semId].discs[id]);ob.setAttribute('aria-pressed',on);ob.innerHTML=on?'✓ Do período original':'↪ Fora do período original';ob.title=on?'Conta para os 75% do Stars. Toque se ela for de outro período.':'Não conta para os 75%. Toque se ela for do seu período original.'};
+    const otag=card.querySelector(`#ot_${id}`);
+    const paintOrig=()=>{const on=isOrig(sems[semId].discs[id]);otag.className='orig-tag '+(on?'on':'off');otag.textContent=on?'Original':'Fora do período';ob.setAttribute('aria-pressed',on);ob.innerHTML=on?'✓ Do período original':'↪ Fora do período original';ob.title=on?'Conta para os 75% do Stars. Toque se ela for de outro período.':'Não conta para os 75%. Toque se ela for do seu período original.'};
     paintOrig();
     ob.onclick=()=>{
       const disc=sems[semId].discs[id];disc.orig=!isOrig(disc);
@@ -2322,7 +2416,10 @@ function renderDiscs(){
     list.appendChild(card);
     if(!animatedDiscs.has(id)){
       animatedDiscs.add(id);
-      gsap.fromTo(card,{opacity:0,y:22,scale:.96},{opacity:1,y:0,scale:1,duration:.45,ease:'back.out(1.6)',delay:i*.05});
+      // Na tela: entrada com stagger como antes (só entre os visíveis). Fora da tela: aparece
+      // quando você rolar até ele, em vez de animar escondido sem ninguém ver.
+      if(inView(card)){card.dataset.revealed='1';gsap.fromTo(card,{opacity:0,y:22,scale:.96},{opacity:1,y:0,scale:1,duration:.45,ease:'back.out(1.6)',delay:(visIdx++)*.05,clearProps:'opacity,transform'})}
+      else reveal([card]);
     }
   });
   if(focusedId){const el=document.getElementById(focusedId);if(el){el.focus();if(el.type==='text')el.setSelectionRange(el.value.length,el.value.length)}}
@@ -2461,6 +2558,7 @@ async function openLeaderboard(){
 function closeLeaderboard(){document.getElementById('lb-modal').classList.remove('open')}
 async function renderLeaderboard(){
   const list=document.getElementById('lb-entries'),posEl=document.getElementById('lb-pos'),title=document.getElementById('lb-list-label');
+  unreveal(list);
   list.innerHTML='<div class="lb-loading"><div class="loading-ring" style="width:28px;height:28px"></div><span>Carregando…</span></div>';
   posEl.textContent='';
   try{
@@ -2506,6 +2604,7 @@ async function renderLeaderboard(){
         </div>`;
       list.appendChild(el);
     });
+    reveal(list.children); // quem está abaixo da dobra aparece ao rolar o painel
     if(!lbPrefs.optin){posEl.innerHTML='Ative a participação para aparecer no ranking!';}
     else if(myPos>0){posEl.innerHTML=myPos<=3?`Você está no <strong>top ${myPos}</strong>! 🎉`:`Você está na posição <strong>#${myPos}</strong>`;}
     else if(!mySemInPeriod){posEl.innerHTML=`Você não tem um semestre "${pLabel.slice(2)}" cadastrado.`;}
