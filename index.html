@@ -1142,7 +1142,8 @@ document.addEventListener('pointerdown',e=>{
 // ─── AVISO DE NOVA VERSÃO ─────────────────────────────────────────────────────
 // O app instalado no iPhone não recarrega sozinho: ao voltar pra ele, o iOS só "acorda"
 // a página antiga. Aqui o app confere o ETag do index.html (muda a cada deploy) quando
-// volta a ficar visível e a cada 30 min; se mudou, oferece atualizar com um toque.
+// volta a ficar visível e a cada 30 min; se mudou, recarrega sozinho ao voltar pro app
+// (ou mostra "Atualizar" se a pessoa estiver no meio de algo).
 (()=>{
   if(!/^https?:$/.test(location.protocol))return;
   let baseTag=null,checking=false,lastCheck=0,dismissedTag=null;
@@ -1152,14 +1153,24 @@ document.addEventListener('pointerdown',e=>{
     // O servidor marca a compressão no fim ("...-br"); só o hash do conteúdo interessa.
     return r.ok?(r.headers.get('etag')||'').replace(/^W\//,'').replace(/-[a-z]+"$/,'"')||null:null;
   };
-  async function check(){
-    if(checking||Date.now()-lastCheck<60000)return; // no máximo 1 conferência por minuto
+  async function check(cameBack=false){
+    if(checking||(!cameBack&&Date.now()-lastCheck<60000))return; // timer: no máximo 1 por minuto
     checking=true;lastCheck=Date.now();
     try{
       const tag=await getTag();
       if(!tag)return;
       if(!baseTag){baseTag=tag;return}
       if(tag!==baseTag&&tag!==dismissedTag){
+        // Atualiza sozinho quando é seguro: app acabou de voltar pra tela, ninguém está
+        // digitando e não há nota esperando pra salvar. Senão, mostra o aviso com botão.
+        const typing=document.activeElement?.matches?.('input,textarea,select');
+        // Só tenta sozinho uma vez por versão: se algum cache devolver a página antiga,
+        // não fica recarregando em loop (cai no aviso com botão).
+        let tried=null;try{tried=sessionStorage.getItem('upd-tried')}catch{}
+        if(cameBack&&!typing&&!saveTimer&&tried!==tag){
+          try{sessionStorage.setItem('upd-tried',tag)}catch{}
+          location.reload();return;
+        }
         bar.dataset.tag=tag;bar.hidden=false;
         gsap.fromTo(bar,{y:30,opacity:0},{y:0,opacity:1,duration:.35,ease:'back.out(1.6)'});
       }
@@ -1173,8 +1184,8 @@ document.addEventListener('pointerdown',e=>{
   };
   document.getElementById('update-x').onclick=()=>{dismissedTag=bar.dataset.tag;bar.hidden=true};
   check();
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
-  window.addEventListener('pageshow',e=>{if(e.persisted)check()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check(true)});
+  window.addEventListener('pageshow',e=>{if(e.persisted)check(true)});
   setInterval(()=>{if(document.visibilityState==='visible'){lastCheck=0;check()}},30*60*1000);
 })();
 
