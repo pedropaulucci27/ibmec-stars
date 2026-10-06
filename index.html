@@ -215,10 +215,22 @@
     .g-input::placeholder{color:rgba(80,110,180,.28);font-size:20px;font-weight:400}
     .g-input.has-val{color:var(--text1)}
     .g-val{font-size:26px;font-weight:900;color:var(--purple);line-height:1.1;padding:2px 0}
-    .g-hint{font-size:9px;font-weight:700;text-align:center;line-height:1.2;min-height:13px;width:100%;padding:0 2px;display:flex;justify-content:center;align-items:center;gap:3px;flex-wrap:wrap}
+    /* Metas embaixo da nota: uma linha "⭐ Stars  mín 9" e outra "✓ Passar  mín 4,5".
+       Nome em cor própria (dourado/azul) e valor colorido pelo estado: amarelo = precisa,
+       verde = garantido, vermelho = impossível. */
+    .g-hint{font-size:10px;line-height:1.25;min-height:13px;width:100%;padding:3px 0 0;display:flex;flex-direction:column;align-items:stretch;gap:2px}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+    .gh-line{display:flex;align-items:baseline;column-gap:3px;flex-wrap:wrap;padding:0 2px}
+    .gh-k{font-weight:700;white-space:nowrap}
+    /* margin-left:auto: valor sempre na direita, inclusive se precisar descer de linha */
+    .gh-v{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.1px}
+    .h-stars .gh-k{color:var(--gold)}
+    .h-pass .gh-k{color:var(--blue)}
+    .gh-line.warn .gh-v{color:var(--text1)}
+    .gh-line.ok .gh-v{color:var(--green)}
+    .gh-line.bad .gh-v{color:var(--red)}
     .h-stars{color:var(--amber)}.h-stars.ok{color:var(--green)}.h-stars.bad{color:var(--red)}
     .h-pass{color:var(--blue)}.h-pass.ok{color:var(--green)}.h-pass.bad{color:var(--red)}
-    .h-sep{color:rgba(80,110,180,.3);font-size:8px}
     .g-slot::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;background:var(--gold);border-radius:1px;transform:scaleX(0);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
     .g-slot:focus-within::after{transform:scaleX(1)}
     .g-slot.tp-slot::after{background:var(--purple)}
@@ -2205,18 +2217,27 @@ function updateTpSelect(){
     sel.appendChild(opt);
   });
 }
+// Dica embaixo de cada nota que falta: quanto precisa tirar nela para o Stars e para passar.
+// Uma linha por meta, com o nome escrito (não só ícone), pra ficar óbvio qual é qual.
+function slotHintParts(field,h){
+  if(!h)return null;
+  const txt=h.val==='livre'?'garantido':h.type==='bad'?'impossível':h.val;
+  return{txt,type:h.type};
+}
+function slotHintHTML(field,sH,pH){
+  const s=slotHintParts(field,sH),p=slotHintParts(field,pH);
+  if(!s&&!p)return{html:'',label:''};
+  // Visual (escondido do leitor de tela) + uma frase completa só pro leitor de tela.
+  const line=(cls,icon,name,o)=>`<span class="gh-line ${cls} ${o.type}" aria-hidden="true"><span class="gh-k">${icon} ${name}</span><span class="gh-v">${o.txt}</span></span>`;
+  const label=SLOTS[field].label;
+  const say=(name,o)=>o.txt==='garantido'?`${name}: já garantido`:o.txt==='impossível'?`${name}: não dá mais nesta disciplina`:`${name}: precisa de ${o.txt.replace('mín ','no mínimo ')} na ${label}`;
+  const sr=[s&&say('Stars',s),p&&say('Passar',p)].filter(Boolean).join('. ');
+  return{html:`<span class="sr-only">${sr}.</span>`+(s?line('h-stars','⭐','Stars',s):'')+(p?line('h-pass','✓','Passar',p):''),label:sr};
+}
 function buildSlotHTML(field,id,d,a){
   const s=SLOTS[field],val=d[field],filled=val!==''&&val!=null;
-  let hint='';
-  if(!filled){
-    const sH=a.slotStars[field],pH=a.slotPass[field];
-    if(sH||pH){
-      const sp=sH?`<span class="h-stars ${sH.type}">⭐${sH.val}</span>`:'';
-      const pp=pH?`<span class="h-pass ${pH.type}">📘${pH.val}</span>`:'';
-      hint=`${sp}${sp&&pp?'<span class="h-sep">·</span>':''}${pp}`;
-    }
-  }
-  return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><span class="g-label-sub">${s.fullName}</span><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="0-${s.inputMax}" value="${filled?val:''}"><div class="g-hint">${hint}</div></div>`;
+  const h=filled?{html:'',label:''}:slotHintHTML(field,a.slotStars[field],a.slotPass[field]);
+  return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><span class="g-label-sub">${s.fullName}</span><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="0-${s.inputMax}" value="${filled?val:''}" aria-label="${s.label} (${s.fullName}), de 0 a ${s.inputMax}" aria-describedby="h_${field}_${id}"><div class="g-hint" id="h_${field}_${id}">${h.html}</div></div>`;
 }
 function renderDiscs(){
   if(!semId)return;
@@ -2304,12 +2325,8 @@ function refreshCard(id,card){
     const inp=card.querySelector(`#${f}_${id}`);if(!inp)return;
     const hintEl=inp.closest('.g-slot')?.querySelector('.g-hint');if(!hintEl)return;
     const filled=sems[semId].discs[id][f]!==''&&sems[semId].discs[id][f]!=null;
-    if(filled){hintEl.innerHTML='';return}
-    const sH=a.slotStars[f],pH=a.slotPass[f];
-    if(!sH&&!pH){hintEl.innerHTML='';return}
-    const sp=sH?`<span class="h-stars ${sH.type}">⭐${sH.val}</span>`:'';
-    const pp=pH?`<span class="h-pass ${pH.type}">📘${pH.val}</span>`:'';
-    hintEl.innerHTML=`${sp}${sp&&pp?'<span class="h-sep">·</span>':''}${pp}`;
+    const h=filled?{html:'',label:''}:slotHintHTML(f,a.slotStars[f],a.slotPass[f]);
+    hintEl.innerHTML=h.html;
   });
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
