@@ -370,9 +370,9 @@
     .ci-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin:-4px 28px 10px;font-size:11px;color:var(--text2);font-weight:700}
     .ci-nav button{background:#0d1a38;border:1px solid #1e3268;color:#a0b4e0;border-radius:8px;width:34px;height:28px;font-size:12px;cursor:pointer;touch-action:manipulation}
     .ci-nav button:disabled{opacity:.3;cursor:default}
-    .fps-cross{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.5);font-size:20px;line-height:1;pointer-events:none;transition:color .15s,font-size .15s}
-    .fps-cross.on{color:var(--gold);font-size:26px}
-    .fps-aim{position:absolute;top:calc(50% + 22px);left:50%;transform:translateX(-50%);background:rgba(6,14,31,.85);border:1px solid rgba(245,166,35,.4);color:var(--gold);font-size:12px;font-weight:700;padding:5px 12px;border-radius:10px;pointer-events:none;white-space:nowrap}
+    .fps-aim{position:absolute;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);background:rgba(6,14,31,.9);border:1px solid rgba(245,166,35,.55);color:var(--gold);font-size:14px;font-weight:800;padding:10px 18px;border-radius:12px;pointer-events:all;white-space:nowrap;cursor:pointer;max-width:calc(100% - 150px);overflow:hidden;text-overflow:ellipsis;touch-action:manipulation;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+    /* Dirigindo: some a barra de filtros/busca/dica da cidade pra liberar a tela */
+    #s-3d.driving .city-bar,#s-3d.driving .city-tip,#s-3d.driving .city-search{display:none!important}
     #city-inspect{position:absolute;bottom:0;left:0;right:0;z-index:110;pointer-events:none;padding:0 12px 20px}
     #city-inspect-inner{pointer-events:auto;background:rgba(8,15,34,0.96);border:1px solid #1e3268;border-radius:18px 18px 12px 12px;padding:16px 16px 14px;backdrop-filter:blur(12px);max-width:480px;margin:0 auto;position:relative}
     #city-inspect-close{position:absolute;top:12px;right:12px;background:none;border:none;color:#7a90c0;font-size:16px;cursor:pointer;line-height:1;padding:4px 8px}
@@ -678,15 +678,14 @@
   </div>
   <div class="city-empty" id="city-empty" hidden></div>
   <p class="city-tip" id="city-tip" style="display:none">Toque num bloco · Arraste para girar · Grid ordenado por CR</p>
-  <button id="btn-fps" style="display:none;position:absolute;bottom:24px;right:16px;z-index:30;background:rgba(6,14,31,.88);border:1px solid rgba(80,110,180,.45);color:#f0f4ff;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)">🚶 1ª Pessoa</button>
+  <button id="btn-fps" style="display:none;position:absolute;bottom:24px;right:16px;z-index:30;background:rgba(6,14,31,.88);border:1px solid rgba(80,110,180,.45);color:#f0f4ff;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(8px)">🚗 Dirigir</button>
   <!-- FPS overlay -->
   <div id="fps-ui" style="display:none;position:fixed;inset:0;z-index:100;pointer-events:none">
     <div id="fps-joy" style="position:absolute;bottom:90px;left:40px;width:112px;height:112px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.28);pointer-events:all;touch-action:none;display:flex;align-items:center;justify-content:center">
       <div id="fps-thumb" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.42);pointer-events:none;transition:transform .04s"></div>
     </div>
     <div id="fps-look" style="position:absolute;right:0;top:0;width:55%;height:100%;pointer-events:all;touch-action:none"></div>
-    <div id="fps-cross" class="fps-cross">·</div>
-    <div id="fps-aim" class="fps-aim" hidden></div>
+    <button id="fps-aim" class="fps-aim" hidden></button>
     <button id="btn-fps-exit" style="position:absolute;top:70px;right:16px;pointer-events:all;background:rgba(6,14,31,.9);border:1px solid rgba(80,110,180,.4);color:#f0f4ff;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer">✕ Sair</button>
     <div id="fps-hint" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.35);font-size:11px;pointer-events:none;white-space:nowrap">Joystick: mover · Lado direito: olhar · Toque: ver prédio</div>
   </div>
@@ -2656,62 +2655,116 @@ async function init3D(){
   ld.style.display='none';
 }
 
-// ─── FIRST PERSON MODE ────────────────────────────────────────────────────────
-let _fps=null;
-const FPS_R=0.25; // "raio" do corpo: distância mínima até a parede de um prédio
-// Prédios da cidade como caixas no chão; andar só é aceito se não entrar em nenhuma.
+// ─── MODO DIRIGIR (3ª pessoa) ─────────────────────────────────────────────────
+// Um carrinho na cor do seu status anda pelas ruas; a câmera segue por trás.
+// O carro só anda no asfalto: os quarteirões (calçada com meio-fio) bloqueiam.
+let _fps=null; // estado do carro enquanto dirige (nome mantido: o resto do código já checa _fps)
+const CAR_R=0.32; // "raio" do carro pra colisão
 function cityCollides(x,z){
-  for(const c of _cityColliders)if(x>c.x1-FPS_R&&x<c.x2+FPS_R&&z>c.z1-FPS_R&&z<c.z2+FPS_R)return true;
+  const R=_cityRoadRect;
+  if(R&&(x<R.x1+CAR_R||x>R.x2-CAR_R||z<R.z1+CAR_R||z>R.z2-CAR_R))return true;
+  for(const c of _cityColliders)if(x>c.x1-CAR_R&&x<c.x2+CAR_R&&z>c.z1-CAR_R&&z<c.z2+CAR_R)return true;
   return false;
 }
 const FINE_POINTER=matchMedia('(hover: hover) and (pointer: fine)').matches;
 
+function carColor(){
+  const me=_cityIndex[user?.uid]?.player;
+  if(!me)return 0x38bdf8;
+  if(me.cr!==null)return me.cr>=9?0xf5a623:me.cr>=7?0x4ade80:0xf87171;
+  return me.partialCr!==null?0x38bdf8:0x7a90c0;
+}
+// Carrinho low-poly: carroceria, cabine com vidro, rodas (as da frente esterçam), faróis.
+function makeCar(color){
+  const car=new THREE.Group();
+  const M=c=>new THREE.MeshBasicMaterial({color:c});
+  const paint=M(color),dark=M(0x1b2a48),tire=M(0x151515);
+  const part=(geo,mat,x,y,z)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);car.add(m);return m};
+  part(new THREE.BoxGeometry(0.62,0.2,1.05),paint,0,0.24,0);           // carroceria
+  part(new THREE.BoxGeometry(0.54,0.19,0.56),dark,0,0.43,0.08);         // cabine (vidros)
+  part(new THREE.BoxGeometry(0.56,0.04,0.5),paint,0,0.54,0.08);         // teto
+  part(new THREE.BoxGeometry(0.13,0.07,0.03),M(0xfff2b3),-0.2,0.27,-0.53); // faróis
+  part(new THREE.BoxGeometry(0.13,0.07,0.03),M(0xfff2b3),0.2,0.27,-0.53);
+  part(new THREE.BoxGeometry(0.13,0.06,0.03),M(0xff4d4d),-0.2,0.28,0.53);  // lanternas
+  part(new THREE.BoxGeometry(0.13,0.06,0.03),M(0xff4d4d),0.2,0.28,0.53);
+  const wheelGeo=new THREE.CylinderGeometry(0.13,0.13,0.1,10);wheelGeo.rotateZ(Math.PI/2);
+  const wheels=[],steer=[];
+  for(const[x,z]of[[-0.33,-0.33],[0.33,-0.33],[-0.33,0.33],[0.33,0.33]]){
+    const pivot=new THREE.Group();pivot.position.set(x,0.13,z);car.add(pivot);
+    const w=new THREE.Mesh(wheelGeo,tire);pivot.add(w);wheels.push(w);
+    if(z<0)steer.push(pivot);
+  }
+  car.userData={wheels,steer};
+  car.scale.setScalar(0.8);
+  return car;
+}
+// Começa na avenida em frente ao seu lote (ou no meio da cidade), virado ao longo da rua.
+function carStartSpot(){
+  const R=_cityRoadRect,mine=_cityIndex[user?.uid]?.pos;
+  const x=Math.min(R.x2-1,Math.max(R.x1+1,mine?mine.x:(R.x1+R.x2)/2));
+  let z=R.z2-CITY_RW/2;
+  for(let i=0;i<60&&cityCollides(x,z);i++)z-=0.2;
+  return{x,z};
+}
+
 function enterFPSMode(){
-  if(!T3||!T3.cityMode) return;
-  const p=T3.cam.position;
-  _fps={x:p.x,y:1.8,z:p.z,yaw:0,pitch:0,mvX:0,mvZ:0,last:performance.now()};
-  // Se a câmera estava em cima de um prédio, começa na rua mais próxima à frente.
-  for(let i=0;i<80&&cityCollides(_fps.x,_fps.z);i++)_fps.z+=0.25;
+  if(!T3||!T3.cityMode||!_cityRoadRect) return;
+  const{x,z}=carStartSpot();
+  const car=makeCar(carColor());
+  car.position.set(x,0.081,z);
+  T3.scene.add(car);
+  _fps={x,z,h:-Math.PI/2,speed:0,look:0,mvX:0,mvZ:0,car,last:performance.now(),camInit:false};
   T3.ctrl.enabled=false;
   _fpsAim=null;updateFpsAimUI();
   document.getElementById('fps-hint').textContent=FINE_POINTER
-    ?'W A S D / setas: andar · Arraste o mouse: olhar · Clique ou E: ver prédio · Esc: sair'
-    :'Joystick: mover · Lado direito: olhar · Toque: ver prédio';
+    ?'W / S: acelerar e ré · A / D: virar · Arraste o mouse: olhar em volta · E: ver prédio · Esc: sair'
+    :'Joystick: dirigir · Arraste à direita: olhar em volta';
   document.getElementById('fps-ui').style.display='block';
   document.getElementById('btn-fps').style.display='none';
+  document.getElementById('s-3d').classList.add('driving');
   closeCitySearch();
 }
 function exitFPSMode(){
   if(!_fps) return;
+  const{x,z,car}=_fps;
+  T3?.scene.remove(car);
   _fps=null;_fpsKeys.clear();_fpsMouse=null;
-  if(T3) T3.ctrl.enabled=true;
+  if(T3){T3.ctrl.target.set(x,0,z);T3.ctrl.enabled=true;T3.ctrl.update()} // câmera continua de onde o carro parou
   document.getElementById('fps-ui').style.display='none';
+  document.getElementById('s-3d').classList.remove('driving');
   if(T3?.cityMode) document.getElementById('btn-fps').style.display='';
+  _fpsAim=null;updateFpsAimUI();
   invalidate3D();
 }
 document.getElementById('btn-fps').onclick=enterFPSMode;
 document.getElementById('btn-fps-exit').onclick=exitFPSMode;
 
-// Mira: o prédio no centro da tela fica destacado e um toque/clique abre o cartão dele.
-let _fpsAim=null,_fpsAimRay=null,_fpsAimTick=0;
+// Lote mais próximo do carro: aparece o botão "Ver Fulano".
+let _fpsAim=null,_fpsAimTick=0;
 function updateFpsAim(){
-  if(!_fpsAimRay){_fpsAimRay=new THREE.Raycaster();_fpsAimRay.far=14}
-  _fpsAimRay.setFromCamera({x:0,y:0},T3.cam);
-  const hit=cityPick(_fpsAimRay);
+  let best=null,bd=Infinity;
+  const L=_cityLayout;
+  for(const c of Object.values(_cityIndex)){
+    // distância do carro até a borda do lote (não até o centro): lote comprido conta inteiro
+    const dx=Math.max(0,Math.abs(_fps.x-c.pos.x)-L.PLOT_W/2),dz=Math.max(0,Math.abs(_fps.z-c.pos.z)-L.PLOT_D/2);
+    const d=Math.hypot(dx,dz);
+    if(d<bd){bd=d;best=c}
+  }
+  const hit=bd<1.6?best:null;
   if((hit?.player.uid??null)!==(_fpsAim?.player.uid??null)){_fpsAim=hit;updateFpsAimUI()}
 }
 function updateFpsAimUI(){
   const aim=document.getElementById('fps-aim');
-  document.getElementById('fps-cross').classList.toggle('on',!!_fpsAim);
   aim.hidden=!_fpsAim;
-  if(_fpsAim)aim.textContent=`${FINE_POINTER?'Clique':'Toque'} para ver ${_fpsAim.player.displayName||'Anônimo'}`;
+  if(_fpsAim)aim.textContent=`👀 Ver ${_fpsAim.player.displayName||'Anônimo'}${FINE_POINTER?' (E)':''}`;
 }
 function fpsSelectAim(){
   if(!_fps||!_fpsAim)return;
   selectCityPlayer(_fpsAim.player,_fpsAim.pos,false);
 }
+document.getElementById('fps-aim').onclick=fpsSelectAim;
 
-// Teclado (computador): WASD/setas andam, E/Enter abre o prédio mirado, Esc sai.
+// Teclado (computador): W/S ou ↑/↓ acelera e dá ré, A/D ou ←/→ vira, E/Enter abre o lote, Esc sai.
 const _fpsKeys=new Set();
 const FPS_MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
 document.addEventListener('keydown',e=>{
@@ -2724,31 +2777,26 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('keyup',e=>_fpsKeys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>_fpsKeys.clear());
 
-// Mouse (computador): arrastar olha em volta; clique sem arrastar abre o prédio mirado.
+// Mouse (computador): arrastar gira a câmera em volta do carro; ao soltar ela volta pra trás dele.
 let _fpsMouse=null;
 document.addEventListener('pointerdown',e=>{
   if(!_fps||e.pointerType!=='mouse'||e.button!==0)return;
   if(e.target.closest('button,#fps-joy,#city-inspect,#city-search,.city-bar'))return;
-  _fpsMouse={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY};
+  _fpsMouse={x:e.clientX};
 });
 document.addEventListener('pointermove',e=>{
   if(!_fps||!_fpsMouse||e.pointerType!=='mouse')return;
-  _fps.yaw-=(e.clientX-_fpsMouse.x)*0.004;
-  _fps.pitch=Math.max(-0.85,Math.min(0.85,_fps.pitch-(e.clientY-_fpsMouse.y)*0.004));
-  _fpsMouse.x=e.clientX;_fpsMouse.y=e.clientY;
+  _fps.look-=(e.clientX-_fpsMouse.x)*0.006;
+  _fpsMouse.x=e.clientX;
 });
-document.addEventListener('pointerup',e=>{
-  if(!_fpsMouse||e.pointerType!=='mouse')return;
-  const m=_fpsMouse;_fpsMouse=null;
-  if(Math.hypot(e.clientX-m.sx,e.clientY-m.sy)<6)fpsSelectAim();
-});
+document.addEventListener('pointerup',e=>{if(e.pointerType==='mouse')_fpsMouse=null});
 
 (function initFPSTouch(){
   const joy=document.getElementById('fps-joy');
   const thumb=document.getElementById('fps-thumb');
   const look=document.getElementById('fps-look');
   const R=44;
-  let jId=null,lId=null,lLast={x:0,y:0};
+  let jId=null,lId=null,lLast=0;
 
   joy.addEventListener('touchstart',e=>{
     e.preventDefault();
@@ -2778,35 +2826,57 @@ document.addEventListener('pointerup',e=>{
     }
   });
 
-  let lStart=null;
+  // Lado direito: arrastar gira a câmera em volta do carro
   look.addEventListener('touchstart',e=>{
     e.preventDefault();
     lId=e.changedTouches[0].identifier;
-    lLast={x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};
-    lStart={...lLast,t:performance.now()};
+    lLast=e.changedTouches[0].clientX;
+    if(_fps)_fps.lookHeld=true;
   },{passive:false});
 
   look.addEventListener('touchmove',e=>{
     e.preventDefault();
     if(!_fps) return;
     for(const t of e.changedTouches){
-      if(t.identifier===lId){
-        _fps.yaw-=(t.clientX-lLast.x)*0.004;
-        _fps.pitch=Math.max(-0.85,Math.min(0.85,_fps.pitch-(t.clientY-lLast.y)*0.004));
-        lLast={x:t.clientX,y:t.clientY};
-      }
+      if(t.identifier===lId){_fps.look-=(t.clientX-lLast)*0.006;lLast=t.clientX}
     }
   },{passive:false});
 
   look.addEventListener('touchend',e=>{
-    for(const t of e.changedTouches) if(t.identifier===lId){
-      lId=null;
-      // Toque rápido sem arrastar = abrir o prédio que está na mira.
-      if(lStart&&Math.hypot(t.clientX-lStart.x,t.clientY-lStart.y)<8&&performance.now()-lStart.t<350)fpsSelectAim();
-      lStart=null;
-    }
+    for(const t of e.changedTouches) if(t.identifier===lId){lId=null;if(_fps)_fps.lookHeld=false}
   });
 })();
+
+// Física simples do carro: acelera/freia/ré, vira proporcional à velocidade, e desliza ao
+// bater no meio-fio (perde velocidade). k = quadros de 60fps passados (mesma velocidade a 120Hz).
+function driveStep(k){
+  const f=_fps,has=key=>_fpsKeys.has(key);
+  const thr=Math.max(-1,Math.min(1,-f.mvZ+((has('w')||has('arrowup'))?1:0)-((has('s')||has('arrowdown'))?1:0)));
+  const steer=Math.max(-1,Math.min(1,f.mvX+((has('d')||has('arrowright'))?1:0)-((has('a')||has('arrowleft'))?1:0)));
+  const MAXF=0.11,MAXR=0.045,ACC=0.0035,BRAKE=0.009;
+  if(thr>0.05)f.speed+=(f.speed<0?BRAKE:ACC)*thr*k;
+  else if(thr<-0.05)f.speed+=(f.speed>0?BRAKE:ACC*0.7)*thr*k;
+  else{f.speed*=Math.pow(0.97,k);if(Math.abs(f.speed)<0.0008)f.speed=0}
+  f.speed=Math.max(-MAXR,Math.min(MAXF,f.speed));
+  f.h-=steer*0.05*k*(f.speed/MAXF);
+  const dx=-Math.sin(f.h)*f.speed*k,dz=-Math.cos(f.h)*f.speed*k;
+  if(!cityCollides(f.x+dx,f.z+dz)){f.x+=dx;f.z+=dz}
+  else if(!cityCollides(f.x+dx,f.z)){f.x+=dx;f.speed*=0.85}
+  else if(!cityCollides(f.x,f.z+dz)){f.z+=dz;f.speed*=0.85}
+  else f.speed*=-0.25; // bateu de frente: dá uma leve recuada
+  // carro, rodas girando e rodas da frente esterçando
+  const car=f.car;
+  car.position.set(f.x,0.081,f.z);car.rotation.y=f.h;
+  car.userData.wheels.forEach(w=>w.rotation.x-=f.speed*k/0.104);
+  car.userData.steer.forEach(p=>p.rotation.y=-steer*0.45);
+  // câmera de perseguição: atrás e acima, suavizada; o "olhar em volta" volta sozinho
+  if(!_fpsMouse&&!f.lookHeld)f.look*=Math.pow(0.93,k);
+  const yaw=f.h+f.look,dist=3.1,hgt=1.7;
+  const tx=f.x+Math.sin(yaw)*dist,tz=f.z+Math.cos(yaw)*dist;
+  const cam=T3.cam,a=f.camInit?1-Math.pow(0.86,k):1;f.camInit=true;
+  cam.position.x+=(tx-cam.position.x)*a;cam.position.y+=(hgt-cam.position.y)*a;cam.position.z+=(tz-cam.position.z)*a;
+  cam.lookAt(f.x-Math.sin(f.h)*1.2,0.45,f.z-Math.cos(f.h)*1.2);
+}
 
 // Pede um novo quadro na cidade (ela só redesenha quando algo muda).
 function invalidate3D(){if(T3)T3.dirty=true}
@@ -2821,21 +2891,7 @@ function loop3D(){
     const t=T3.clock.getElapsedTime();
     if(_fps){
       const now=performance.now(),k=Math.min(3,(now-_fps.last)/16.667);_fps.last=now;
-      // Joystick + teclado somados; na diagonal não anda mais rápido.
-      const has=key=>_fpsKeys.has(key);
-      let mx=_fps.mvX+((has('d')||has('arrowright'))?1:0)-((has('a')||has('arrowleft'))?1:0);
-      let mz=_fps.mvZ+((has('s')||has('arrowdown'))?1:0)-((has('w')||has('arrowup'))?1:0);
-      const len=Math.hypot(mx,mz);if(len>1){mx/=len;mz/=len}
-      const SPEED=0.08*k, sy=Math.sin(_fps.yaw), cy=Math.cos(_fps.yaw);
-      const fwd=-mz, rgt=mx;
-      // Colisão por eixo: bater de lado num prédio desliza ao longo da parede.
-      const nx=_fps.x+(-sy*fwd+cy*rgt)*SPEED, nz=_fps.z+(-cy*fwd-sy*rgt)*SPEED;
-      if(!cityCollides(nx,_fps.z))_fps.x=nx;
-      if(!cityCollides(_fps.x,nz))_fps.z=nz;
-      T3.cam.position.set(_fps.x,_fps.y,_fps.z);
-      T3.cam.rotation.order='YXZ';
-      T3.cam.rotation.y=_fps.yaw;
-      T3.cam.rotation.x=_fps.pitch;
+      driveStep(k);
     } else {
       T3.ctrl.update();
       if(!T3.cityMode){
@@ -2881,96 +2937,125 @@ function tube3D(a,b,color,opacity){
 }
 
 // ─── LEGO ASSETS ─────────────────────────────────────────────────────────────
-let _legoA=null;
-function legoAssets(){
-  if(_legoA) return _legoA;
-  const BH=0.38;
-  _legoA={
-    BH,
-    bodyGeo:new THREE.BoxGeometry(0.54,BH*0.88,0.54),
-    studGeo:new THREE.CylinderGeometry(0.055,0.055,0.05,6),
-    studs:[[-0.135,-0.135],[-0.135,0.135],[0.135,-0.135],[0.135,0.135]]
-  };
-  return _legoA;
+// ─── PRÉDIOS LOW-POLY ────────────────────────────────────────────────────────
+// Fachada lisa com janelas: uma textura pequena (4 andares × 4 colunas) que se repete.
+// Ela é compartilhada por cor de nota + faixa de nota, então a cidade inteira usa no
+// máximo umas 40 texturas, mesmo com centenas de prédios.
+const BLD_FLOOR_H=0.28, BLD_COL_W=0.16;
+const BLD_STYLE={
+  ok:     {wall:'#b06f14',roof:0xf5a623},
+  pass:   {wall:'#23804a',roof:0x4ade80},
+  partial:{wall:'#1a7aa8',roof:0x38bdf8},
+  bad:    {wall:'#9c3434',roof:0xf87171}
+};
+const _facadeTex={};
+function facadeTexture(type,val){
+  const lvl=Math.max(0,Math.min(10,Math.floor(val))); // quanto maior a nota, mais janelas acesas
+  const key=type+lvl;
+  if(_facadeTex[key])return _facadeTex[key];
+  const S=128,cv=document.createElement('canvas');cv.width=cv.height=S;
+  const x=cv.getContext('2d'),st=BLD_STYLE[type]||BLD_STYLE.bad;
+  x.fillStyle=st.wall;x.fillRect(0,0,S,S);
+  // pseudo-aleatório fixo por chave: o mesmo prédio sempre tem as mesmas janelas acesas
+  let seed=0;for(const ch of key)seed=(seed*31+ch.charCodeAt(0))>>>0;
+  const rnd=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+  const litP=0.15+lvl/10*0.7,cell=S/4;
+  for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+    x.fillStyle=rnd()<litP?'#ffe7a0':'#1b2a48';
+    x.fillRect(c*cell+cell*0.22,r*cell+cell*0.2,cell*0.56,cell*0.5);
+  }
+  const tex=new THREE.CanvasTexture(cv);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.colorSpace=THREE.SRGBColorSpace;
+  return _facadeTex[key]=tex;
 }
+const _bldMats={};
+function bldMat(key,make){return _bldMats[key]||(_bldMats[key]=make())}
 
-function buildLegoBaseplate(gridW,gridD,cx,cz,STEP_X,STEP_Z,PLOT_W,PLOT_D,COLS,rows){
-  const PAD=2,SR=0.085,SH=0.07,SG=0.4;
-  const pw=gridW+PAD*2, pd=gridD+PAD*2;
-  const gxOff=cx-gridW/2, gzOff=cz-gridD/2;
+// Chão da cidade: cada lote vira um quarteirão com calçada e meio-fio; ruas entre eles e
+// uma avenida em anel em volta de tudo (pra todas as ruas se ligarem e dar pra dirigir).
+// Faixas, faixas de pedestre, postes e árvores são InstancedMesh: um objeto por tipo.
+const CITY_SW=0.3,CITY_RW=2.0; // largura da calçada e da avenida do anel
+let _cityRoadRect=null;         // retângulo do asfalto (limite do carro)
+function buildCityGround(gridW,gridD,cx,cz,STEP_X,STEP_Z,PLOT_W,PLOT_D,COLS,rows,nPlayers){
+  const SW=CITY_SW,RW=CITY_RW;
+  const zMin=-PLOT_D/2,zMax=(rows-1)*STEP_Z+PLOT_D/2;
+  const ax1=-SW-RW,ax2=gridW+SW+RW,az1=zMin-SW-RW,az2=zMax+SW+RW; // asfalto
+  _cityRoadRect={x1:ax1,x2:ax2,z1:az1,z2:az2};
+  const OUT=0.5,GR=3.5; // calçada externa e gramado em volta
+  const add=o=>{T3.scene.add(o);_cityObjs.push(o)};
+  const box=(w,h,d,col,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),bldMat('c'+col,()=>new THREE.MeshBasicMaterial({color:col})));m.position.set(x,y,z);add(m);return m};
 
-  // Green base plate
-  const plate=new THREE.Mesh(new THREE.BoxGeometry(pw,0.15,pd),new THREE.MeshBasicMaterial({color:0x237a23}));
-  plate.position.set(cx,-0.075,cz); T3.scene.add(plate); _cityObjs.push(plate);
+  // Gramado, calçada externa e asfalto
+  box(ax2-ax1+2*(OUT+GR),0.15,az2-az1+2*(OUT+GR),0x3f8f4a,(ax1+ax2)/2,-0.075,(az1+az2)/2);
+  box(ax2-ax1+2*OUT,0.07,az2-az1+2*OUT,0xb8bec9,(ax1+ax2)/2,0.035,(az1+az2)/2);
+  box(ax2-ax1,0.02,az2-az1,0x4b5262,(ax1+ax2)/2,0.071,(az1+az2)/2);
 
-  // Road detector (grid coords: 0,0 = top-left of city)
-  function isRoad(gx,gz){
-    if(gx<-0.05||gx>gridW+0.05) return false;
-    if(gz<-PLOT_D/2-0.05||gz>gridD+PLOT_D/2+0.05) return false;
-    if(((gx%STEP_X)+STEP_X)%STEP_X>PLOT_W+0.05) return true;
-    if((((gz+PLOT_D/2)%STEP_Z)+STEP_Z)%STEP_Z>PLOT_D+0.05) return true;
-    return false;
+  // Quarteirões: calçada com meio-fio (mais alta que o asfalto). Vagas sem aluno viram pracinha.
+  const blocks=[],trees=[],lamps=[];
+  for(let r=0;r<rows;r++)for(let c=0;c<COLS;c++){
+    const x1=c*STEP_X-SW,x2=c*STEP_X+PLOT_W+SW,z1=r*STEP_Z-PLOT_D/2-SW,z2=r*STEP_Z+PLOT_D/2+SW;
+    blocks.push({x1,x2,z1,z2});
+    box(x2-x1,0.12,z2-z1,0xb8bec9,(x1+x2)/2,0.06,(z1+z2)/2);
+    if(r*COLS+c>=nPlayers){ // pracinha
+      box(PLOT_W,0.04,PLOT_D,0x4aa257,(x1+x2)/2,0.14,(z1+z2)/2);
+      trees.push([x1+SW+PLOT_W*0.3,(z1+z2)/2,0.16],[x1+SW+PLOT_W*0.7,(z1+z2)/2,0.16]);
+    }
+    const li=0.14;lamps.push([x1+li,z1+li],[x2-li,z1+li],[x1+li,z2-li],[x2-li,z2-li]);
   }
+  _cityColliders=blocks;
 
-  // Gray road surfaces: N-S (full city height) and E-W (full city width, above N-S)
-  const roadSurf=new THREE.MeshBasicMaterial({color:0x7d7d7d});
-  for(let c=0;c<COLS-1;c++){
-    const rx1=c*STEP_X+PLOT_W, rx2=(c+1)*STEP_X;
-    const m=new THREE.Mesh(new THREE.BoxGeometry(rx2-rx1,0.012,-PLOT_D/2+(gridD+PLOT_D/2)),roadSurf);
-    m.position.set(gxOff+(rx1+rx2)/2,0.006,gzOff+(-PLOT_D/2+gridD+PLOT_D/2)/2);
-    T3.scene.add(m); _cityObjs.push(m);
-  }
-  for(let r=0;r<rows-1;r++){
-    const rz1=r*STEP_Z+PLOT_D/2, rz2=(r+1)*STEP_Z-PLOT_D/2;
-    const m=new THREE.Mesh(new THREE.BoxGeometry(gridW,0.014,rz2-rz1),roadSurf);
-    m.position.set(gxOff+gridW/2,0.007,gzOff+(rz1+rz2)/2);
-    T3.scene.add(m); _cityObjs.push(m);
-  }
+  // Linhas centrais das ruas (verticais e horizontais), anel incluído
+  const Vs=[{x:-SW-RW/2,hw:RW/2}],Hs=[{z:zMin-SW-RW/2,hw:RW/2}];
+  for(let c=0;c<COLS-1;c++)Vs.push({x:c*STEP_X+PLOT_W+(STEP_X-PLOT_W)/2,hw:(STEP_X-PLOT_W)/2-SW});
+  Vs.push({x:gridW+SW+RW/2,hw:RW/2});
+  for(let r=0;r<rows-1;r++)Hs.push({z:r*STEP_Z+STEP_Z/2,hw:(STEP_Z-PLOT_D)/2-SW});
+  Hs.push({z:zMax+SW+RW/2,hw:RW/2});
+  const inBlock=(x,z)=>blocks.some(b=>x>b.x1&&x<b.x2&&z>b.z1&&z<b.z2);
+  const onRoad=(x,z)=>x>ax1&&x<ax2&&z>az1&&z<az2&&!inBlock(x,z);
 
-  // White dashed center lines
-  const lineMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.75});
-  const DL=0.28,DG=0.22;
-  // N-S roads
-  for(let c=0;c<COLS-1;c++){
-    const rx=(c*STEP_X+PLOT_W+(c+1)*STEP_X)/2;
-    const z1=-PLOT_D/2, z2=gridD+PLOT_D/2;
-    const n=Math.floor((z2-z1)/(DL+DG));
-    for(let d=0;d<n;d++){
-      const dz=z1+(d+0.5)*(DL+DG);
-      const m=new THREE.Mesh(new THREE.PlaneGeometry(0.06,DL),lineMat);
-      m.rotation.x=-Math.PI/2; m.position.set(gxOff+rx,0.016,gzOff+dz);
-      T3.scene.add(m); _cityObjs.push(m);
+  const mt=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),v=new THREE.Vector3(),s=new THREE.Vector3();
+  const instanced=(geo,mat,list,fn)=>{
+    if(!list.length)return;
+    const im=new THREE.InstancedMesh(geo,mat,list.length);
+    list.forEach((it,i)=>{fn(it,v,q,s);mt.compose(v,q,s);im.setMatrixAt(i,mt)});
+    im.instanceMatrix.needsUpdate=true;add(im);
+  };
+
+  // Faixas tracejadas: param antes dos cruzamentos
+  const DL=0.28,DG=0.22,dashes=[];
+  for(const V of Vs)for(let z=Hs[0].z;z<=Hs[Hs.length-1].z;z+=DL+DG)
+    if(!Hs.some(H=>Math.abs(z-H.z)<H.hw+0.9)&&onRoad(V.x,z))dashes.push([V.x,z,0]);
+  for(const H of Hs)for(let x=Vs[0].x;x<=Vs[Vs.length-1].x;x+=DL+DG)
+    if(!Vs.some(V=>Math.abs(x-V.x)<V.hw+0.9)&&onRoad(x,H.z))dashes.push([x,H.z,Math.PI/2]);
+  const flat=(w,l)=>{const g=new THREE.PlaneGeometry(w,l);g.rotateX(-Math.PI/2);return g};
+  const white=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.8});
+  instanced(flat(0.06,DL),white,dashes,([x,z,ry],v,q,s)=>{v.set(x,0.083,z);q.setFromEuler(e.set(0,ry,0));s.set(1,1,1)});
+
+  // Faixas de pedestre: em cada braço de cada cruzamento que for rua de verdade
+  const stripes=[];
+  for(const V of Vs)for(const H of Hs){
+    for(const sg of[-1,1]){
+      const z=H.z+sg*(H.hw+0.4); // braço vertical (atravessa a rua vertical)
+      if(onRoad(V.x,z))for(let i=-2;i<=2;i++)stripes.push([V.x+i*V.hw*0.36,z,0]);
+      const x=V.x+sg*(V.hw+0.4); // braço horizontal
+      if(onRoad(x,H.z))for(let i=-2;i<=2;i++)stripes.push([x,H.z+i*H.hw*0.36,Math.PI/2]);
     }
   }
-  // E-W roads
-  for(let r=0;r<rows-1;r++){
-    const rz=r*STEP_Z+STEP_Z/2;
-    const n=Math.floor(gridW/(DL+DG));
-    for(let d=0;d<n;d++){
-      const dx=(d+0.5)*(DL+DG);
-      const m=new THREE.Mesh(new THREE.PlaneGeometry(DL,0.06),lineMat);
-      m.rotation.x=-Math.PI/2; m.position.set(gxOff+dx,0.017,gzOff+rz);
-      T3.scene.add(m); _cityObjs.push(m);
-    }
-  }
+  instanced(flat(0.16,0.55),white,stripes,([x,z,ry],v,q,s)=>{v.set(x,0.084,z);q.setFromEuler(e.set(0,ry,0));s.set(1,1,1)});
 
-  // Studs: split green (grass) vs gray (road) via InstancedMesh
-  const nx=Math.floor(pw/SG), nz=Math.floor(pd/SG);
-  const gPos=[], rPos=[];
-  const x0=cx-pw/2+SG/2, z0=cz-pd/2+SG/2;
-  for(let xi=0;xi<nx;xi++) for(let zi=0;zi<nz;zi++){
-    const wx=x0+xi*SG, wz=z0+zi*SG;
-    (isRoad(wx-gxOff,wz-gzOff)?rPos:gPos).push([wx,wz]);
-  }
-  const mt=new THREE.Matrix4();
-  const studGeo=new THREE.CylinderGeometry(SR,SR,SH,6);
-  [[gPos,0x2d9e2d,SH/2],[rPos,0x9a9a9a,0.012+SH/2]].forEach(([pos,col,sy])=>{
-    if(!pos.length) return;
-    const inst=new THREE.InstancedMesh(studGeo,new THREE.MeshBasicMaterial({color:col}),pos.length);
-    pos.forEach(([x,z],i)=>{mt.setPosition(x,sy,z);inst.setMatrixAt(i,mt);});
-    inst.instanceMatrix.needsUpdate=true;
-    T3.scene.add(inst); _cityObjs.push(inst);
-  });
+  // Postes nas quinas dos quarteirões, com cabeça amarela e um círculo de luz no chão
+  instanced(new THREE.CylinderGeometry(0.025,0.035,1.1,5),new THREE.MeshBasicMaterial({color:0x5d6577}),lamps,([x,z],v,q,s)=>{v.set(x,0.67,z);q.identity();s.set(1,1,1)});
+  instanced(new THREE.BoxGeometry(0.14,0.06,0.14),new THREE.MeshBasicMaterial({color:0xffe08a}),lamps,([x,z],v,q,s)=>{v.set(x,1.24,z);q.identity();s.set(1,1,1)});
+  const pool=new THREE.CircleGeometry(0.55,16);pool.rotateX(-Math.PI/2);
+  instanced(pool,new THREE.MeshBasicMaterial({color:0xffc94d,transparent:true,opacity:0.22,depthWrite:false,blending:THREE.AdditiveBlending}),lamps,([x,z],v,q,s)=>{v.set(x,0.125,z);q.identity();s.set(1,1,1)});
+
+  // Árvores no gramado em volta da cidade
+  const tx1=ax1-OUT-GR*0.5,tx2=ax2+OUT+GR*0.5,tz1=az1-OUT-GR*0.5,tz2=az2+OUT+GR*0.5,SP=1.4;
+  for(let x=tx1;x<=tx2+1e-6;x+=SP){trees.push([x,tz1,0]);trees.push([x,tz2,0])}
+  for(let z=tz1+SP;z<tz2-1e-6;z+=SP){trees.push([tx1,z,0]);trees.push([tx2,z,0])}
+  instanced(new THREE.CylinderGeometry(0.05,0.07,0.35,5),new THREE.MeshBasicMaterial({color:0x6b4a2b}),trees,([x,z,y0],v,q,s)=>{v.set(x,y0+0.175,z);q.identity();s.set(1,1,1)});
+  instanced(new THREE.ConeGeometry(0.32,0.75,6),new THREE.MeshBasicMaterial({color:0x2f7a3a}),trees,([x,z,y0],v,q,s,i)=>{const k=0.85+((Math.abs(x*7+z*13)|0)%10)/25;v.set(x,y0+0.35+0.37*k,z);q.identity();s.set(k,k,k)});
 }
 
 // ─── CITY MODE ───────────────────────────────────────────────────────────────
@@ -2988,29 +3073,37 @@ let _cityIndex={};          // uid -> {player,pos,rank}
 let _cityLayout=null;       // medidas do lote (destaque de seleção)
 let _citySel=null;          // moldura do lote selecionado
 
+// Prédio de uma matéria: quanto maior a nota, mais alto, mais largo e com mais janelas
+// acesas. Nota 9+ ganha jardim no telhado. A cor segue o status (Stars/aprovado/parcial/reprovado).
 function building3D(val,type){
-  const {BH,bodyGeo,studGeo,studs}=legoAssets();
+  const st=BLD_STYLE[type]||BLD_STYLE.bad;
   const h=Math.max(0.45,val*0.55);
-  const nb=Math.max(1,Math.ceil(h/BH));
+  const w=0.48+Math.min(1,val/10)*0.24; // 0,48 a 0,72 (largura máxima do espaço no lote)
   const grp=new THREE.Group();
-  const mainCol=type==='ok'?0xe08010:type==='pass'?0x28a040:type==='partial'?0x0a9ad0:0xd03030;
-  const topCol =type==='ok'?0xf5a623:type==='pass'?0x4ade80:type==='partial'?0x38bdf8:0xf87171;
-  const bodyMat=new THREE.MeshBasicMaterial({color:mainCol});
-  const studMat=new THREE.MeshBasicMaterial({color:topCol});
-  for(let b=0;b<nb;b++){
-    const by=b*BH;
-    const body=new THREE.Mesh(bodyGeo,bodyMat);
-    body.position.set(0,by+BH*0.44,0); grp.add(body);
-    studs.forEach(([sx,sz])=>{
-      const s=new THREE.Mesh(studGeo,studMat);
-      s.position.set(sx,by+BH*0.88+0.025,sz); grp.add(s);
-    });
-  }
-  if(val>=8.5){
-    const ant=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,0.55,4),new THREE.MeshBasicMaterial({color:topCol}));
-    ant.position.y=nb*BH+0.3; grp.add(ant);
-    const dot=new THREE.Mesh(new THREE.SphereGeometry(0.055,6,6),new THREE.MeshBasicMaterial({color:0xffffff}));
-    dot.position.y=nb*BH+0.6; grp.add(dot);
+
+  // Corpo com fachada de janelas: UV das laterais escalado pra textura repetir por andar
+  const geo=new THREE.BoxGeometry(w,h,w);
+  const uv=geo.attributes.uv,ru=w/(4*BLD_COL_W),rv=h/(4*BLD_FLOOR_H);
+  for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*ru,uv.getY(i)*rv);
+  const body=new THREE.Mesh(geo,bldMat('f'+type+Math.floor(val),()=>new THREE.MeshBasicMaterial({map:facadeTexture(type,val)})));
+  body.position.y=h/2; grp.add(body);
+
+  // Laje do topo na cor do status (dá pra ler a nota de cima)
+  const roofMat=bldMat('r'+type,()=>new THREE.MeshBasicMaterial({color:st.roof}));
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(w+0.06,0.08,w+0.06),roofMat);
+  roof.position.y=h+0.04; grp.add(roof);
+
+  // Jardim no telhado para nota 9+
+  if(val>=9){
+    const grass=new THREE.Mesh(new THREE.BoxGeometry(w-0.1,0.05,w-0.1),bldMat('g',()=>new THREE.MeshBasicMaterial({color:0x3fa34d})));
+    grass.position.y=h+0.105; grp.add(grass);
+    const leaf=bldMat('l',()=>new THREE.MeshBasicMaterial({color:0x2f7a3a}));
+    const nTrees=val>=9.5?3:2;
+    for(let i=0;i<nTrees;i++){
+      const t=new THREE.Mesh(new THREE.IcosahedronGeometry(0.09+0.02*(i%2),0),leaf);
+      const a=i/nTrees*Math.PI*2+0.6;
+      t.position.set(Math.cos(a)*w*0.22,h+0.2,Math.sin(a)*w*0.22); grp.add(t);
+    }
   }
   return grp;
 }
@@ -3028,7 +3121,7 @@ function setCitySelection(pos){
   if(_citySel){T3.scene.remove(_citySel);_citySel=null}
   if(pos&&_cityLayout){
     _citySel=new THREE.Mesh(new THREE.BoxGeometry(_cityLayout.PLOT_W+0.4,0.06,_cityLayout.PLOT_D+0.4),new THREE.MeshBasicMaterial({color:0x38bdf8}));
-    _citySel.position.set(pos.x,0.035,pos.z);
+    _citySel.position.set(pos.x,0.13,pos.z); // em cima da calçada (topo 0,12)
     T3.scene.add(_citySel);
   }
   invalidate3D();
@@ -3061,8 +3154,8 @@ function buildCityScene(players){
   _cityLayout={PLOT_W,PLOT_D};
   _cityPlayers=players;
 
-  // LEGO baseplate: green grass + gray roads + dashed center lines
-  buildLegoBaseplate(gridW,gridD,cx,cz,STEP_X,STEP_Z,PLOT_W,PLOT_D,COLS,rows);
+  // Chão: gramado + asfalto + faixas + árvores na borda
+  buildCityGround(gridW,gridD,cx,cz,STEP_X,STEP_Z,PLOT_W,PLOT_D,COLS,rows,players.length);
 
   let maxH=0;
   let myBlockCenter={x:cx,z:cz};
@@ -3078,15 +3171,15 @@ function buildCityScene(players){
     _cityIndex[player.uid]={player,pos:pickData.pos,rank:pi+1};
 
     // Plot base
-    const plate=new THREE.Mesh(new THREE.BoxGeometry(PLOT_W,0.1,PLOT_D),new THREE.MeshBasicMaterial({color:isMe?0x1c3870:0x0d1a38}));
-    plate.position.set(pcx,0.05,pz);
+    const plate=new THREE.Mesh(new THREE.BoxGeometry(PLOT_W,0.06,PLOT_D),new THREE.MeshBasicMaterial({color:isMe?0x1c3870:0x0d1a38}));
+    plate.position.set(pcx,0.15,pz); // lote em cima da calçada do quarteirão
     plate.userData=pickData;
     T3.scene.add(plate); _cityObjs.push(plate); _cityPickables.push(plate);
 
     // Gold border for current user
     if(isMe){
       const fr=new THREE.Mesh(new THREE.BoxGeometry(PLOT_W+0.18,0.05,PLOT_D+0.18),new THREE.MeshBasicMaterial({color:0xf5a623}));
-      fr.position.set(pcx,0.02,pz);
+      fr.position.set(pcx,0.14,pz);
       T3.scene.add(fr); _cityObjs.push(fr);
     }
 
@@ -3104,11 +3197,10 @@ function buildCityScene(players){
       const bx=px+BLOCK_PAD+bi*(BLDW+BLDGAP)+BLDW/2;
       if(bld&&bld.v>0){
         const bgrp=building3D(bld.v,bld.t);
-        bgrp.position.set(bx,0.1,pz);
+        bgrp.position.set(bx,0.18,pz);
         bgrp.scale.y=0; // start collapsed, animated in switchToCityMode
         bgrp.userData=pickData; // tocar no prédio (não só no chão do lote) também seleciona
         T3.scene.add(bgrp); _cityObjs.push(bgrp); _cityPickables.push(bgrp);
-        _cityColliders.push({x1:bx-BLDW/2,x2:bx+BLDW/2,z1:pz-BLDW/2,z2:pz+BLDW/2});
         bldGroups.push({grp:bgrp, delay:pi*65});
         const h=Math.max(0.45,bld.v*0.55);
         if(h>localMaxH) localMaxH=h;
@@ -3118,7 +3210,7 @@ function buildCityScene(players){
         _playerBldMap[player.uid].localMaxH=Math.max(_playerBldMap[player.uid].localMaxH,h);
       } else {
         const lot=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.07,0.52),new THREE.MeshBasicMaterial({color:0x112040,transparent:true,opacity:0.7}));
-        lot.position.set(bx,0.135,pz);
+        lot.position.set(bx,0.215,pz);
         T3.scene.add(lot); _cityObjs.push(lot);
       }
     }
