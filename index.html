@@ -15,25 +15,31 @@
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <style>
     :root {
-      --bg0:#060e1f;--bg1:#0a1628;--bg2:rgba(16,26,52,0.75);--bg3:rgba(28,42,74,0.8);
-      --border:rgba(80,110,180,0.2);
-      --text1:#f0f4ff;--text2:#7a90c0;
-      --gold:#f5a623;--gold-lt:#ffc653;--gold-glow:rgba(245,166,35,0.35);
-      --green:#4ade80;--green-bg:rgba(74,222,128,0.1);
-      --red:#f87171;--red-bg:rgba(248,113,113,0.1);
-      --amber:#fbbf24;--amber-bg:rgba(251,191,36,0.1);
-      --blue:#38bdf8;--blue-bg:rgba(56,189,248,0.1);
-      --purple:#c084fc;--purple-bg:rgba(192,132,252,0.1);
+      /* Noite dourada: azul-noite com toque índigo; dourado é a cor-assinatura */
+      --bg0:#070b1d;--bg1:#0b1029;--bg2:rgba(17,22,52,0.78);--bg3:rgba(31,36,80,0.8);
+      --card:#10163a;                 /* superfície sólida dos cartões */
+      --border:rgba(118,124,210,0.2);
+      --text1:#f2f3ff;--text2:#8a93c8;
+      --gold:#f5a623;--gold-lt:#ffd27a;--gold-glow:rgba(245,166,35,0.35);
+      --gold-grad:linear-gradient(135deg,#f59e0b 0%,#f7c548 55%,#ffd9a8 100%);
+      --edge-grad:linear-gradient(160deg,rgba(247,197,72,.42) 0%,rgba(247,197,72,0) 38%,rgba(140,130,255,0) 62%,rgba(140,130,255,.28) 100%);
+      --green:#5fd39a;--green-bg:rgba(95,211,154,0.1);
+      --red:#f28b8b;--red-bg:rgba(242,139,139,0.1);
+      --amber:#f7c548;--amber-bg:rgba(247,197,72,0.1);
+      --blue:#74b9f5;--blue-bg:rgba(116,185,245,0.1);
+      --purple:#b79cfb;--purple-bg:rgba(183,156,251,0.1);
       --radius:16px;--glass:blur(20px) saturate(180%);
       --shadow:0 8px 32px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.2);
-      --shadow-gold:0 0 40px rgba(245,166,35,0.3),0 8px 32px rgba(0,0,0,0.4);
+      --shadow-gold:0 8px 32px rgba(0,0,0,0.4);
+      --lift-1:0 1px 2px rgba(0,0,0,.35),0 2px 8px rgba(0,0,0,.25);
+      --lift-2:0 2px 4px rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.3);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg0);color:var(--text1);min-height:100dvh;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden;scrollbar-gutter:stable}
     body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:radial-gradient(ellipse 80% 60% at 15% 15%,rgba(245,166,35,.03) 0%,transparent 60%),
-        radial-gradient(ellipse 60% 80% at 85% 85%,rgba(56,189,248,.025) 0%,transparent 60%),
-        radial-gradient(ellipse 100% 100% at 50% 50%,rgba(192,132,252,.015) 0%,transparent 70%);
+      background:radial-gradient(ellipse 90% 55% at 20% -5%,rgba(247,180,60,.10) 0%,transparent 60%),
+        radial-gradient(ellipse 80% 70% at 100% 100%,rgba(110,90,255,.14) 0%,transparent 65%),
+        linear-gradient(180deg,#070b1d 0%,#0b0f2c 55%,#130f33 100%);
       animation:bgDrift 18s ease-in-out infinite alternate}
     @keyframes bgDrift{0%{transform:scale(1) translate(0,0)}50%{transform:scale(1.02) translate(-.5%,.5%)}100%{transform:scale(1.01) translate(.5%,-.5%)}}
     #bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
@@ -64,8 +70,8 @@
     .btn:active{transform:scale(.95)}
     .btn-google{background:#fff;color:#333;width:100%;border:1px solid #ddd;font-size:15px;padding:14px;border-radius:14px}
     .btn-google:hover{background:#f7f7f7;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.2)}
-    .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-weight:700;box-shadow:0 4px 20px var(--gold-glow)}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px var(--gold-glow)}
+    .btn-primary{background:var(--gold-grad);color:#0a1628;font-weight:700;box-shadow:var(--lift-1)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:var(--lift-2)}
     .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
     .btn-ghost:hover{background:var(--bg3);color:var(--text1);border-color:rgba(245,166,35,.3)}
     .btn-danger{background:transparent;color:var(--red);border:1px solid rgba(248,113,113,.3)}
@@ -102,7 +108,7 @@
     main{flex:1;padding:16px 16px 48px;max-width:560px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 
     /* CARD */
-    .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;backdrop-filter:var(--glass);box-shadow:var(--shadow);transition:border-color .3s,box-shadow .3s}
+    .card{background:linear-gradient(var(--card),var(--card)) padding-box,var(--edge-grad) border-box,linear-gradient(var(--border),var(--border)) border-box;border:1px solid transparent;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);transition:border-color .3s,box-shadow .3s}
     .card-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:14px}
 
     /* SEMESTER */
@@ -110,7 +116,7 @@
     .sem-scroll{display:flex;gap:7px;flex:1;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
     .sem-scroll::-webkit-scrollbar{display:none}
     .sem-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .25s;display:flex;align-items:center;gap:5px}
-    .sem-chip.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;border-color:transparent;font-weight:800;box-shadow:0 4px 16px var(--gold-glow)}
+    .sem-chip.active{background:var(--gold-grad);color:#0a1628;border-color:transparent;font-weight:800;box-shadow:var(--lift-1)}
     .sem-chip:not(.active):hover{border-color:rgba(245,166,35,.4);color:var(--gold)}
     .chip-del{width:15px;height:15px;border-radius:50%;background:rgba(0,0,0,.2);border:none;cursor:pointer;font-size:11px;display:none;align-items:center;justify-content:center;color:inherit;line-height:1;padding:0}
     .sem-chip.active .chip-del{display:inline-flex}
@@ -126,19 +132,20 @@
     .sem-add-hint.err{color:var(--red)}
 
     /* SUMMARY */
-    .summary-card{border-radius:20px;padding:20px 16px 18px;border:1px solid var(--border);background:var(--bg2);backdrop-filter:var(--glass);box-shadow:var(--shadow);transition:border-color .5s,box-shadow .5s;position:relative;overflow:hidden}
-    .summary-card::before{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at 50% 0%,rgba(245,166,35,.15) 0%,transparent 70%);transition:opacity .5s;pointer-events:none}
+    .summary-card{border-radius:20px;padding:20px 16px 18px;background:linear-gradient(var(--card),var(--card)) padding-box,var(--edge-grad) border-box,linear-gradient(var(--border),var(--border)) border-box;border:1px solid transparent;box-shadow:var(--shadow);transition:border-color .5s,box-shadow .5s;position:relative;overflow:hidden}
+    /* Apto: um filete dourado fino no topo do cartão (antes era um brilho radial) */
+    .summary-card::before{content:'';position:absolute;top:0;left:12%;right:12%;height:1px;opacity:0;background:linear-gradient(90deg,transparent,rgba(245,166,35,.8),transparent);transition:opacity .5s;pointer-events:none}
     .summary-card.apto{border-color:rgba(245,166,35,.5);box-shadow:var(--shadow-gold)}
     .summary-card.apto::before{opacity:1}
-    .summary-card.inapto{border-color:rgba(248,113,113,.4);box-shadow:0 0 30px rgba(248,113,113,.15),var(--shadow)}
-    .summary-card.progress{border-color:rgba(56,189,248,.3)}
+    .summary-card.inapto{border-color:rgba(242,139,139,.4);box-shadow:var(--shadow)}
+    .summary-card.progress{border-color:rgba(116,185,245,.3)}
     .summary-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
     .summary-cr-block{flex:1}
     .summary-cr-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:4px}
     .summary-cr{font-size:56px;font-weight:900;letter-spacing:-3px;line-height:1;color:var(--text2);transition:color .5s,text-shadow .5s;font-variant-numeric:tabular-nums}
-    .summary-cr.apto{color:var(--gold);text-shadow:0 0 40px rgba(245,166,35,.5),0 0 80px rgba(245,166,35,.2)}
-    .summary-cr.inapto{color:var(--red);text-shadow:0 0 30px rgba(248,113,113,.3)}
-    .summary-cr.progress{color:var(--blue);text-shadow:0 0 30px rgba(56,189,248,.3)}
+    .summary-cr.apto{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .summary-cr.inapto{background:linear-gradient(135deg,#f28b8b,#f4a7c9);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .summary-cr.progress{background:linear-gradient(135deg,#74b9f5,#a9a6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
     .summary-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(255,255,255,.05);color:var(--text2);white-space:nowrap;align-self:flex-start;margin-top:6px;border:1px solid var(--border);transition:all .4s}
     .summary-badge.apto{background:var(--green-bg);color:var(--green);border-color:rgba(74,222,128,.3)}
     .summary-badge.inapto{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.3)}
@@ -170,7 +177,7 @@
     .share-wpp-btn:active{transform:scale(.97)}
 
     /* TP */
-    .tp-card{border-color:rgba(192,132,252,.25);background:rgba(192,132,252,.04)}
+    .tp-card{border-color:rgba(183,156,251,.28);background:linear-gradient(rgba(183,156,251,.05),rgba(183,156,251,.05)) padding-box,linear-gradient(var(--card),var(--card)) padding-box}
     .tp-card .card-label{color:var(--purple)}
     .tp-body{display:flex;flex-direction:column;gap:12px}
     .tp-row{display:flex;align-items:center;gap:12px}
@@ -191,10 +198,10 @@
     .tp-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--purple-bg);color:var(--purple);border:1px solid rgba(192,132,252,.3);white-space:nowrap}
 
     /* SUBJECT CARD */
-    .subj-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;backdrop-filter:var(--glass);box-shadow:0 4px 16px rgba(0,0,0,.2);transition:border-color .35s,box-shadow .35s}
-    .subj-card.s-ok{border-color:rgba(74,222,128,.3);box-shadow:0 0 20px rgba(74,222,128,.08),0 4px 16px rgba(0,0,0,.2)}
-    .subj-card.s-warn{border-color:rgba(251,191,36,.3)}
-    .subj-card.s-bad,.subj-card.s-disq{border-color:rgba(248,113,113,.3)}
+    .subj-card{background:linear-gradient(var(--card),var(--card)) padding-box,var(--edge-grad) border-box,linear-gradient(var(--border),var(--border)) border-box;border:1px solid transparent;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:border-color .35s,box-shadow .35s}
+    .subj-card.s-ok{border-color:rgba(95,211,154,.35);box-shadow:0 4px 16px rgba(0,0,0,.2)}
+    .subj-card.s-warn{border-color:rgba(247,197,72,.3)}
+    .subj-card.s-bad,.subj-card.s-disq{border-color:rgba(242,139,139,.32)}
     .subj-head{display:flex;align-items:center;gap:8px;padding:13px 16px 0}
     .subj-num{font-size:10px;font-weight:800;color:rgba(122,144,192,.45);min-width:18px;letter-spacing:.5px}
     .name-input{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text1);font-size:14px;font-weight:700;padding:3px 0;min-width:0;transition:border-color .2s}
@@ -215,20 +222,25 @@
     .g-input::placeholder{color:rgba(80,110,180,.28);font-size:20px;font-weight:400}
     .g-input.has-val{color:var(--text1)}
     .g-val{font-size:26px;font-weight:900;color:var(--purple);line-height:1.1;padding:2px 0}
-    /* Metas embaixo da nota: uma linha "⭐ Stars  mín 9" e outra "✓ Passar  mín 4,5".
-       Nome em cor própria (dourado/azul) e valor colorido pelo estado: amarelo = precisa,
-       verde = garantido, vermelho = impossível. */
-    .g-hint{font-size:10px;line-height:1.25;min-height:13px;width:100%;padding:3px 0 0;display:flex;flex-direction:column;align-items:stretch;gap:2px}
+    .g-hint{font-size:9px;font-weight:700;text-align:center;line-height:1.2;width:100%;padding:0 2px;display:flex;justify-content:center;align-items:center;gap:3px;flex-wrap:wrap}
+    .g-hint:empty{display:none}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-    .gh-line{display:flex;align-items:baseline;column-gap:3px;flex-wrap:wrap;padding:0 2px}
-    .gh-k{font-weight:700;white-space:nowrap}
-    /* margin-left:auto: valor sempre na direita, inclusive se precisar descer de linha */
-    .gh-v{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-.1px}
-    .h-stars .gh-k{color:var(--gold)}
-    .h-pass .gh-k{color:var(--blue)}
-    .gh-line.warn .gh-v{color:var(--text1)}
-    .gh-line.ok .gh-v{color:var(--green)}
-    .gh-line.bad .gh-v{color:var(--red)}
+    /* Faixa "quanto precisa tirar": título discreto + dois blocos (Stars dourado, Passar azul).
+       Número grande e legível; "garantido" em verde e "impossível" em vermelho. */
+    .subj-goals{padding:12px 16px 2px;display:flex;flex-direction:column;gap:7px}
+    .subj-goals:empty{display:none}
+    .sg-title{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text2)}
+    .sg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .sg-item{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:8px 12px;border-radius:12px;border:1px solid transparent}
+    .sg-item.stars{background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.22)}
+    .sg-item.pass{background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.2)}
+    .sg-k{font-size:12px;font-weight:700;white-space:nowrap}
+    .sg-item.stars .sg-k{color:var(--gold)}
+    .sg-item.pass .sg-k{color:var(--blue)}
+    .sg-v{font-size:18px;font-weight:800;line-height:1;color:var(--text1);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .sg-v small{font-size:10px;font-weight:600;color:var(--text2);margin-left:1px}
+    .sg-item.ok .sg-v{font-size:12px;color:var(--green)}
+    .sg-item.bad .sg-v{font-size:12px;color:var(--red)}
     .h-stars{color:var(--amber)}.h-stars.ok{color:var(--green)}.h-stars.bad{color:var(--red)}
     .h-pass{color:var(--blue)}.h-pass.ok{color:var(--green)}.h-pass.bad{color:var(--red)}
     .g-slot::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:2px;background:var(--gold);border-radius:1px;transform:scaleX(0);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
@@ -272,7 +284,7 @@
     .lb-name-input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
     .lb-entries{display:flex;flex-direction:column;gap:6px}
     .lb-entry{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(10,18,38,.5);transition:border-color .3s}
-    .lb-entry.me{border-color:rgba(245,166,35,.45);background:rgba(245,166,35,.05);box-shadow:0 0 16px rgba(245,166,35,.06)}
+    .lb-entry.me{border-color:rgba(245,166,35,.45);background:rgba(245,166,35,.05)}
     .lb-rank{font-size:17px;font-weight:900;color:var(--text2);min-width:28px;text-align:center;flex-shrink:0}
     .lb-entry-info{flex:1;min-width:0}
     .lb-ename{font-size:13px;font-weight:700;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
@@ -308,12 +320,12 @@
     .lb-filter-tabs{display:flex;gap:5px;background:rgba(10,18,38,.6);border:1px solid var(--border);border-radius:12px;padding:3px}
     .lb-filter-tab{flex:1;padding:6px 12px;border-radius:9px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
     .lb-period-row{display:flex;gap:8px;margin-top:-6px}
-    .lb-filter-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628}
+    .lb-filter-tab.active{background:var(--gold-grad);color:#0a1628}
     .lb-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--text2);font-size:13px}
 
     /* ADD BTN */
     .add-btn{width:100%;padding:13px;margin-top:4px;border:1.5px dashed rgba(245,166,35,.35);background:rgba(245,166,35,.04);color:var(--gold);font-size:13px;font-weight:600;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s}
-    .add-btn:hover{border-color:var(--gold);background:rgba(245,166,35,.09);transform:translateY(-1px);box-shadow:0 4px 14px rgba(245,166,35,.12)}
+    .add-btn:hover{border-color:var(--gold);background:rgba(245,166,35,.09);transform:translateY(-1px);box-shadow:var(--lift-1)}
 
     .empty-msg{text-align:center;padding:32px 16px;color:var(--text2);font-size:13px}
     .danger-area{display:flex;justify-content:center}
@@ -323,7 +335,6 @@
     .toast.show{transform:translateX(-50%) translateY(0)}
 
     /* CURSOR GLOW */
-    .cursor-glow{position:fixed;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.07) 0%,transparent 70%);pointer-events:none;z-index:0;transform:translate(-50%,-50%);will-change:transform;opacity:0;transition:opacity .4s}
 
     /* PWA BANNER */
     .pwa-banner{position:fixed;bottom:0;left:0;right:0;z-index:200;padding:12px 14px 24px;transform:translateY(110%);transition:transform .55s cubic-bezier(.34,1.56,.64,1)}
@@ -347,12 +358,10 @@
 
     /* RIPPLE BUTTON */
     .btn{overflow:hidden}
-    .ripple{position:absolute;border-radius:50%;transform:scale(0);animation:rippleAnim .55s linear;background:rgba(255,255,255,.18);pointer-events:none}
+    .ripple{position:absolute;border-radius:50%;transform:scale(0);animation:rippleAnim .55s linear;background:rgba(255,255,255,.1);pointer-events:none}
     @keyframes rippleAnim{to{transform:scale(4);opacity:0}}
 
     /* CARD SHIMMER */
-    .subj-card.s-ok{animation:shimmerPulse 3s ease-in-out infinite}
-    @keyframes shimmerPulse{0%,100%{box-shadow:0 0 20px rgba(74,222,128,.08),0 4px 16px rgba(0,0,0,.2)}50%{box-shadow:0 0 28px rgba(74,222,128,.15),0 4px 16px rgba(0,0,0,.2)}}
 
     /* ── 3D VIEW ─────────────────────────────────────────────────────────── */
     #s-3d{background:#060e1f;overflow:hidden;position:fixed;inset:0;z-index:200}
@@ -364,7 +373,7 @@
     .city-sel:focus{outline:none;border-color:var(--gold)}
     .city-seg{display:flex;background:rgba(10,18,38,.6);border-radius:10px;padding:2px}
     .city-seg button{border:none;background:transparent;color:var(--text2);font-size:11px;font-weight:600;padding:5px 8px;border-radius:8px;cursor:pointer;white-space:nowrap;touch-action:manipulation}
-    .city-seg button.active{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628}
+    .city-seg button.active{background:var(--gold-grad);color:#0a1628}
     .city-icon-btn{border:1px solid var(--border);background:var(--bg3);color:var(--text1);border-radius:10px;width:32px;height:30px;font-size:14px;cursor:pointer;flex-shrink:0;touch-action:manipulation}
     .city-search{position:absolute;top:104px;left:50%;transform:translateX(-50%);z-index:62;width:min(420px,calc(100% - 24px));background:rgba(8,15,34,.97);border:1px solid #1e3268;border-radius:16px;padding:10px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;max-height:min(60vh,460px)}
     .city-search-head{display:flex;gap:8px}
@@ -418,7 +427,7 @@
     .onboard-sub{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:16px}
     .onboard-steps{display:flex;flex-direction:column;gap:10px}
     .onboard-step{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(10,18,38,.6);border:1px solid var(--border);border-radius:12px}
-    .onboard-step-num{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .onboard-step-num{width:26px;height:26px;border-radius:50%;background:var(--gold-grad);color:#0a1628;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
     .onboard-step-text{flex:1}
     .onboard-step-label{font-size:13px;font-weight:700;color:var(--text1);margin-bottom:2px}
     .onboard-step-desc{font-size:11px;color:var(--text2);line-height:1.5}
@@ -458,14 +467,14 @@
 
     /* SIA IMPORT */
     .sia-step{display:flex;align-items:flex-start;gap:12px;font-size:13px;color:var(--text2);line-height:1.6}
-    .sia-step-n{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+    .sia-step-n{width:24px;height:24px;border-radius:50%;background:var(--gold-grad);color:#0a1628;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
     .sia-install-card{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
     .sia-install-header{display:flex;align-items:center;gap:10px}
     .sia-install-options{display:flex;flex-direction:column;gap:8px}
     .sia-install-opt{display:flex;align-items:flex-start;gap:10px;font-size:12px;color:var(--text2);line-height:1.6}
     .sia-install-icon{font-size:16px;flex-shrink:0;margin-top:1px}
-    .sia-bm-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-size:14px;font-weight:800;border-radius:14px;text-decoration:none;cursor:grab;user-select:none;border:none;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(245,166,35,.35);width:100%;justify-content:center}
-    .sia-bm-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,166,35,.45)}
+    .sia-bm-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;background:var(--gold-grad);color:#0a1628;font-size:14px;font-weight:800;border-radius:14px;text-decoration:none;cursor:grab;user-select:none;border:none;transition:transform .15s,box-shadow .15s;box-shadow:0 4px 20px rgba(245,166,35,.35);width:100%;justify-content:center}
+    .sia-bm-btn:hover{transform:translateY(-1px);box-shadow:var(--lift-2)}
     .sia-bm-btn:active{cursor:grabbing;transform:scale(.97)}
     .sia-copy-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;background:transparent;border:1px solid rgba(245,166,35,.3);border-radius:10px;color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
     .sia-copy-btn:hover{background:rgba(245,166,35,.08);border-color:var(--gold)}
@@ -483,8 +492,8 @@
     #tour-wrap.active{opacity:1;pointer-events:all}
     /* Moldura e cartão são posicionados por JS a cada quadro (seguem o item mesmo durante a
        rolagem), por isso sem transition de posição aqui. */
-    #tour-hl{position:fixed;top:0;left:0;border-radius:12px;border:2px solid rgba(245,166,35,.9);box-shadow:0 0 0 9999px rgba(0,0,0,.75),0 0 0 5px rgba(245,166,35,.12),0 0 28px rgba(245,166,35,.5);pointer-events:none;z-index:501;box-sizing:border-box;will-change:transform,width,height}
-    #tour-card{position:fixed;top:0;left:0;z-index:503;background:var(--bg1);border:1px solid rgba(245,166,35,.4);border-radius:18px;padding:16px 18px 18px;max-width:300px;box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 20px rgba(245,166,35,.12);will-change:transform}
+    #tour-hl{position:fixed;top:0;left:0;border-radius:12px;border:2px solid rgba(245,166,35,.9);box-shadow:0 0 0 9999px rgba(0,0,0,.75),0 0 0 4px rgba(245,166,35,.15);pointer-events:none;z-index:501;box-sizing:border-box;will-change:transform,width,height}
+    #tour-card{position:fixed;top:0;left:0;z-index:503;background:var(--bg1);border:1px solid rgba(245,166,35,.4);border-radius:18px;padding:16px 18px 18px;max-width:300px;box-shadow:0 8px 40px rgba(0,0,0,.7);will-change:transform}
     /* Durante o tutorial a página não rola nem recebe toques: só o cartão do tutorial responde. */
     #tour-wrap{touch-action:none;overscroll-behavior:none}
     /* Trava no html. O body volta a overflow visível: com o html travado, o overflow-x:hidden
@@ -499,13 +508,13 @@
     .tc-title{font-size:15px;font-weight:900;color:var(--gold);margin-bottom:6px}
     .tc-text{font-size:12.5px;color:var(--text2);line-height:1.65;margin-bottom:14px;white-space:pre-line}
     .tc-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
-    .tc-next{padding:9px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-weight:700;border:none;border-radius:11px;cursor:pointer;font-size:13px;flex-shrink:0;transition:transform .15s}
+    .tc-next{padding:9px 18px;background:var(--gold-grad);color:#0a1628;font-weight:700;border:none;border-radius:11px;cursor:pointer;font-size:13px;flex-shrink:0;transition:transform .15s}
     .tc-next:active{transform:scale(.95)}
     .tc-skip{background:none;border:none;color:var(--text2);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
     /* Rolagem e toque mais fluidos no celular: sem atraso de toque duplo e sem "puxar" a página
        inteira quando um modal rolável chega no fim. */
     .update-bar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:600;display:flex;align-items:center;gap:10px;background:rgba(16,26,52,.97);border:1px solid rgba(245,166,35,.4);border-radius:14px;padding:8px 8px 8px 14px;color:var(--text1);font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;max-width:calc(100% - 24px)}
-    .update-go{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer}
+    .update-go{background:var(--gold-grad);color:#0a1628;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer}
     .update-go:disabled{opacity:.6}
     .update-x{background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;padding:6px 8px}
     /* Atributo hidden sempre esconde, mesmo em elementos com display próprio (ex.: busca da cidade). */
@@ -516,14 +525,13 @@
        em loop (os indicadores de carregamento continuam girando). */
     @media (prefers-reduced-motion: reduce){
       *,*::before,*::after{transition-duration:.08s!important;scroll-behavior:auto!important}
-      .login-star,.pwa-icon,.subj-card.s-ok,.empty-visual-arrow{animation:none!important}
+      .login-star,.pwa-icon,.empty-visual-arrow{animation:none!important}
     }
   </style>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
 <canvas id="particle-canvas"></canvas>
-<div class="cursor-glow" id="cursor-glow"></div>
 
 <div class="pwa-banner" id="pwa-banner">
   <div class="pwa-inner">
@@ -1120,22 +1128,6 @@ gsap.registerPlugin(TextPlugin, ScrollTrigger);
 // (os callbacks continuam rodando normalmente, só sem o movimento longo).
 if(matchMedia('(prefers-reduced-motion: reduce)').matches)gsap.globalTimeline.timeScale(6);
 
-// ─── CURSOR / TOUCH GLOW ─────────────────────────────────────────────────────
-(()=>{
-  const glow=document.getElementById('cursor-glow');
-  let glowX=0,glowY=0,targetX=0,targetY=0,raf=null;
-  const lerp=(a,b,t)=>a+(b-a)*t;
-  function tickGlow(){
-    glowX=lerp(glowX,targetX,.1);glowY=lerp(glowY,targetY,.1);
-    glow.style.transform=`translate(${glowX-140}px,${glowY-140}px)`;
-    // Chegou no dedo/mouse: para o loop até o próximo movimento (antes rodava pra sempre).
-    if(Math.abs(targetX-glowX)<.5&&Math.abs(targetY-glowY)<.5){raf=null;return}
-    raf=requestAnimationFrame(tickGlow);
-  }
-  document.addEventListener('mousemove',e=>{targetX=e.clientX;targetY=e.clientY;glow.style.opacity='1';if(!raf)tickGlow()},{passive:true});
-  document.addEventListener('touchmove',e=>{const t=e.touches[0];targetX=t.clientX;targetY=t.clientY;glow.style.opacity='1';if(!raf)tickGlow()},{passive:true});
-  document.addEventListener('mouseleave',()=>glow.style.opacity='0');
-})();
 
 // ─── BUTTON RIPPLE ────────────────────────────────────────────────────────────
 document.addEventListener('pointerdown',e=>{
@@ -2158,7 +2150,7 @@ function updateSummary(){
     if(!wasApto){
       wasApto=true;
       const tl=gsap.timeline();
-      tl.fromTo(card,{boxShadow:'0 0 0px rgba(245,166,35,0)'},{boxShadow:'0 0 60px rgba(245,166,35,0.5),0 8px 32px rgba(0,0,0,0.4)',duration:.6,ease:'power2.out'})
+      tl.fromTo(card,{y:6},{y:0,duration:.5,ease:'power2.out'})
         .fromTo(badge,{scale:.5,opacity:0},{scale:1,opacity:1,duration:.55,ease:'back.out(2.8)'},'<.1')
         .fromTo('#sum-cr',{scale:.85},{scale:1.08,duration:.3,ease:'power3.out'},'.1')
         .to('#sum-cr',{scale:1,duration:.25,ease:'back.out(2)'},'+=0')
@@ -2217,27 +2209,32 @@ function updateTpSelect(){
     sel.appendChild(opt);
   });
 }
-// Dica embaixo de cada nota que falta: quanto precisa tirar nela para o Stars e para passar.
-// Uma linha por meta, com o nome escrito (não só ícone), pra ficar óbvio qual é qual.
-function slotHintParts(field,h){
-  if(!h)return null;
-  const txt=h.val==='livre'?'garantido':h.type==='bad'?'impossível':h.val;
-  return{txt,type:h.type};
-}
-function slotHintHTML(field,sH,pH){
-  const s=slotHintParts(field,sH),p=slotHintParts(field,pH);
-  if(!s&&!p)return{html:'',label:''};
-  // Visual (escondido do leitor de tela) + uma frase completa só pro leitor de tela.
-  const line=(cls,icon,name,o)=>`<span class="gh-line ${cls} ${o.type}" aria-hidden="true"><span class="gh-k">${icon} ${name}</span><span class="gh-v">${o.txt}</span></span>`;
-  const label=SLOTS[field].label;
-  const say=(name,o)=>o.txt==='garantido'?`${name}: já garantido`:o.txt==='impossível'?`${name}: não dá mais nesta disciplina`:`${name}: precisa de ${o.txt.replace('mín ','no mínimo ')} na ${label}`;
-  const sr=[s&&say('Stars',s),p&&say('Passar',p)].filter(Boolean).join('. ');
-  return{html:`<span class="sr-only">${sr}.</span>`+(s?line('h-stars','⭐','Stars',s):'')+(p?line('h-pass','✓','Passar',p):''),label:sr};
+// Faixa "quanto precisa tirar" embaixo das notas de cada disciplina.
+// Falta 1 prova: a nota exata nela (na escala dela: AC até 20, APs até 10).
+// Faltam várias: a MÉDIA (0 a 10) que precisa tirar nas que faltam. O "mín" por prova supunha
+// tirar 10 nas outras, o que não dá pra resumir numa frase só sem enganar.
+function goalStripHTML(d,a){
+  if(a.type==='disq'||a.grade!==null)return'';
+  const miss=Object.keys(SLOTS).filter(k=>pv(d[k])===null);
+  if(!miss.length||miss.length===Object.keys(SLOTS).length)return'';
+  const remPts=miss.reduce((s,k)=>s+SLOTS[k].pts,0);
+  const one=miss.length===1?SLOTS[miss[0]]:null;
+  const goal=target=>{
+    const need=target-a.knownPts;
+    if(need<=0)return{txt:'garantido',type:'ok'};
+    if(need>remPts)return{txt:'impossível',type:'bad'};
+    const g=one?need/one.weight:need/remPts*10;
+    const v=fmtI(Math.ceil(g*10-1e-9)/10); // arredonda pra cima: é o mínimo
+    return{txt:v,type:'warn',scale:one&&one.inputMax!==10?`/${one.inputMax}`:''};
+  };
+  const names=miss.map(k=>SLOTS[k].label);
+  const title=one?`Precisa tirar na ${one.label}`:`Média que precisa tirar em ${names.slice(0,-1).join(', ')} e ${names.at(-1)}`;
+  const item=(cls,icon,name,o)=>`<div class="sg-item ${cls} ${o.type}"><span class="sg-k"><span aria-hidden="true">${icon}</span> ${name}</span><span class="sg-v">${o.txt}${o.scale?`<small>${o.scale}</small>`:''}</span></div>`;
+  return`<div class="sg-title">${title}</div><div class="sg-row">${item('stars','⭐','Stars',goal(TARGET_STARS))}${item('pass','✓','Passar',goal(TARGET_PASS))}</div>`;
 }
 function buildSlotHTML(field,id,d,a){
   const s=SLOTS[field],val=d[field],filled=val!==''&&val!=null;
-  const h=filled?{html:'',label:''}:slotHintHTML(field,a.slotStars[field],a.slotPass[field]);
-  return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><span class="g-label-sub">${s.fullName}</span><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="0-${s.inputMax}" value="${filled?val:''}" aria-label="${s.label} (${s.fullName}), de 0 a ${s.inputMax}" aria-describedby="h_${field}_${id}"><div class="g-hint" id="h_${field}_${id}">${h.html}</div></div>`;
+  return`<div class="g-slot"><div class="g-label">${s.label}<em>/${s.inputMax}</em></div><span class="g-label-sub">${s.fullName}</span><input type="number" class="g-input${filled?' has-val':''}" id="${field}_${id}" min="0" max="${s.inputMax}" step="0.1" placeholder="0-${s.inputMax}" value="${filled?val:''}" aria-label="${s.label} (${s.fullName}), de 0 a ${s.inputMax}" aria-describedby="goals_${id}"><div class="g-hint"></div></div>`;
 }
 function renderDiscs(){
   if(!semId)return;
@@ -2272,6 +2269,7 @@ function renderDiscs(){
       <div class="grade-grid${tpPts>0?' has-tp':''}">
         ${buildSlotHTML('ac',id,d,a)}${buildSlotHTML('ap1',id,d,a)}${buildSlotHTML('ap2',id,d,a)}${tpSlot}
       </div>
+      <div class="subj-goals" id="goals_${id}" aria-live="polite">${goalStripHTML(d,a)}</div>
       <div class="subj-foot"><button type="button" class="orig-btn" id="o_${id}" aria-pressed="${isOrig(d)}"></button>${gradePill}</div>`;
     card.querySelector(`#n_${id}`).oninput=function(){sems[semId].discs[id].nome=this.value;updateTpSelect();queueSave()};
     // Do período original? Conta pros 75% do Stars. Toque alterna.
@@ -2321,13 +2319,9 @@ function refreshCard(id,card){
       foot.appendChild(pill);
     }
   }
-  Object.keys(SLOTS).forEach(f=>{
-    const inp=card.querySelector(`#${f}_${id}`);if(!inp)return;
-    const hintEl=inp.closest('.g-slot')?.querySelector('.g-hint');if(!hintEl)return;
-    const filled=sems[semId].discs[id][f]!==''&&sems[semId].discs[id][f]!=null;
-    const h=filled?{html:'',label:''}:slotHintHTML(f,a.slotStars[f],a.slotPass[f]);
-    hintEl.innerHTML=h.html;
-  });
+  // Faixa "quanto precisa tirar" acompanha as notas digitadas
+  const goals=card.querySelector('.subj-goals');
+  if(goals)goals.innerHTML=goalStripHTML(sems[semId].discs[id],a);
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 let toastTimer;
