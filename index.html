@@ -483,6 +483,10 @@
     .tc-skip{background:none;border:none;color:var(--text2);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
     /* Rolagem e toque mais fluidos no celular: sem atraso de toque duplo e sem "puxar" a página
        inteira quando um modal rolável chega no fim. */
+    .update-bar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:600;display:flex;align-items:center;gap:10px;background:rgba(16,26,52,.97);border:1px solid rgba(245,166,35,.4);border-radius:14px;padding:8px 8px 8px 14px;color:var(--text1);font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.5);white-space:nowrap;max-width:calc(100% - 24px)}
+    .update-go{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer}
+    .update-go:disabled{opacity:.6}
+    .update-x{background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;padding:6px 8px}
     /* Atributo hidden sempre esconde, mesmo em elementos com display próprio (ex.: busca da cidade). */
     [hidden]{display:none!important}
     button,a,input,select,.btn,.lb-filter-tab,.import-sem-opt{touch-action:manipulation}
@@ -1022,6 +1026,11 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="update-bar" id="update-bar" role="status" aria-live="polite" hidden>
+  <span>✨ Nova versão disponível</span>
+  <button class="update-go" id="update-go">Atualizar</button>
+  <button class="update-x" id="update-x" aria-label="Agora não">✕</button>
+</div>
 
 <script type="importmap">
 {
@@ -1129,6 +1138,45 @@ document.addEventListener('pointerdown',e=>{
   r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
   btn.appendChild(r);setTimeout(()=>r.remove(),600);
 },{passive:true});
+
+// ─── AVISO DE NOVA VERSÃO ─────────────────────────────────────────────────────
+// O app instalado no iPhone não recarrega sozinho: ao voltar pra ele, o iOS só "acorda"
+// a página antiga. Aqui o app confere o ETag do index.html (muda a cada deploy) quando
+// volta a ficar visível e a cada 30 min; se mudou, oferece atualizar com um toque.
+(()=>{
+  if(!/^https?:$/.test(location.protocol))return;
+  let baseTag=null,checking=false,lastCheck=0,dismissedTag=null;
+  const bar=document.getElementById('update-bar');
+  const getTag=async()=>{
+    const r=await fetch('/',{method:'HEAD',cache:'no-store'});
+    // O servidor marca a compressão no fim ("...-br"); só o hash do conteúdo interessa.
+    return r.ok?(r.headers.get('etag')||'').replace(/^W\//,'').replace(/-[a-z]+"$/,'"')||null:null;
+  };
+  async function check(){
+    if(checking||Date.now()-lastCheck<60000)return; // no máximo 1 conferência por minuto
+    checking=true;lastCheck=Date.now();
+    try{
+      const tag=await getTag();
+      if(!tag)return;
+      if(!baseTag){baseTag=tag;return}
+      if(tag!==baseTag&&tag!==dismissedTag){
+        bar.dataset.tag=tag;bar.hidden=false;
+        gsap.fromTo(bar,{y:30,opacity:0},{y:0,opacity:1,duration:.35,ease:'back.out(1.6)'});
+      }
+    }catch{}finally{checking=false}
+  }
+  document.getElementById('update-go').onclick=async function(){
+    this.disabled=true;this.textContent='Atualizando…';
+    // Se tem nota esperando pra salvar (o salvamento espera 0,9s após digitar), salva antes.
+    if(saveTimer){clearTimeout(saveTimer);saveTimer=null;try{await saveSem()}catch{}}
+    location.reload();
+  };
+  document.getElementById('update-x').onclick=()=>{dismissedTag=bar.dataset.tag;bar.hidden=true};
+  check();
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check()});
+  window.addEventListener('pageshow',e=>{if(e.persisted)check()});
+  setInterval(()=>{if(document.visibilityState==='visible'){lastCheck=0;check()}},30*60*1000);
+})();
 
 // ─── PWA INSTALL BANNER ───────────────────────────────────────────────────────
 (()=>{
