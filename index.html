@@ -455,6 +455,16 @@
     .tc-next{padding:9px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:#0a1628;font-weight:700;border:none;border-radius:11px;cursor:pointer;font-size:13px;flex-shrink:0;transition:transform .15s}
     .tc-next:active{transform:scale(.95)}
     .tc-skip{background:none;border:none;color:var(--text2);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
+    /* Rolagem e toque mais fluidos no celular: sem atraso de toque duplo e sem "puxar" a página
+       inteira quando um modal rolável chega no fim. */
+    button,a,input,select,.btn,.lb-filter-tab,.import-sem-opt{touch-action:manipulation}
+    .lb-sheet{overscroll-behavior:contain}
+    /* Quem ativou "reduzir movimento" no aparelho: transições curtas e sem animações decorativas
+       em loop (os indicadores de carregamento continuam girando). */
+    @media (prefers-reduced-motion: reduce){
+      *,*::before,*::after{transition-duration:.08s!important;scroll-behavior:auto!important}
+      .login-star,.pwa-icon,.subj-card.s-ok,.empty-visual-arrow{animation:none!important}
+    }
   </style>
 </head>
 <body>
@@ -993,9 +1003,14 @@ const firebaseConfig = {
 };
 import{initializeApp}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
 import{getAuth,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,onAuthStateChanged,signOut as fbSignOut}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
-import{getFirestore,doc,setDoc,getDoc,deleteDoc,collection,getDocs,onSnapshot,serverTimestamp,arrayUnion}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import{getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,setDoc,getDoc,getDocFromCache,deleteDoc,collection,getDocs,getDocsFromCache,writeBatch,onSnapshot,serverTimestamp,arrayUnion}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/11.8.1/firebase-functions.js";
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),functions=getFunctions(app);
+const app=initializeApp(firebaseConfig),auth=getAuth(app),functions=getFunctions(app);
+// Cache no aparelho (IndexedDB): o app abre na hora com os dados da última sessão e
+// sincroniza com a nuvem em seguida. Sem IndexedDB (ex.: aba anônima) cai no modo normal.
+let db;
+try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})})}
+catch(e){console.warn('[Firestore cache]',e);db=getFirestore(app)}
 
 // ─── ONESIGNAL ───────────────────────────────────────────────────────────────
 const OS_APP_ID='7bd240f1-a6de-4f04-9078-7d2d521b9b52';
@@ -1035,6 +1050,9 @@ async function sendPushViaOneSignal(targetUid,emoji,fromName){
 
 // ─── GSAP PLUGINS ────────────────────────────────────────────────────────────
 gsap.registerPlugin(TextPlugin, ScrollTrigger);
+// Quem ativou "reduzir movimento" no aparelho: animações do GSAP terminam bem mais rápido
+// (os callbacks continuam rodando normalmente, só sem o movimento longo).
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)gsap.globalTimeline.timeScale(6);
 
 // ─── CURSOR / TOUCH GLOW ─────────────────────────────────────────────────────
 (()=>{
@@ -1044,6 +1062,8 @@ gsap.registerPlugin(TextPlugin, ScrollTrigger);
   function tickGlow(){
     glowX=lerp(glowX,targetX,.1);glowY=lerp(glowY,targetY,.1);
     glow.style.transform=`translate(${glowX-140}px,${glowY-140}px)`;
+    // Chegou no dedo/mouse: para o loop até o próximo movimento (antes rodava pra sempre).
+    if(Math.abs(targetX-glowX)<.5&&Math.abs(targetY-glowY)<.5){raf=null;return}
     raf=requestAnimationFrame(tickGlow);
   }
   document.addEventListener('mousemove',e=>{targetX=e.clientX;targetY=e.clientY;glow.style.opacity='1';if(!raf)tickGlow()},{passive:true});
@@ -1127,9 +1147,33 @@ const bgCanvas = document.getElementById('bg-canvas');
 const bgCtx    = bgCanvas.getContext('2d');
 let bgParticles = [], bgAnimId = null, currentCourse = 'computacao';
 
+const REDUCED_MOTION=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function resizeBg(){bgCanvas.width=innerWidth;bgCanvas.height=innerHeight}
 resizeBg();
-window.addEventListener('resize',()=>{resizeBg();initBgParticles()});
+// No celular a barra do navegador some/aparece ao rolar e dispara resize só de altura:
+// aí só ajusta o canvas, sem sortear os símbolos de novo.
+let _bgW=innerWidth;
+window.addEventListener('resize',()=>{
+  if(innerWidth===_bgW&&Math.abs(innerHeight-bgCanvas.height)<160){bgCanvas.height=innerHeight;if(REDUCED_MOTION)drawBgFrame();return}
+  _bgW=innerWidth;resizeBg();initBgParticles();if(REDUCED_MOTION)drawBgFrame();
+});
+// Cada símbolo (texto + tamanho + cor) é desenhado uma vez, com o brilho, num canvas à parte;
+// a cada quadro é só copiar a imagem. Mesmo visual, sem recalcular o shadowBlur o tempo todo.
+const _bgSprites=new Map();
+function bgSprite(sym,size,color,glow){
+  const key=sym+'|'+size+'|'+color;
+  let sp=_bgSprites.get(key);if(sp)return sp;
+  const font=`${size}px monospace`,pad=8;
+  const c=document.createElement('canvas'),x=c.getContext('2d');
+  x.font=font;
+  const w=Math.ceil(x.measureText(sym).width)+pad*2,asc=Math.ceil(size*1.1),h=asc+Math.ceil(size*.45)+pad*2;
+  c.width=w;c.height=h;
+  x.font=font;x.fillStyle=color;x.shadowColor=glow;x.shadowBlur=4;
+  x.fillText(sym,pad,pad+asc);
+  sp={c,ox:pad,oy:pad+asc};
+  _bgSprites.set(key,sp);
+  return sp;
+}
 
 class BgSymbol {
   constructor(spreadY){
@@ -1141,7 +1185,7 @@ class BgSymbol {
     this.baseX  = Math.random()*bgCanvas.width;
     this.x      = this.baseX;
     this.y      = spreadY!==undefined ? spreadY : -40;
-    this.size   = Math.random()*10+8;        // 8-18px
+    this.size   = Math.round(Math.random()*10+8); // 8-18px (inteiro: reaproveita o sprite)
     this.speed  = Math.random()*0.4+0.15;   // 0.15-0.55 px/frame
     this.alpha  = Math.random()*0.06+0.02;  // 2-8%
     this.driftA = Math.random()*22+8;        // drift amplitude px
@@ -1150,10 +1194,11 @@ class BgSymbol {
     this.rot    = Math.random()*0.3-0.15;    // initial lean
     this.rotSpd = (Math.random()-0.5)*0.012; // rotation speed
   }
-  update(){
-    this.y   += this.speed;
+  // k = quantos quadros de 60fps se passaram (mantém a mesma velocidade a 30fps ou 120Hz)
+  update(k=1){
+    this.y   += this.speed*k;
     this.x    = this.baseX + Math.sin(this.y*this.driftF+this.driftP)*this.driftA;
-    this.rot += this.rotSpd;
+    this.rot += this.rotSpd*k;
     if(this.y > bgCanvas.height+50) this.init();
   }
   draw(){
@@ -1163,16 +1208,12 @@ class BgSymbol {
     let a = this.alpha;
     if(yR<0.12) a *= yR/0.12;
     else if(yR>0.88) a *= (1-yR)/0.12;
-    bgCtx.save();
-    bgCtx.globalAlpha = Math.max(0,a);
-    bgCtx.fillStyle   = c.color;
-    bgCtx.shadowColor = c.glow;
-    bgCtx.shadowBlur  = 4;
-    bgCtx.font        = `${this.size}px monospace`;
-    bgCtx.translate(this.x,this.y);
-    bgCtx.rotate(this.rot);
-    bgCtx.fillText(this.symbol,0,0);
-    bgCtx.restore();
+    if(a<=0)return;
+    const sp=bgSprite(this.symbol,this.size,c.color,c.glow);
+    const cos=Math.cos(this.rot),sin=Math.sin(this.rot);
+    bgCtx.globalAlpha = a;
+    bgCtx.setTransform(cos,sin,-sin,cos,this.x,this.y);
+    bgCtx.drawImage(sp.c,-sp.ox,-sp.oy);
   }
 }
 
@@ -1185,10 +1226,25 @@ function initBgParticles(){
   }
 }
 
-function animBg(){
+function drawBgFrame(){
+  bgCtx.setTransform(1,0,0,1,0,0);bgCtx.globalAlpha=1;
   bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
-  bgParticles.forEach(p=>{p.update();p.draw()});
+  bgParticles.forEach(p=>p.draw());
+}
+// Os símbolos andam devagar (menos de 1px por quadro), então 30fps fica igual a olho nu e
+// corta pela metade o trabalho do fundo e dos cartões com desfoque por cima dele.
+// Com o modo 3D aberto o fundo fica escondido, então nem desenha.
+const _s3d=document.getElementById('s-3d');
+let _bgLast=0;
+function animBg(now=performance.now()){
+  if(REDUCED_MOTION){drawBgFrame();bgAnimId=1;return} // fundo parado pra quem pediu menos movimento
   bgAnimId = requestAnimationFrame(animBg);
+  const dt=now-_bgLast;
+  if(dt<31||_s3d.classList.contains('active'))return;
+  _bgLast=now;
+  const k=Math.min(4,dt/16.667); // volta de aba em segundo plano não dá "salto"
+  bgParticles.forEach(p=>p.update(k));
+  drawBgFrame();
 }
 
 function setCourse(key){
@@ -1197,6 +1253,7 @@ function setCourse(key){
     const c = COURSES[key]||COURSES.computacao;
     p.symbol = c.symbols[Math.floor(Math.random()*c.symbols.length)];
   });
+  if(REDUCED_MOTION)drawBgFrame();
   updateCourseBtn();
 }
 
@@ -1471,14 +1528,27 @@ onAuthStateChanged(auth,async u=>{
     document.getElementById('btn-user-menu').style.display='flex';
     // load prefs; detect new account (no onboarded flag in Firestore)
     _needsOnboard=false; _needsCourseConfirm=false;
+    const applyPrefs=pd=>{
+      if(pd.curso)currentCourse=pd.curso;
+      if(pd.lbOptin!=null)lbPrefs.optin=pd.lbOptin;
+      if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;
+      if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;
+    };
     try{
-      const snap=await getDoc(doc(db,'users',user.uid,'prefs','settings'));
+      const prefRef=doc(db,'users',user.uid,'prefs','settings');
+      // Cache primeiro pra não segurar a abertura; a versão da nuvem atualiza em seguida.
+      let snap=null;
+      try{snap=await getDocFromCache(prefRef)}catch{}
+      if(snap?.exists()){
+        getDoc(prefRef).then(s=>{
+          if(!s.exists()||user?.uid!==u.uid)return;
+          const prevCourse=currentCourse;applyPrefs(s.data());
+          if(currentCourse!==prevCourse)setCourse(currentCourse);
+        }).catch(()=>{});
+      }else snap=await getDoc(prefRef);
       if(snap.exists()){
         const pd=snap.data();
-        if(pd.curso)currentCourse=pd.curso;
-        if(pd.lbOptin!=null)lbPrefs.optin=pd.lbOptin;
-        if(pd.lbNamed!=null)lbPrefs.named=pd.lbNamed;
-        if(pd.lbDisplayName)lbPrefs.displayName=pd.lbDisplayName;
+        applyPrefs(pd);
         if(!pd.onboarded)_needsOnboard=true;
         if(!pd.courseConfirmed)_needsCourseConfirm=true;
       }else{_needsOnboard=true; _needsCourseConfirm=true;}
@@ -1626,24 +1696,67 @@ document.getElementById('tc-next').onclick=()=>{if(_tourIdx<_tourActive.length-1
 document.getElementById('tc-skip').onclick=endTour;
 
 // ─── FIRESTORE ───────────────────────────────────────────────────────────────
+// Busca todos os semestres e as disciplinas de cada um em paralelo (antes era um por vez).
+async function fetchSems(fromCache){
+  const get=fromCache?getDocsFromCache:getDocs;
+  const ss=await get(collection(db,'users',user.uid,'semestres'));
+  const out={};
+  for(const sd of ss.docs){const d=sd.data();out[sd.id]={name:d.name??sd.id,tp_nota:d.tp_nota??'',tp_disc:d.tp_disc??'',discs:{}}}
+  await Promise.all(ss.docs.map(async sd=>{
+    const ds=await get(collection(db,'users',user.uid,'semestres',sd.id,'disciplinas'));
+    ds.forEach(dd=>{out[sd.id].discs[dd.id]=dd.data()});
+  }));
+  return out;
+}
+// Última versão gravada de cada semestre/disciplina: o saveSem só envia o que mudou.
+let _savedSnap={};
+function snapSems(data){
+  _savedSnap={};
+  for(const[sid,s]of Object.entries(data)){
+    _savedSnap[sid]=JSON.stringify({name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc});
+    for(const[id,d]of Object.entries(s.discs))_savedSnap[sid+'/'+id]=JSON.stringify(d);
+  }
+}
+function applySems(data,keepSel){
+  sems=data;snapSems(data);
+  if(!keepSel||!sems[semId])semId=Object.keys(sems)[0]??null;
+  if(!keepSel)animatedDiscs.clear(); // atualização vinda da nuvem não repete a animação de entrada
+  renderAll();
+}
+// Abre com o cache do aparelho (instantâneo) e confere a nuvem em segundo plano. Só troca
+// pelo dado da nuvem se o usuário ainda não mexeu em nada, pra não atropelar uma edição.
 async function loadData(){
   sems={};
-  const ss=await getDocs(collection(db,'users',user.uid,'semestres'));
-  for(const sd of ss.docs){
-    const d=sd.data();sems[sd.id]={name:d.name??sd.id,tp_nota:d.tp_nota??'',tp_disc:d.tp_disc??'',discs:{}};
-    const ds=await getDocs(collection(db,'users',user.uid,'semestres',sd.id,'disciplinas'));
-    ds.forEach(dd=>{sems[sd.id].discs[dd.id]=dd.data()});
+  let cached=null;
+  try{cached=await fetchSems(true)}catch{}
+  const fromServer=fetchSems(false);
+  if(cached&&Object.keys(cached).length){
+    applySems(cached,false);
+    const cachedJson=JSON.stringify(cached);
+    fromServer.then(fresh=>{
+      if(!user||JSON.stringify(sems)!==cachedJson)return;
+      if(JSON.stringify(fresh)!==cachedJson)applySems(fresh,true);
+      if(lbPrefs.optin)updateLeaderboard();
+    }).catch(e=>console.warn('[sync]',e));
+    return;
   }
-  semId=Object.keys(sems)[0]??null;animatedDiscs.clear();renderAll();
+  applySems(await fromServer,false);
   if(lbPrefs.optin) updateLeaderboard();
 }
 async function saveSem(){
   if(!user||!semId||!sems[semId])return;
-  const s=sems[semId];
-  await setDoc(doc(db,'users',user.uid,'semestres',semId),{name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc});
-  for(const[id,disc]of Object.entries(s.discs))
-    await setDoc(doc(db,'users',user.uid,'semestres',semId,'disciplinas',id),disc);
-  if(lbPrefs.optin) updateLeaderboard(semId);
+  const sid=semId,s=sems[sid],batch=writeBatch(db),done={};
+  const semJson=JSON.stringify({name:s.name,tp_nota:s.tp_nota,tp_disc:s.tp_disc});
+  if(_savedSnap[sid]!==semJson){batch.set(doc(db,'users',user.uid,'semestres',sid),JSON.parse(semJson));done[sid]=semJson}
+  for(const[id,disc]of Object.entries(s.discs)){
+    const j=JSON.stringify(disc);
+    if(_savedSnap[sid+'/'+id]!==j){batch.set(doc(db,'users',user.uid,'semestres',sid,'disciplinas',id),disc);done[sid+'/'+id]=j}
+  }
+  if(Object.keys(done).length){
+    await batch.commit();
+    Object.assign(_savedSnap,done);
+  }
+  if(lbPrefs.optin) updateLeaderboard(sid);
 }
 function queueSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveSem,900)}
 
