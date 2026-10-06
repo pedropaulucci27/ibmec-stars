@@ -146,8 +146,10 @@
     .summary-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
     .summary-cr-block{flex:1}
     .summary-cr-label{font-size:12.5px;font-weight:600;color:var(--text2);margin-bottom:4px}
-    /* Números com algarismos de largura fixa: o CR animado e as notas não "tremem" ao mudar */
-    .g-input,.g-val,.sg-lbl b,.grade-pill,.lb-rank{font-variant-numeric:tabular-nums}
+    /* Números na fonte do sistema (como era antes da Jakarta), com algarismos de largura fixa:
+       o CR animado e as notas não "tremem" ao mudar */
+    .summary-cr,.g-input,.g-val,.sg-lbl b,.grade-pill,.lb-rank,.lb-ecr-val,.gt-input,.tp-input,.f-input{font-family:system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums}
+    .g-input,.g-val,.sg-lbl b,.grade-pill,.lb-rank,.lb-ecr-val,.gt-input,.tp-input,.f-input{letter-spacing:normal}
     .summary-cr{font-size:56px;font-weight:900;letter-spacing:-3px;line-height:1;color:var(--text2);transition:color .5s,text-shadow .5s;font-variant-numeric:tabular-nums}
     .summary-cr.apto{background:var(--gold-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
     .summary-cr.inapto{background:linear-gradient(135deg,#f28b8b,#f4a7c9);-webkit-background-clip:text;background-clip:text;color:transparent}
