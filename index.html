@@ -166,6 +166,7 @@
     .gt-input.need{border-color:rgba(251,191,36,.55)}
     .gt-hint{font-size:11px;color:var(--text2);margin-top:6px;line-height:1.5}
     .gt-hint strong{color:var(--text1)}
+    .gt-hint:empty{display:none}
     .chk-chip{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);background:rgba(10,18,38,.5);border:1px solid var(--border);border-radius:20px;padding:3px 10px 3px 4px;transition:border-color .3s,background .3s}
     .chk-chip:has(.chk-icon.ok){border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.05)}
     .chk-chip:has(.chk-icon.fail){border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)}
@@ -230,14 +231,14 @@
     .subj-goals{padding:12px 16px 2px;display:flex;flex-direction:column;gap:7px}
     .subj-goals:empty{display:none}
     .sg-title{font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--text2)}
-    .sg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .sg-item{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;padding:8px 12px;border-radius:12px;border:1px solid transparent}
+    .sg-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+    .sg-item{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;column-gap:6px;row-gap:3px;min-width:0;min-height:40px;padding:8px 12px;border-radius:12px;border:1px solid transparent}
     .sg-item.stars{background:rgba(245,166,35,.07);border-color:rgba(245,166,35,.22)}
     .sg-item.pass{background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.2)}
     .sg-k{font-size:12px;font-weight:700;white-space:nowrap}
     .sg-item.stars .sg-k{color:var(--gold)}
     .sg-item.pass .sg-k{color:var(--blue)}
-    .sg-v{font-size:18px;font-weight:800;line-height:1;color:var(--text1);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .sg-v{margin-left:auto;font-size:18px;font-weight:800;line-height:1;color:var(--text1);font-variant-numeric:tabular-nums;white-space:nowrap}
     .sg-v small{font-size:10px;font-weight:600;color:var(--text2);margin-left:1px}
     .sg-item.ok .sg-v{font-size:12px;color:var(--green)}
     .sg-item.bad .sg-v{font-size:12px;color:var(--red)}
@@ -626,12 +627,12 @@
         <div class="summary-msg" id="sum-msg"></div>
         <!-- Critérios integrados como chips -->
         <div class="chk-chips">
-          <div class="chk-chip"><span class="chk-icon" id="chk-min">?</span><span id="chk-min-txt">Período original ≥ 75%</span></div>
-          <div class="chk-chip"><span class="chk-icon" id="chk-cr">?</span><span id="chk-cr-txt">CR ≥ 9,0</span></div>
+          <div class="chk-chip"><span class="chk-icon" id="chk-min">?</span><span id="chk-min-txt">75% do período</span></div>
+          <div class="chk-chip"><span class="chk-icon" id="chk-cr">?</span><span id="chk-cr-txt">CR ≥ 9</span></div>
           <div class="chk-chip"><span class="chk-icon" id="chk-disq">?</span><span id="chk-disq-txt">Sem AS/Sub</span></div>
         </div>
         <div class="gt-row">
-          <label class="gt-label" for="grade-total">Quantas disciplinas o seu <strong>período original</strong> tem na grade?</label>
+          <label class="gt-label" for="grade-total">Disciplinas do <strong>período original</strong> na grade</label>
           <input type="number" class="gt-input" id="grade-total" min="1" max="20" step="1" inputmode="numeric" placeholder="—" aria-describedby="grade-total-hint">
         </div>
         <div class="gt-hint" id="grade-total-hint"></div>
@@ -2130,23 +2131,23 @@ function updateSummary(){
   setChk('chk-min',en.ok,en.known);
   setChk('chk-cr',cr!==null&&cr>=9,cr!==null);
   setChk('chk-disq',!disq,totalN>0);
-  document.getElementById('chk-min-txt').textContent=en.known?`Período original ≥ 75% (${en.n} de ${en.total})`:'Período original ≥ 75%';
-  // Campo do total da grade + dica do que falta
+  // Critérios curtos: o detalhe já está no número grande e na frase de cima
+  document.getElementById('chk-min-txt').textContent=en.known?`75% do período · ${en.n}/${en.total}`:'75% do período';
+  // Campo do total da grade: explicação só enquanto está vazio
   const gt=document.getElementById('grade-total'),gtHint=document.getElementById('grade-total-hint');
   if(document.activeElement!==gt)gt.value=semId&&sems[semId]?.grade_total!==undefined?sems[semId].grade_total:'';
   gt.classList.toggle('need',!en.known);
-  gtHint.innerHTML=!en.known?'Veja na grade do seu curso quantas disciplinas o seu período tem. Depois marque, em cada disciplina abaixo, se ela é do período original.'
-    :`Para concorrer ao Stars, pelo menos <strong>${en.need} de ${en.total}</strong> (75%) precisam ser do período original. Você tem <strong>${en.n}</strong>${en.ok?' ✓':'.'}`;
-  document.getElementById('chk-cr-txt').textContent=cr!==null?`CR ≥ 9,00 (atual: ${fmtG(cr)})`:'CR ≥ 9,00';
+  gtHint.innerHTML=en.known?'':'Veja na grade do curso. Depois marque em cada disciplina se ela é do período original.';
+  document.getElementById('chk-cr-txt').textContent='CR ≥ 9';
   // Parcial é só informativa: os chk-* acima continuam exigindo notas fechadas.
   const showingPartial=cr===null&&partialCr!==null;
   animateCR(cr??partialCr,showingPartial);
   if(!totalN){card.className='summary-card';crEl.className='summary-cr';badge.className='summary-badge';badge.style.display='none';msg.innerHTML='';return}
   badge.style.display='';
-  if(disq){card.className='summary-card inapto';crEl.className='summary-cr inapto';badge.className='summary-badge inapto';badge.textContent='Desclassificado';msg.innerHTML=reasons.map(r=>`⚠️ ${r}`).join('<br>');wasApto=false;return}
+  if(disq){card.className='summary-card inapto';crEl.className='summary-cr inapto';badge.className='summary-badge inapto';badge.textContent='Desclassificado';msg.innerHTML=`⚠️ ${escHtml(reasons[0])}${reasons.length>1?` e mais ${reasons.length-1}`:''}`;wasApto=false;return}
   if(starsEligible(c,en)){
     card.className='summary-card apto';crEl.className='summary-cr apto';badge.className='summary-badge apto';badge.textContent='Apto para concorrer! 🏆';
-    msg.innerHTML='<strong>Parabéns!</strong> Você está elegível para o Ibmec Stars 🏆';
+    msg.innerHTML='Você está elegível para o Ibmec Stars.';
     if(!wasApto){
       wasApto=true;
       const tl=gsap.timeline();
@@ -2161,13 +2162,16 @@ function updateSummary(){
   }
   wasApto=false;
   card.className='summary-card progress';crEl.className='summary-cr progress';badge.className='summary-badge progress';badge.textContent='Em andamento';
-  const lines=[];
-  if(!en.known)lines.push(`Informe abaixo quantas disciplinas o seu período original tem na grade.`);
-  else if(!en.ok)lines.push(`Você tem <strong>${en.n}</strong> disciplina${en.n!==1?'s':''} do período original. Precisa de pelo menos <strong>${en.need} de ${en.total}</strong> (75%).`);
-  if(showingPartial)lines.push(`Média parcial <strong>~${fmtG(partialCr)}</strong> com AC e AP1. Lance as AP2 para fechar o CR.`);
-  else if(validN<totalN)lines.push(`Faltam notas em <strong>${totalN-validN} disciplina${totalN-validN!==1?'s':''}</strong> para fechar o CR.`);
-  if(cr!==null&&cr<9)lines.push(`CR atual <strong>${fmtG(cr)}</strong>, meta: <strong>9,00</strong>.`);
-  msg.innerHTML=lines.join('<br>');
+  // Uma frase só: o próximo passo mais importante (os critérios embaixo mostram o resto)
+  const pl=(n,s,p)=>`${n} ${n===1?s:p}`;
+  const falta=en.need-en.n,semNota=totalN-validN;
+  msg.innerHTML=
+    !en.known?'Informe abaixo quantas disciplinas o seu período tem.'
+    :!en.ok?`Faltam <strong>${pl(falta,'disciplina','disciplinas')}</strong> do período original para os 75%.`
+    :showingPartial?`Média parcial <strong>~${fmtG(partialCr)}</strong>. Lance as AP2 para fechar o CR.`
+    :semNota>0?`Faltam notas em <strong>${pl(semNota,'disciplina','disciplinas')}</strong>.`
+    :cr!==null&&cr<9?`Faltam <strong>${fmtG(9-cr)}</strong> no CR para chegar a 9,00.`
+    :'';
 }
 function setChk(id,ok,hasData){
   const el=document.getElementById(id);
@@ -2230,7 +2234,7 @@ function goalStripHTML(d,a){
   const names=miss.map(k=>SLOTS[k].label);
   const title=one?`Precisa tirar na ${one.label}`:`Média que precisa tirar em ${names.slice(0,-1).join(', ')} e ${names.at(-1)}`;
   const item=(cls,icon,name,o)=>`<div class="sg-item ${cls} ${o.type}"><span class="sg-k"><span aria-hidden="true">${icon}</span> ${name}</span><span class="sg-v">${o.txt}${o.scale?`<small>${o.scale}</small>`:''}</span></div>`;
-  return`<div class="sg-title">${title}</div><div class="sg-row">${item('stars','⭐','Stars',goal(TARGET_STARS))}${item('pass','✓','Passar',goal(TARGET_PASS))}</div>`;
+  return`<div class="sg-title">${title}</div><div class="sg-row">${item('stars','⭐','Para Stars',goal(TARGET_STARS))}${item('pass','✓','Para passar',goal(TARGET_PASS))}</div>`;
 }
 function buildSlotHTML(field,id,d,a){
   const s=SLOTS[field],val=d[field],filled=val!==''&&val!=null;
@@ -3130,11 +3134,20 @@ let _cityIndex={};          // uid -> {player,pos,rank}
 let _cityLayout=null;       // medidas do lote (destaque de seleção)
 let _citySel=null;          // moldura do lote selecionado
 
+// Altura do prédio pela nota. Curva que "estica" a faixa de cima (onde as notas realmente
+// variam): 5 → 1,5 · 6 → 2,2 · 7 → 3,0 · 8 → 4,1 · 9 → 5,4 · 10 → 7,0. Um 9 fica quase o dobro
+// de um 7, e cada décimo de nota muda a altura.
+function bldHeight(v){
+  const g=Math.max(0,Math.min(10,+v||0));
+  return Math.max(0.45,0.4+6.6*Math.pow(g/10,2.6));
+}
+
 // Prédio de uma matéria: quanto maior a nota, mais alto, mais largo e com mais janelas
-// acesas. Nota 9+ ganha jardim no telhado. A cor segue o status (Stars/aprovado/parcial/reprovado).
+// acesas. Nota 9+ ganha jardim no telhado e 10 ganha um pináculo dourado.
+// A cor segue o status (Stars/aprovado/parcial/reprovado).
 function building3D(val,type){
   const st=BLD_STYLE[type]||BLD_STYLE.bad;
-  const h=Math.max(0.45,val*0.55);
+  const h=bldHeight(val);
   const w=0.48+Math.min(1,val/10)*0.24; // 0,48 a 0,72 (largura máxima do espaço no lote)
   const grp=new THREE.Group();
 
@@ -3161,6 +3174,14 @@ function building3D(val,type){
       const a=i/nTrees*Math.PI*2+0.6;
       t.position.set(Math.cos(a)*w*0.22,h+0.2,Math.sin(a)*w*0.22); grp.add(t);
     }
+  }
+  // Nota 10: pináculo dourado no centro do telhado
+  if(val>=10){
+    const gold=bldMat('crown',()=>new THREE.MeshBasicMaterial({color:0xf7c548}));
+    const base=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.1,0.14,6),gold);
+    base.position.y=h+0.2; grp.add(base);
+    const spire=new THREE.Mesh(new THREE.ConeGeometry(0.07,0.7,6),gold);
+    spire.position.y=h+0.62; grp.add(spire);
   }
   return grp;
 }
@@ -3259,7 +3280,7 @@ function buildCityScene(players){
         bgrp.userData=pickData; // tocar no prédio (não só no chão do lote) também seleciona
         T3.scene.add(bgrp); _cityObjs.push(bgrp); _cityPickables.push(bgrp);
         bldGroups.push({grp:bgrp, delay:pi*65});
-        const h=Math.max(0.45,bld.v*0.55);
+        const h=bldHeight(bld.v);
         if(h>localMaxH) localMaxH=h;
         if(h>maxH) maxH=h;
         if(!_playerBldMap[player.uid]) _playerBldMap[player.uid]={entries:[],pos:{x:pcx,z:pz},player,localMaxH:0};
@@ -3514,7 +3535,7 @@ function toggleXray(uid){
   _xrayGroup=new THREE.Group();
   const colMap={ok:'#f5a623',pass:'#4ade80',bad:'#f87171',partial:'#38bdf8'};
   info.entries.forEach(({grp,bld,bx,bz})=>{
-    const h=Math.max(0.45,bld.v*0.55);
+    const h=bldHeight(bld.v);
     // Scan plane (sweeps up)
     const scanMat=new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.18,side:THREE.DoubleSide});
     const scan=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.72),scanMat);
