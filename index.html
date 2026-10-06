@@ -483,6 +483,8 @@
     .tc-skip{background:none;border:none;color:var(--text2);font-size:11px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:4px}
     /* Rolagem e toque mais fluidos no celular: sem atraso de toque duplo e sem "puxar" a página
        inteira quando um modal rolável chega no fim. */
+    /* Atributo hidden sempre esconde, mesmo em elementos com display próprio (ex.: busca da cidade). */
+    [hidden]{display:none!important}
     button,a,input,select,.btn,.lb-filter-tab,.import-sem-opt{touch-action:manipulation}
     .lb-sheet{overscroll-behavior:contain}
     /* Quem ativou "reduzir movimento" no aparelho: transições curtas e sem animações decorativas
@@ -2185,9 +2187,29 @@ async function lbSavePrefs(){
 // O período vem do nome do semestre ("25.1", "2025.2", "25/1"...) e vira a chave "2025-1".
 // Semestre com nome fora desse padrão não entra no ranking por período.
 function semPeriod(name){
-  const m=String(name||'').match(/(?:^|\D)(\d{4}|\d{2})\s*[.\/\-]\s*([12])(?!\d)/);
-  if(!m)return null;
-  return `${m[1].length===2?2000+(+m[1]):+m[1]}-${m[2]}`;
+  const s=String(name||'');
+  let m=s.match(/(?:^|\D)(\d{4}|\d{2})\s*[.\/\-]\s*([12])(?!\d)/);
+  if(m)return `${m[1].length===2?2000+(+m[1]):+m[1]}-${m[2]}`;
+  // Formato antigo do import do SIA: "2/26" (semestre/ano)
+  m=s.match(/(?:^|\D)([12])\s*\/\s*(\d{4}|\d{2})(?!\d)/);
+  if(m)return `${m[2].length===2?2000+(+m[2]):+m[2]}-${m[1]}`;
+  return null;
+}
+// Alunos de um período: coleção nova + quem ainda está só na coleção antiga (leaderboard/{uid},
+// que guarda o semestre que o aluno deixou aberto). Quem não abriu o app desde a mudança
+// pro ranking por período só existe na antiga; sem isso, sumia do ranking e da cidade.
+async function fetchPeriodEntries(period){
+  const [cur,legacy]=await Promise.all([
+    getDocs(collection(db,'ranking',period,'alunos')),
+    getDocs(collection(db,'leaderboard')).catch(()=>null)
+  ]);
+  const byUid=new Map(cur.docs.map(d=>[d.id,{...d.data(),uid:d.id}]));
+  legacy?.docs.forEach(d=>{
+    if(byUid.has(d.id))return;
+    const e=d.data();
+    if(semPeriod(e.semName)===period)byUid.set(d.id,{...e,uid:d.id});
+  });
+  return[...byUid.values()];
 }
 function currentPeriod(){const d=new Date();return `${d.getFullYear()}-${d.getMonth()<6?1:2}`}
 function periodLabel(p){const[y,s]=p.split('-');return `${y}.${s}`}
@@ -2254,9 +2276,8 @@ async function renderLeaderboard(){
   posEl.textContent='';
   try{
     const period=lbPeriod,pLabel=periodLabel(period);
-    const snap=await getDocs(collection(db,'ranking',period,'alunos'));
+    const all=await fetchPeriodEntries(period);
     if(period!==lbPeriod)return; // usuário trocou de período enquanto carregava
-    const all=snap.docs.map(d=>({...d.data(),uid:d.id}));
     const filtered=lbCourseFilter&&currentCourse?all.filter(e=>e.curso===currentCourse):all;
     filtered.sort((a,b)=>{
       const as=a.cr!==null?a.cr:(a.partialCr!==null?a.partialCr-0.01:-1);
@@ -3102,9 +3123,8 @@ async function loadCity(){
   ld.style.display='flex';
   try{
     const period=lbPeriod,byCourse=lbCourseFilter&&currentCourse;
-    const snap=await getDocs(collection(db,'ranking',period,'alunos'));
+    let players=await fetchPeriodEntries(period);
     if(seq!==_cityLoadSeq||!T3.cityMode)return; // trocou de filtro/aba enquanto carregava
-    let players=snap.docs.map(d=>({...d.data(),uid:d.id}));
     if(byCourse)players=players.filter(p=>p.curso===currentCourse);
     // Sort by CR descending (best at top-left of grid)
     players.sort((a,b)=>{
