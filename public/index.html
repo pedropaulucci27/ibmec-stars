@@ -204,6 +204,8 @@
     .disc-txt{flex:1;min-width:0;transition:color .2s}
     .disc-chev{flex:0 0 auto;width:7px;height:7px;margin-right:4px;border-right:1.6px solid var(--text2);border-bottom:1.6px solid var(--text2);transform:translateY(-2px) rotate(45deg);transition:transform .25s}
     .disc-row[aria-expanded="true"] .disc-chev{transform:translateY(2px) rotate(-135deg);border-color:var(--gold)}
+    /* Esperando pra entrar ao rolar: só invisível (o desfoque existe só durante a animação) */
+    .rv-hide{opacity:0;transform:translateY(24px) scale(.98)}
     .panel-wrap{overflow:hidden;overflow-anchor:none;contain:paint}
     .disc-panel{margin:10px 0 12px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--border);font-size:12.5px;line-height:1.6;color:var(--text2)}
     .disc-panel strong{color:var(--text1);font-weight:700}
@@ -1569,21 +1571,38 @@ function animParticles(){
 // ─── REVELAR AO ROLAR (fade nos dois sentidos) ───────────────────────────────
 // Rolando pra baixo, o que entra pela borda de baixo chega desfocado, 2% menor e 24px abaixo,
 // e entra em foco enquanto sobe (desacelera no fim). Rolando pra cima, o que sai pela borda de
-// baixo faz o caminho inverso. O desfoque só existe durante a animação (o filtro é limpo no
-// fim). O que sai pelo topo fica como está. O gatilho é o IntersectionObserver nativo: não
-// escuta a rolagem quadro a quadro como um scroll listener, então não pesa. O estilo inline é
-// limpo ao aparecer. Com "reduzir movimento" nada é escondido nem animado.
+// baixo faz o caminho inverso. O que sai pelo topo fica como está.
+// Eficiência (era o que pesava no celular):
+// • a animação é da Web Animations API (el.animate), não do GSAP: opacidade, deslize e desfoque
+//   rodam no compositor do navegador, fora da linha que cuida da rolagem e dos toques. Com o
+//   GSAP o estilo era trocado por JavaScript a cada quadro, disputando com a rolagem;
+// • quem espera pra entrar fica só invisível (classe .rv-hide), sem desfoque: o filtro existe
+//   só durante a animação, e no fim não sobra estilo nem camada extra;
+// • o gatilho é o IntersectionObserver (não escuta a rolagem quadro a quadro).
 // A linha do gatilho fica 4% acima da borda de baixo: o sumiço ainda acontece à vista, e o que
-// entra aparece logo (com 10% o conteúdo parecia chegar atrasado).
-// No celular (toque) fica sem o desfoque: o filtro é caro de desenhar e era o que mais pesava
-// na rolagem. Opacidade, deslize e escala a placa de vídeo faz sem esforço.
-const REVEAL_BLUR=matchMedia('(hover: hover) and (pointer: fine)').matches;
-const REVEAL_OUT=REVEAL_BLUR?{opacity:0,y:24,scale:.98,filter:'blur(8px)'}:{opacity:0,y:20,scale:.98};
-const REVEAL_IN=REVEAL_BLUR?{opacity:1,y:0,scale:1,filter:'blur(0px)'}:{opacity:1,y:0,scale:1};
-const REVEAL_CLEAR='opacity,transform,filter,willChange';
-const REVEAL_WILL=REVEAL_BLUR?'opacity,transform,filter':'opacity,transform';
+// entra aparece logo. Com "reduzir movimento" nada é escondido nem animado.
+const RV_OUT={opacity:0,transform:'translateY(24px) scale(.98)',filter:'blur(8px)'};
+const RV_IN={opacity:1,transform:'none',filter:'blur(0px)'};
+const RV_EASE_IN='cubic-bezier(.16,1,.3,1)'; // parecido com o expo.out de antes
+function rvStop(el){el.getAnimations?.().forEach(an=>an.cancel())}
+// Entra: some a classe que escondia e anima de "fora" pra "dentro" (fill backwards segura o
+// estado inicial durante o atraso da sequência)
+function rvIn(els,{duration=500,stagger=50,delay=0}={}){
+  [...els].forEach((el,i)=>{
+    rvStop(el);el.classList.remove('rv-hide');
+    if(REDUCED_MOTION||!el.animate)return;
+    el.animate([RV_OUT,RV_IN],{duration,delay:delay+i*stagger,easing:RV_EASE_IN,fill:'backwards'});
+  });
+}
+// Sai: anima de "dentro" pra "fora" e, no fim, fica escondido pela classe (sem filtro parado)
+function rvOut(el){
+  rvStop(el);
+  if(REDUCED_MOTION||!el.animate){el.classList.add('rv-hide');return}
+  const an=el.animate([RV_IN,RV_OUT],{duration:300,easing:'cubic-bezier(.4,0,1,1)',fill:'forwards'});
+  an.onfinish=()=>{el.classList.add('rv-hide');an.cancel()};
+}
 // true enquanto o app rola a página sozinho (abrir painel): aí quem entra na tela só aparece,
-// sem animar, e ninguém some (o desfoque é pesado no celular e brigava com a rolagem)
+// sem animar, e ninguém some (não briga com a rolagem automática)
 let _autoScroll=false;
 const _revealSeen=new WeakSet();
 const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new IntersectionObserver(entries=>{
@@ -1596,12 +1615,12 @@ const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new Int
     else if(!first&&el.dataset.shown&&!el.contains(document.activeElement)&&e.rootBounds&&e.boundingClientRect.top>=e.rootBounds.bottom-1){el.dataset.shown='';hide.push(el)}
   }
   if(_autoScroll){
-    if(show.length)gsap.set(show,{...REVEAL_IN,overwrite:'auto',clearProps:REVEAL_CLEAR});
+    show.forEach(el=>{rvStop(el);el.classList.remove('rv-hide')});
     hide.forEach(el=>el.dataset.shown='1'); // não some agora; volta a valer na próxima rolagem
     return;
   }
-  if(show.length)gsap.to(show,{...REVEAL_IN,duration:.5,ease:'expo.out',stagger:.05,overwrite:'auto',clearProps:REVEAL_CLEAR});
-  if(hide.length)gsap.to(hide,{...REVEAL_OUT,duration:.3,ease:'power2.in',overwrite:'auto'});
+  if(show.length)rvIn(show);
+  hide.forEach(rvOut);
 },{rootMargin:'0px 0px -4% 0px',threshold:0});
 function inView(el){const r=el.getBoundingClientRect();return r.height>0&&r.top<innerHeight&&r.bottom>0}
 // Passa a acompanhar um elemento que já está visível (pra ele sumir se sair por baixo)
@@ -1612,7 +1631,7 @@ function reveal(els){
     if(el.dataset.revealed)continue;
     if(inView(el)){trackShown(el);continue} // já na tela: fica como está
     el.dataset.revealed='1';
-    gsap.set(el,{...REVEAL_OUT,willChange:REVEAL_WILL});
+    el.classList.add('rv-hide');
     _revealIO.observe(el);
   }
 }
@@ -1656,7 +1675,7 @@ function show(id){
     // Entrada em sequência só pro que está na tela; o resto aparece ao rolar (reveal)
     const kids=[...document.querySelectorAll('#s-app main > *')],vis=kids.filter(inView);
     vis.forEach(trackShown);
-    gsap.fromTo(vis,REVEAL_OUT,{...REVEAL_IN,stagger:.07,duration:.75,ease:'expo.out',delay:.15,overwrite:'auto',clearProps:REVEAL_CLEAR});
+    rvIn(vis,{duration:750,stagger:70,delay:150});
     reveal(kids.filter(k=>!vis.includes(k)));
   }
 }
@@ -2716,7 +2735,7 @@ function renderDiscs(){
       animatedDiscs.add(id);
       // Na tela: entrada com stagger como antes (só entre os visíveis). Fora da tela: aparece
       // quando você rolar até ele, em vez de animar escondido sem ninguém ver.
-      if(inView(card)){trackShown(card);gsap.fromTo(card,REVEAL_OUT,{...REVEAL_IN,duration:.75,ease:'expo.out',delay:(visIdx++)*.06,clearProps:REVEAL_CLEAR})}
+      if(inView(card)){trackShown(card);rvIn([card],{duration:750,delay:(visIdx++)*60})}
       else reveal([card]);
     }
     // Card recriado (já animou antes): na tela ou acima dela fica visível, abaixo espera a rolagem.
