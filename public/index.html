@@ -628,9 +628,113 @@
       *,*::before,*::after{transition-duration:.08s!important;scroll-behavior:auto!important}
       .login-star,.pwa-icon,.empty-visual-arrow{animation:none!important}
     }
+
+    /* ── PRELOADER ── a logo se forma: os contornos se desenham, o dourado/azul preenche, o rosto
+       e os brilhos surgem. Só CSS (roda leve enquanto o app carrega por trás). pathLength="1" nos
+       traços deixa o "desenhar" igual pra qualquer tamanho de contorno (tracejado "1 2": com "1" a
+       ponta arredondada aparecia como um pontinho antes de o traço começar). */
+    #preloader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--bg0);transition:opacity .45s ease,visibility .45s}
+    #preloader.pl-out{opacity:0;visibility:hidden;pointer-events:none}
+    #preloader.pl-out .pl-logo{transform:scale(1.08);transition:transform .45s cubic-bezier(.4,0,.2,1)}
+    .pl-logo{width:148px;height:148px;overflow:visible}
+    .pl-logo *{transform-box:fill-box;transform-origin:center}
+    .pl-trace{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw 1.1s cubic-bezier(.65,0,.35,1) forwards}
+    .pl-trace.gold{stroke:#ffd166}.pl-trace.blue{stroke:#5f9ff0}
+    .pl-trace.ped{animation-delay:.15s}
+    .pl-fill{opacity:0;animation:pl-fade .65s ease-out .95s forwards}
+    .pl-face{opacity:0;transform:scale(.4);animation:pl-pop .6s cubic-bezier(.34,1.56,.64,1) 1.4s forwards}
+    .pl-smile{fill:none;stroke:#122650;stroke-width:8;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .5s ease-out 1.65s forwards}
+    .pl-spark{opacity:0;transform:scale(0) rotate(-40deg);animation:pl-spark .65s cubic-bezier(.34,1.56,.64,1) var(--d) forwards,pl-twinkle 2.4s ease-in-out calc(var(--d) + .7s) infinite}
+    .pl-speed{fill:none;stroke:#2a4a8a;stroke-width:5;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .45s ease-out var(--d) forwards}
+    .pl-whole{animation:pl-float 2.6s ease-in-out 2.4s infinite}
+    .pl-name{font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--text2);opacity:0;transform:translateY(6px);animation:pl-fade-up .7s ease-out 1.7s forwards}
+    .pl-name b{color:var(--gold);font-weight:800}
+    @keyframes pl-draw{to{stroke-dashoffset:0}}
+    @keyframes pl-fade{to{opacity:1}}
+    @keyframes pl-pop{to{opacity:1;transform:scale(1)}}
+    @keyframes pl-spark{to{opacity:1;transform:scale(1) rotate(0)}}
+    @keyframes pl-twinkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+    @keyframes pl-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    @keyframes pl-fade-up{to{opacity:1;transform:none}}
+    @media (prefers-reduced-motion: reduce){
+      .pl-trace,.pl-smile,.pl-speed{stroke-dashoffset:0;animation:none}
+      .pl-fill,.pl-face,.pl-spark,.pl-name{opacity:1;transform:none;animation:none}
+      .pl-whole{animation:none}
+    }
   </style>
 </head>
 <body>
+<!-- Preloader: a logo (estrela no pedestal) se forma pelos traços e se completa. Mesmas coordenadas
+     do gen_icon.py (ícone de 512). Some quando o app mostra a primeira tela (hidePreloader). -->
+<div id="preloader" role="status" aria-label="Carregando Ibmec Stars">
+  <svg class="pl-logo" viewBox="60 40 392 400" aria-hidden="true">
+    <defs>
+      <linearGradient id="plGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset=".55" stop-color="#ffbc2a"/><stop offset="1" stop-color="#e09a12"/></linearGradient>
+      <linearGradient id="plBlue" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5fa0f0"/><stop offset=".15" stop-color="#417dd2"/><stop offset=".85" stop-color="#417dd2"/><stop offset="1" stop-color="#2655a5"/></linearGradient>
+    </defs>
+    <g class="pl-whole">
+      <!-- pedestal: contorno se desenha, depois preenche -->
+      <g class="pl-fill">
+        <polygon points="213,290 299,290 316,394 196,394" fill="#122650"/>
+        <polygon points="220,296 292,296 308,388 204,388" fill="url(#plBlue)"/>
+        <rect x="183" y="385" width="146" height="39" rx="13" fill="#122650"/>
+        <rect x="190" y="390" width="132" height="30" rx="11" fill="#3269b9"/>
+        <rect x="190" y="408" width="132" height="12" rx="6" fill="#2655a5"/>
+        <rect x="190" y="390" width="132" height="8" rx="4" fill="#5fa0f0"/>
+      </g>
+      <polygon class="pl-trace blue ped" pathLength="1" points="213,290 299,290 316,394 196,394"/>
+      <rect class="pl-trace blue ped" pathLength="1" x="183" y="385" width="146" height="39" rx="13"/>
+      <!-- estrela: contorno dourado se desenha, depois o corpo preenche -->
+      <g class="pl-fill">
+        <path d="M256 50L278.6 145.5L362.1 93.9L310.5 177.4L406 200L310.5 222.6L362.1 306.1L278.6 254.5L256 350L233.4 254.5L149.9 306.1L201.5 222.6L106 200L201.5 177.4L149.9 93.9L233.4 145.5Z" fill="#122650"/>
+        <path d="M256 60L276.7 150.1L355 101L305.9 179.3L396 200L305.9 220.7L355 299L276.7 249.9L256 340L235.3 249.9L157 299L206.1 220.7L116 200L206.1 179.3L157 101L235.3 150.1Z" fill="url(#plGold)"/>
+        <path d="M244 68L269.3 127L328.9 103.1L305 162.7L364 188L305 213.3L328.9 272.9L269.3 249L244 308L218.7 249L159.1 272.9L183 213.3L124 188L183 162.7L159.1 103.1L218.7 127Z" fill="#ffe178" opacity=".27"/>
+        <path d="M266 90L290.5 155.9L354.4 126.6L325.1 190.5L391 215L325.1 239.5L354.4 303.4L290.5 274.1L266 340L241.5 274.1L177.6 303.4L206.9 239.5L141 215L206.9 190.5L177.6 126.6L241.5 155.9Z" fill="#cd940f" opacity=".22"/>
+      </g>
+      <path class="pl-trace gold" pathLength="1" d="M256 55L277.6 147.8L358.5 97.5L308.2 178.4L401 200L308.2 221.6L358.5 302.5L277.6 252.2L256 345L234.4 252.2L153.5 302.5L203.8 221.6L111 200L203.8 178.4L153.5 97.5L234.4 147.8Z"/>
+      <!-- rosto -->
+      <g class="pl-face">
+        <ellipse cx="212" cy="218" rx="19" ry="10" fill="#ff8246" opacity=".45"/>
+        <ellipse cx="300" cy="218" rx="19" ry="10" fill="#ff8246" opacity=".45"/>
+        <circle cx="228" cy="198" r="11" fill="#122650"/>
+        <circle cx="284" cy="198" r="11" fill="#122650"/>
+        <circle cx="232.5" cy="194.5" r="2.6" fill="#fff" opacity=".85"/>
+        <circle cx="288.5" cy="194.5" r="2.6" fill="#fff" opacity=".85"/>
+      </g>
+      <path class="pl-smile" pathLength="1" d="M282.6 226.9A28 16 0 0 1 229.4 226.9"/>
+      <!-- traços de movimento -->
+      <path class="pl-speed" pathLength="1" style="--d:1.95s" d="M326 70L352 76"/>
+      <path class="pl-speed" pathLength="1" style="--d:2s" d="M337 86L360 97"/>
+      <path class="pl-speed" pathLength="1" style="--d:2s" d="M108 165L78 164"/>
+      <path class="pl-speed" pathLength="1" style="--d:2.08s" d="M103 184L72 180"/>
+      <path class="pl-speed" pathLength="1" style="--d:2.15s" d="M338 276L362 288"/>
+      <!-- brilhinhos -->
+      <path class="pl-spark" style="--d:1.7s" d="M393.7 96.1L371.6 104.2L369.9 127.7L361.8 105.6L338.3 103.9L360.4 95.8L362.1 72.3L370.2 94.4Z" fill="#ffe43c" stroke="#122650" stroke-width="2"/>
+      <path class="pl-spark" style="--d:1.8s" d="M152.5 132.4L134.7 132.2L127.6 148.5L127.8 130.7L111.5 123.6L129.3 123.8L136.4 107.5L136.2 125.3Z" fill="#ffe43c" stroke="#122650" stroke-width="2"/>
+      <path class="pl-spark" style="--d:1.9s" d="M416 202.9L405 204.3L402.1 215L400.7 204L390 201.1L401 199.7L403.9 189L405.3 200Z" fill="#ffe43c"/>
+      <path class="pl-spark" style="--d:2s" d="M115.9 210.7L106.3 213.9L105.3 223.9L102.1 214.3L92.1 213.3L101.7 210.1L102.7 200.1L105.9 209.7Z" fill="#ffe43c"/>
+      <path class="pl-spark" style="--d:2.1s" d="M398.9 303.3L391.2 303.6L388.7 310.9L388.4 303.2L381.1 300.7L388.8 300.4L391.3 293.1L391.6 300.8Z" fill="#ffe43c"/>
+    </g>
+  </svg>
+  <div class="pl-name">Ibmec <b>Stars</b></div>
+</div>
+<script>
+// Some o preloader quando o app mostra a primeira tela (login ou app), depois de a logo terminar
+// de se formar. Nunca prende o app: some sozinho em 8s no pior caso.
+(function(){
+  var el=document.getElementById('preloader'),t0=performance.now(),done=false;
+  var MIN=matchMedia('(prefers-reduced-motion: reduce)').matches?250:2500;
+  var resolve;window.__plReady=new Promise(function(r){resolve=r});
+  window.hidePreloader=function(){
+    if(done)return;done=true;
+    setTimeout(function(){
+      el.classList.add('pl-out');resolve();
+      setTimeout(function(){el.remove()},500);
+    },Math.max(0,MIN-(performance.now()-t0)));
+  };
+  setTimeout(window.hidePreloader,8000);
+})();
+</script>
 <canvas id="bg-canvas"></canvas>
 <canvas id="particle-canvas"></canvas>
 
@@ -1669,6 +1773,12 @@ const animatedDiscs=new Set();
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // Primeira tela pronta: o preloader termina a logo e some; a entrada da tela anima depois dele
+  window.hidePreloader?.();
+  (window.__plReady||Promise.resolve()).then(()=>showEnter(id));
+}
+function showEnter(id){
+  if(!document.getElementById(id).classList.contains('active'))return; // já trocou de tela
   if(id==='s-login') gsap.fromTo('#login-card',{opacity:0,y:40,scale:.95},{opacity:1,y:0,scale:1,duration:.65,ease:'back.out(1.4)'});
   if(id==='s-app'){
     gsap.fromTo('header',{opacity:0,y:-16},{opacity:1,y:0,duration:.4,ease:'power3.out'});
