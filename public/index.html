@@ -638,17 +638,21 @@
     #preloader.pl-out .pl-logo{transform:scale(1.08);transition:transform .45s cubic-bezier(.4,0,.2,1)}
     .pl-logo{width:148px;height:148px;overflow:visible}
     .pl-logo *{transform-box:fill-box;transform-origin:center}
-    .pl-trace{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw 1.55s cubic-bezier(.65,0,.35,1) forwards}
+    .pl-trace{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw calc(1.55s*var(--k,1)) cubic-bezier(.65,0,.35,1) forwards}
     .pl-trace.gold{stroke:#ffd166}.pl-trace.blue{stroke:#5f9ff0}
-    .pl-trace.ped{animation-delay:.2s}
-    .pl-fill{opacity:0;animation:pl-fade .9s ease-out 1.35s forwards}
-    .pl-face{opacity:0;transform:scale(.4);animation:pl-pop .85s cubic-bezier(.34,1.56,.64,1) 1.95s forwards}
-    .pl-smile{fill:none;stroke:#122650;stroke-width:8;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .7s ease-out 2.3s forwards}
-    .pl-spark{opacity:0;transform:scale(0) rotate(-40deg);animation:pl-spark .9s cubic-bezier(.34,1.56,.64,1) var(--d) forwards,pl-twinkle 2.4s ease-in-out calc(var(--d) + .7s) infinite}
-    .pl-speed{fill:none;stroke:#2a4a8a;stroke-width:5;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .6s ease-out var(--d) forwards}
-    .pl-whole{animation:pl-float 2.6s ease-in-out 3.4s infinite}
-    .pl-name{font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--text2);opacity:0;transform:translateY(6px);animation:pl-fade-up 1s ease-out 2.4s forwards}
+    .pl-trace.ped{animation-delay:calc(.2s*var(--k,1))}
+    .pl-fill{opacity:0;animation:pl-fade calc(.9s*var(--k,1)) ease-out calc(1.35s*var(--k,1)) forwards}
+    .pl-face{opacity:0;transform:scale(.4);animation:pl-pop calc(.85s*var(--k,1)) cubic-bezier(.34,1.56,.64,1) calc(1.95s*var(--k,1)) forwards}
+    .pl-smile{fill:none;stroke:#122650;stroke-width:8;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw calc(.7s*var(--k,1)) ease-out calc(2.3s*var(--k,1)) forwards}
+    .pl-spark{opacity:0;transform:scale(0) rotate(-40deg);animation:pl-spark calc(.9s*var(--k,1)) cubic-bezier(.34,1.56,.64,1) calc(var(--d)*var(--k,1)) forwards,pl-twinkle 2.4s ease-in-out calc(var(--d)*var(--k,1) + .7s) infinite}
+    .pl-speed{fill:none;stroke:#2a4a8a;stroke-width:5;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw calc(.6s*var(--k,1)) ease-out calc(var(--d)*var(--k,1)) forwards}
+    .pl-whole{animation:pl-float 2.6s ease-in-out calc(3.4s*var(--k,1)) infinite}
+    .pl-name{font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--text2);opacity:0;transform:translateY(6px);animation:pl-fade-up calc(1s*var(--k,1)) ease-out calc(2.4s*var(--k,1)) forwards}
     .pl-name b{color:var(--gold);font-weight:800}
+    /* A mesma logo no carregamento do mapa da cidade, mais rápida (--k) */
+    .star-loader{--k:.55;display:flex;flex-direction:column;align-items:center;gap:16px;transition:opacity .35s ease}
+    .star-loader.sl-out{opacity:0}
+    .star-loader .pl-logo{width:120px;height:120px}
     @keyframes pl-draw{to{stroke-dashoffset:0}}
     @keyframes pl-fade{to{opacity:1}}
     @keyframes pl-pop{to{opacity:1;transform:scale(1)}}
@@ -723,6 +727,7 @@
 // de se formar (~3,5s). Nunca prende o app: some sozinho em 8s no pior caso.
 (function(){
   var el=document.getElementById('preloader'),t0=performance.now(),done=false;
+  window.__starLogo=el.querySelector('.pl-logo').cloneNode(true); // reusada no carregamento do mapa
   var MIN=matchMedia('(prefers-reduced-motion: reduce)').matches?250:3500;
   var resolve;window.__plReady=new Promise(function(r){resolve=r});
   window.hidePreloader=function(){
@@ -958,8 +963,7 @@
   </div>
   <canvas id="three-canvas"></canvas>
   <div id="3d-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:50;background:#060e1f;flex-direction:column;gap:14px">
-    <div class="loading-ring"></div>
-    <p style="color:#7a90c0;font-size:13px;margin:0">Carregando cena 3D…</p>
+
   </div>
 </div>
 
@@ -3188,8 +3192,46 @@ let THREE=null; // loaded lazily when user opens 3D view
 document.getElementById('btn-3d').onclick=()=>open3D();
 document.getElementById('btn-back3d').onclick=()=>{exitFPSMode();show('s-app');};
 
+// ─── CARREGAMENTO DO MAPA COM A LOGO ──────────────────────────────────────────
+// Abrir o mapa: a logo se forma (~2s, --k .55) num carregamento contínuo (cena 3D + dados da
+// cidade, sem piscar entre as etapas) e só some depois de completa; os prédios sobem depois.
+// Trocar período/filtro dentro do mapa: a logo só aparece se a busca passar de 250ms (sem
+// piscar à toa) e some assim que os dados chegam.
+const CITY_LOGO_MS=REDUCED_MOTION?0:2000;
+let _cityLd={shownAt:0,showT:0};
+function cityLoaderShow(text,{intro=false}={}){
+  const ld=document.getElementById('3d-loading');
+  clearTimeout(_cityLd.showT);
+  const put=()=>{
+    let box=ld.querySelector('.star-loader');
+    if(!box||box.classList.contains('sl-out')){
+      box=document.createElement('div');box.className='star-loader';box.setAttribute('role','status');
+      if(window.__starLogo)box.append(window.__starLogo.cloneNode(true));
+      const cap=document.createElement('div');cap.className='pl-name';box.append(cap);
+      ld.replaceChildren(box);_cityLd.shownAt=performance.now();
+    }
+    box.querySelector('.pl-name').textContent=text;
+    ld.style.display='flex';
+  };
+  _cityLd.intro=intro||_cityLd.intro;
+  if(intro||ld.style.display==='flex')put();else _cityLd.showT=setTimeout(put,250);
+}
+// Some quando der: na abertura, só depois de a logo terminar. Devolve quando já sumiu.
+function cityLoaderHide(){
+  const ld=document.getElementById('3d-loading');
+  clearTimeout(_cityLd.showT);
+  const box=ld.querySelector('.star-loader');
+  if(ld.style.display!=='flex'||!box){ld.style.display='none';_cityLd.intro=false;return Promise.resolve()}
+  const wait=_cityLd.intro?Math.max(0,CITY_LOGO_MS-(performance.now()-_cityLd.shownAt)):0;
+  _cityLd.intro=false;
+  return new Promise(res=>setTimeout(()=>{
+    box.classList.add('sl-out');
+    setTimeout(()=>{if(box.classList.contains('sl-out')){ld.style.display='none';box.remove()}res()},REDUCED_MOTION?0:350);
+  },wait));
+}
 function open3D(){
   show('s-3d');
+  cityLoaderShow('Montando a cidade…',{intro:true});
   if(!T3){ if(!_3dIniting) init3D(); }
   else { if(!T3.running) loop3D(); switchToCityMode(); } // recarrega a cidade com dados novos
 }
@@ -3197,7 +3239,6 @@ function open3D(){
 async function init3D(){
   _3dIniting=true;
   const ld=document.getElementById('3d-loading');
-  ld.style.display='flex';
   try{
     if(!THREE) THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
     const {OrbitControls} = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js');
@@ -3287,8 +3328,7 @@ async function init3D(){
     return;
   }
   _3dIniting=false;
-  ld.style.display='none';
-  switchToCityMode();
+  switchToCityMode(); // o carregamento continua o mesmo (a logo não pisca entre a cena e a cidade)
 }
 
 // ─── MODO DIRIGIR (3ª pessoa) ─────────────────────────────────────────────────
@@ -3891,9 +3931,7 @@ async function loadCity(){
   const seq=++_cityLoadSeq;
   exitFPSMode();closeCitySearch();clearCityObjs();
   const empty=document.getElementById('city-empty');empty.hidden=true;
-  const ld=document.getElementById('3d-loading');
-  ld.innerHTML='<div class="loading-ring"></div><p style="color:#7a90c0;font-size:13px;margin:0">Carregando cidade…</p>';
-  ld.style.display='flex';
+  cityLoaderShow('Montando a cidade…');
   try{
     const period=lbPeriod,byCourse=lbCourseFilter&&currentCourse;
     let players=await fetchPeriodEntries(period);
@@ -3906,7 +3944,7 @@ async function loadCity(){
       return bs-as;
     });
     if(!players.length){
-      ld.style.display='none';
+      await cityLoaderHide();
       empty.innerHTML=`🏗️ Nenhum aluno ${byCourse?'do seu curso ':''}na cidade de <strong>${periodLabel(period)}</strong> ainda.<br>Troque o período ou o filtro acima.`;
       empty.hidden=false;invalidate3D();
       return;
@@ -3919,14 +3957,16 @@ async function loadCity(){
     T3.ctrl.minDistance=2;
     T3.ctrl.maxDistance=Math.max(60,Math.max(gridW,gridD)*1.8);
     T3.ctrl.update();
-    // Animate buildings growing up from the ground
+    // Os prédios sobem depois que a logo some (senão subiam escondidos atrás dela)
+    invalidate3D();await cityLoaderHide();
+    if(seq!==_cityLoadSeq||!T3.cityMode)return;
     bldGroups.forEach(({grp,delay})=>{
       gsap.to(grp.scale,{y:1,duration:0.65,ease:'back.out(1.7)',delay:delay/1000});
     });
     loadCityReactions();
     invalidate3D();
   }catch(e){console.error('city',e);toast('Erro ao carregar cidade');}
-  if(seq===_cityLoadSeq)ld.style.display='none';
+  if(seq===_cityLoadSeq)cityLoaderHide();
 }
 function setCityPeriodFromUI(){
   lbPeriod=`${document.getElementById('city-year').value}-${document.getElementById('city-sem').value}`;
