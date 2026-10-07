@@ -638,16 +638,16 @@
     #preloader.pl-out .pl-logo{transform:scale(1.08);transition:transform .45s cubic-bezier(.4,0,.2,1)}
     .pl-logo{width:148px;height:148px;overflow:visible}
     .pl-logo *{transform-box:fill-box;transform-origin:center}
-    .pl-trace{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw 1.1s cubic-bezier(.65,0,.35,1) forwards}
+    .pl-trace{fill:none;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw 1.55s cubic-bezier(.65,0,.35,1) forwards}
     .pl-trace.gold{stroke:#ffd166}.pl-trace.blue{stroke:#5f9ff0}
-    .pl-trace.ped{animation-delay:.15s}
-    .pl-fill{opacity:0;animation:pl-fade .65s ease-out .95s forwards}
-    .pl-face{opacity:0;transform:scale(.4);animation:pl-pop .6s cubic-bezier(.34,1.56,.64,1) 1.4s forwards}
-    .pl-smile{fill:none;stroke:#122650;stroke-width:8;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .5s ease-out 1.65s forwards}
-    .pl-spark{opacity:0;transform:scale(0) rotate(-40deg);animation:pl-spark .65s cubic-bezier(.34,1.56,.64,1) var(--d) forwards,pl-twinkle 2.4s ease-in-out calc(var(--d) + .7s) infinite}
-    .pl-speed{fill:none;stroke:#2a4a8a;stroke-width:5;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .45s ease-out var(--d) forwards}
-    .pl-whole{animation:pl-float 2.6s ease-in-out 2.4s infinite}
-    .pl-name{font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--text2);opacity:0;transform:translateY(6px);animation:pl-fade-up .7s ease-out 1.7s forwards}
+    .pl-trace.ped{animation-delay:.2s}
+    .pl-fill{opacity:0;animation:pl-fade .9s ease-out 1.35s forwards}
+    .pl-face{opacity:0;transform:scale(.4);animation:pl-pop .85s cubic-bezier(.34,1.56,.64,1) 1.95s forwards}
+    .pl-smile{fill:none;stroke:#122650;stroke-width:8;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .7s ease-out 2.3s forwards}
+    .pl-spark{opacity:0;transform:scale(0) rotate(-40deg);animation:pl-spark .9s cubic-bezier(.34,1.56,.64,1) var(--d) forwards,pl-twinkle 2.4s ease-in-out calc(var(--d) + .7s) infinite}
+    .pl-speed{fill:none;stroke:#2a4a8a;stroke-width:5;stroke-linecap:round;stroke-dasharray:1 2;stroke-dashoffset:1;animation:pl-draw .6s ease-out var(--d) forwards}
+    .pl-whole{animation:pl-float 2.6s ease-in-out 3.4s infinite}
+    .pl-name{font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--text2);opacity:0;transform:translateY(6px);animation:pl-fade-up 1s ease-out 2.4s forwards}
     .pl-name b{color:var(--gold);font-weight:800}
     @keyframes pl-draw{to{stroke-dashoffset:0}}
     @keyframes pl-fade{to{opacity:1}}
@@ -666,7 +666,7 @@
 <body>
 <!-- Preloader: a logo (estrela no pedestal) se forma pelos traços e se completa. Mesmas coordenadas
      do gen_icon.py (ícone de 512). Some quando o app mostra a primeira tela (hidePreloader). -->
-<div id="preloader" role="status" aria-label="Carregando Ibmec Stars">
+<div id="preloader" role="status" aria-label="Carregando Stars">
   <svg class="pl-logo" viewBox="60 40 392 400" aria-hidden="true">
     <defs>
       <linearGradient id="plGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset=".55" stop-color="#ffbc2a"/><stop offset="1" stop-color="#e09a12"/></linearGradient>
@@ -703,27 +703,27 @@
       </g>
       <path class="pl-smile" pathLength="1" d="M282.6 226.9A28 16 0 0 1 229.4 226.9"/>
       <!-- traços de movimento -->
-      <path class="pl-speed" pathLength="1" style="--d:1.95s" d="M326 70L352 76"/>
-      <path class="pl-speed" pathLength="1" style="--d:2s" d="M337 86L360 97"/>
-      <path class="pl-speed" pathLength="1" style="--d:2s" d="M108 165L78 164"/>
-      <path class="pl-speed" pathLength="1" style="--d:2.08s" d="M103 184L72 180"/>
-      <path class="pl-speed" pathLength="1" style="--d:2.15s" d="M338 276L362 288"/>
+      <path class="pl-speed" pathLength="1" style="--d:2.7s" d="M326 70L352 76"/>
+      <path class="pl-speed" pathLength="1" style="--d:2.75s" d="M337 86L360 97"/>
+      <path class="pl-speed" pathLength="1" style="--d:2.75s" d="M108 165L78 164"/>
+      <path class="pl-speed" pathLength="1" style="--d:2.85s" d="M103 184L72 180"/>
+      <path class="pl-speed" pathLength="1" style="--d:2.95s" d="M338 276L362 288"/>
       <!-- brilhinhos -->
-      <path class="pl-spark" style="--d:1.7s" d="M393.7 96.1L371.6 104.2L369.9 127.7L361.8 105.6L338.3 103.9L360.4 95.8L362.1 72.3L370.2 94.4Z" fill="#ffe43c" stroke="#122650" stroke-width="2"/>
-      <path class="pl-spark" style="--d:1.8s" d="M152.5 132.4L134.7 132.2L127.6 148.5L127.8 130.7L111.5 123.6L129.3 123.8L136.4 107.5L136.2 125.3Z" fill="#ffe43c" stroke="#122650" stroke-width="2"/>
-      <path class="pl-spark" style="--d:1.9s" d="M416 202.9L405 204.3L402.1 215L400.7 204L390 201.1L401 199.7L403.9 189L405.3 200Z" fill="#ffe43c"/>
-      <path class="pl-spark" style="--d:2s" d="M115.9 210.7L106.3 213.9L105.3 223.9L102.1 214.3L92.1 213.3L101.7 210.1L102.7 200.1L105.9 209.7Z" fill="#ffe43c"/>
-      <path class="pl-spark" style="--d:2.1s" d="M398.9 303.3L391.2 303.6L388.7 310.9L388.4 303.2L381.1 300.7L388.8 300.4L391.3 293.1L391.6 300.8Z" fill="#ffe43c"/>
+      <path class="pl-spark" style="--d:2.4s" d="M393.7 96.1L371.6 104.2L369.9 127.7L361.8 105.6L338.3 103.9L360.4 95.8L362.1 72.3L370.2 94.4Z" fill="#ffe43c" stroke="#122650" stroke-width="2"/>
+      <path class="pl-spark" style="--d:2.5s" d="M152.5 132.4L134.7 132.2L127.6 148.5L127.8 130.7L111.5 123.6L129.3 123.8L136.4 107.5L136.2 125.3Z" fill="#ffe43c" stroke="#122650" stroke-width="2"/>
+      <path class="pl-spark" style="--d:2.6s" d="M416 202.9L405 204.3L402.1 215L400.7 204L390 201.1L401 199.7L403.9 189L405.3 200Z" fill="#ffe43c"/>
+      <path class="pl-spark" style="--d:2.75s" d="M115.9 210.7L106.3 213.9L105.3 223.9L102.1 214.3L92.1 213.3L101.7 210.1L102.7 200.1L105.9 209.7Z" fill="#ffe43c"/>
+      <path class="pl-spark" style="--d:2.9s" d="M398.9 303.3L391.2 303.6L388.7 310.9L388.4 303.2L381.1 300.7L388.8 300.4L391.3 293.1L391.6 300.8Z" fill="#ffe43c"/>
     </g>
   </svg>
-  <div class="pl-name">Ibmec <b>Stars</b></div>
+  <div class="pl-name"><b>Stars</b></div>
 </div>
 <script>
 // Some o preloader quando o app mostra a primeira tela (login ou app), depois de a logo terminar
-// de se formar. Nunca prende o app: some sozinho em 8s no pior caso.
+// de se formar (~3,5s). Nunca prende o app: some sozinho em 8s no pior caso.
 (function(){
   var el=document.getElementById('preloader'),t0=performance.now(),done=false;
-  var MIN=matchMedia('(prefers-reduced-motion: reduce)').matches?250:2500;
+  var MIN=matchMedia('(prefers-reduced-motion: reduce)').matches?250:3500;
   var resolve;window.__plReady=new Promise(function(r){resolve=r});
   window.hidePreloader=function(){
     if(done)return;done=true;
