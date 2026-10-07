@@ -204,7 +204,7 @@
     .disc-txt{flex:1;min-width:0;transition:color .2s}
     .disc-chev{flex:0 0 auto;width:7px;height:7px;margin-right:4px;border-right:1.6px solid var(--text2);border-bottom:1.6px solid var(--text2);transform:translateY(-2px) rotate(45deg);transition:transform .25s}
     .disc-row[aria-expanded="true"] .disc-chev{transform:translateY(2px) rotate(-135deg);border-color:var(--gold)}
-    .panel-wrap{overflow:hidden}
+    .panel-wrap{overflow:hidden;overflow-anchor:none;contain:paint}
     .disc-panel{margin:10px 0 12px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--border);font-size:12.5px;line-height:1.6;color:var(--text2)}
     .disc-panel strong{color:var(--text1);font-weight:700}
     .dp-lead{margin-bottom:10px}
@@ -1575,6 +1575,9 @@ function animParticles(){
 // A linha do gatilho fica 10% acima da borda de baixo, para o sumiço acontecer à vista.
 const REVEAL_OUT={opacity:0,y:24,scale:.98,filter:'blur(8px)'},REVEAL_IN={opacity:1,y:0,scale:1,filter:'blur(0px)'};
 const REVEAL_CLEAR='opacity,transform,filter,willChange';
+// true enquanto o app rola a página sozinho (abrir painel): aí quem entra na tela só aparece,
+// sem animar, e ninguém some (o desfoque é pesado no celular e brigava com a rolagem)
+let _autoScroll=false;
 const _revealSeen=new WeakSet();
 const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new IntersectionObserver(entries=>{
   const show=[],hide=[];
@@ -1584,6 +1587,11 @@ const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new Int
     // 1ª leitura de quem já estava visível na faixa de baixo: não some do nada ao carregar
     // (e nunca some o cartão em que você está digitando, ex. quando o teclado sobe)
     else if(!first&&el.dataset.shown&&!el.contains(document.activeElement)&&e.rootBounds&&e.boundingClientRect.top>=e.rootBounds.bottom-1){el.dataset.shown='';hide.push(el)}
+  }
+  if(_autoScroll){
+    if(show.length)gsap.set(show,{...REVEAL_IN,overwrite:'auto',clearProps:REVEAL_CLEAR});
+    hide.forEach(el=>el.dataset.shown='1'); // não some agora; volta a valer na próxima rolagem
+    return;
   }
   if(show.length)gsap.to(show,{...REVEAL_IN,duration:.75,ease:'expo.out',stagger:.08,overwrite:'auto',clearProps:REVEAL_CLEAR});
   if(hide.length)gsap.to(hide,{...REVEAL_OUT,duration:.4,ease:'power2.in',overwrite:'auto'});
@@ -2208,37 +2216,56 @@ document.getElementById('tp-nota').oninput=function(){
   sems[semId].tp_nota=g===null?'':tpGradeToPts(g);
   renderDiscs();updateSummary();queueSave();
 };
-// Painéis que abrem/fecham (Regulamento, Período original, Como funciona o TP): crescem de
-// altura (o que está embaixo desce junto, sem pulo) e o texto surge deslizando; ao fechar,
-// encolhem. Quem anima é um invólucro criado em volta do painel: o painel tem margem, borda e
-// espaçamento, e animar a altura dele direto media errado e dava um pulinho no fim.
-// O painel continua com o atributo hidden (quem consulta "está aberto?" segue funcionando).
-// Ao abrir, a página rola junto com o painel (scroll into view) pra o fim dele não ficar
-// escondido abaixo da tela: a cada quadro, rola só o que passou da borda de baixo, e nunca
-// a ponto de o botão sumir atrás do cabeçalho fixo.
-function followOpen(btn,el){
-  const hh=document.querySelector('header')?.offsetHeight||0;
-  const over=el.getBoundingClientRect().bottom-(innerHeight-16);
-  if(over<=0)return;
-  const room=btn.getBoundingClientRect().top-hh-8; // quanto dá pra subir sem esconder o botão
-  if(room>0)scrollBy(0,Math.min(over,room));
-}
+// Painéis que abrem/fecham (Regulamento, Período original, aba e "Como funciona" do TP).
+// Ao abrir, o painel cresce e a página rola junto até ele aparecer inteiro (scroll into view).
+// Pra ficar liso no celular:
+// • altura e rolagem andam no MESMO tween (mesmo ritmo, mesma curva). O quanto crescer e o quanto
+//   rolar é medido UMA vez no começo; durante a animação só se escreve (nada de medir por quadro,
+//   que forçava o navegador a recalcular a página duas vezes a cada quadro);
+// • a "ancoragem de rolagem" do Chrome fica desligada enquanto anima (ela também corrigia a
+//   rolagem quando o painel crescia, e as duas correções juntas davam tranco);
+// • se a pessoa tocar/rolar no meio, o app para de rolar e devolve o controle;
+// • enquanto rola sozinho, a entrada ao rolar não anima (_autoScroll).
+// Quem anima é um invólucro em volta do painel (o painel tem margem, borda e espaçamento, e
+// animar a altura dele direto media errado). O painel segue com o atributo hidden.
 function togglePanel(btn,panel,onOpen){
   let wrap=panel.parentElement;
   if(!wrap.classList.contains('panel-wrap')){wrap=document.createElement('div');wrap.className='panel-wrap';panel.before(wrap);wrap.append(panel)}
   const open=btn.getAttribute('aria-expanded')!=='true';
   btn.setAttribute('aria-expanded',open);
-  gsap.killTweensOf([wrap,panel]);
+  const from=panel.hidden?0:wrap.getBoundingClientRect().height; // continua de onde parou se clicar no meio
+  wrap._tw?.kill();wrap._end?.();gsap.killTweensOf(panel);
   if(open){
     panel.hidden=false;onOpen?.();
-    if(REDUCED_MOTION){gsap.set(wrap,{clearProps:'height'});followOpen(btn,wrap);return}
-    gsap.fromTo(wrap,{height:0},{height:'auto',duration:.38,ease:'power3.out',clearProps:'height',onUpdate:()=>followOpen(btn,wrap)});
-    gsap.fromTo(panel,{opacity:0,y:-8},{opacity:1,y:0,duration:.35,delay:.05,ease:'power2.out',clearProps:'opacity,transform'});
+    wrap.style.height='';const full=wrap.offsetHeight; // altura final, medida uma vez
+    // quanto rolar pro fim do painel caber na tela (sem esconder o botão atrás do cabeçalho)
+    const hh=document.querySelector('header')?.offsetHeight||0,vh=window.visualViewport?.height||innerHeight;
+    const over=wrap.getBoundingClientRect().top+full-(vh-16),room=btn.getBoundingClientRect().top-hh-8;
+    const delta=Math.max(0,Math.min(over,room));
+    if(REDUCED_MOTION){if(delta)scrollBy(0,delta);return}
+    wrap.style.height=from+'px';
+    if(!from)gsap.fromTo(panel,{opacity:0,y:-8},{opacity:1,y:0,duration:.4,delay:.06,ease:'power2.out',clearProps:'opacity,transform'});
+    else gsap.to(panel,{opacity:1,y:0,duration:.2,clearProps:'opacity,transform'}); // reaberto no meio do fechamento
+    animatePanel(wrap,from,full,delta,.45,'power3.out',()=>{wrap.style.height=''});
   }else{
     if(REDUCED_MOTION){panel.hidden=true;return}
-    gsap.to(panel,{opacity:0,duration:.18,ease:'power1.in'});
-    gsap.to(wrap,{height:0,duration:.28,ease:'power2.inOut',onComplete:()=>{panel.hidden=true;gsap.set([wrap,panel],{clearProps:'height,opacity'})}});
+    wrap.style.height=from+'px';
+    gsap.to(panel,{opacity:0,duration:.2,ease:'power1.in'});
+    animatePanel(wrap,from,0,0,.32,'power2.inOut',()=>{panel.hidden=true;wrap.style.height='';gsap.set(panel,{clearProps:'opacity'})});
   }
+}
+// Um tween só: escreve a altura do invólucro e a rolagem da página no mesmo quadro
+function animatePanel(wrap,from,to,delta,dur,ease,done){
+  const root=document.documentElement,y0=scrollY,st={p:0};
+  let follow=delta>0;
+  const stop=()=>{follow=false;_autoScroll=false}; // a pessoa assumiu: para de rolar por ela
+  const evs=['touchstart','wheel','keydown'];
+  root.style.overflowAnchor='none';_autoScroll=follow;
+  evs.forEach(e=>addEventListener(e,stop,{passive:true,once:true}));
+  wrap._end=()=>{wrap._end=null;root.style.overflowAnchor='';_autoScroll=false;evs.forEach(e=>removeEventListener(e,stop))};
+  wrap._tw=gsap.to(st,{p:1,duration:dur,ease,
+    onUpdate(){wrap.style.height=(from+(to-from)*st.p)+'px';if(follow)scrollTo(0,y0+delta*st.p)},
+    onComplete(){wrap._tw=null;wrap._end?.();done()}});
 }
 document.getElementById('tp-more').onclick=function(){togglePanel(this,document.getElementById('tp-info'))};
 document.getElementById('tp-select').onchange=function(){
@@ -2257,20 +2284,25 @@ tpToggle.onclick=function(){
 tpToggle.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tpToggle.click()}};
 // Rola suave até o elemento caber inteiro na tela (abaixo do cabeçalho fixo); se já cabe, não mexe
 function scrollIntoViewSmooth(el){
-  const hh=document.querySelector('header')?.offsetHeight||0,r=el.getBoundingClientRect();
+  const hh=document.querySelector('header')?.offsetHeight||0,r=el.getBoundingClientRect(),vh=window.visualViewport?.height||innerHeight;
   let dy=0;
-  if(r.bottom>innerHeight-16)dy=r.bottom-(innerHeight-16);
+  if(r.bottom>vh-16)dy=r.bottom-(vh-16);
   if(r.top-dy<hh+8)dy=r.top-hh-8; // card maior que a tela: prioriza o topo dele
   if(Math.abs(dy)>1)scrollTo({top:scrollY+dy,behavior:REDUCED_MOTION?'auto':'smooth'});
 }
+const TOUCH=matchMedia('(pointer: coarse)').matches;
 function addDisc(){
   if(!semId)return;const id='disc_'+Date.now();
   sems[semId].discs[id]={nome:'',ac:'',ap1:'',ap2:'',faltas:0,as:false,sub:false,orig:true};
   renderDiscs();updateTpSelect();queueSave();
-  // A página desce até o card novo; o foco vem depois, sem rolar de novo (senão dá um tranco)
   const input=document.getElementById('n_'+id),card=input?.closest('.subj-card');
-  if(card)requestAnimationFrame(()=>scrollIntoViewSmooth(card));
-  setTimeout(()=>input?.focus({preventScroll:true}),REDUCED_MOTION?0:350);
+  if(!input)return;
+  // Celular: foca já, dentro do toque (o iOS só abre o teclado assim). O próprio navegador rola
+  // o campo pra cima do teclado, do jeito nativo; o app não rola junto pra não brigar com ele.
+  if(TOUCH){input.focus();return}
+  // Computador: desce suave até o card novo e só então foca, sem rolar de novo (senão dá tranco)
+  requestAnimationFrame(()=>scrollIntoViewSmooth(card));
+  setTimeout(()=>input.focus({preventScroll:true}),REDUCED_MOTION?0:350);
 }
 async function removeDisc(id,cardEl){
   if(!semId)return;
