@@ -85,7 +85,7 @@
     .icon-btn:hover{background:var(--red-bg);color:var(--red)}
 
     /* HEADER */
-    header{background:rgba(6,14,31,.85);border-bottom:1px solid var(--border);padding:calc(11px + env(safe-area-inset-top,0px)) 16px 11px;position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px;backdrop-filter:blur(24px);overflow:hidden}
+    header{background:rgba(7,11,29,.95);border-bottom:1px solid var(--border);padding:calc(11px + env(safe-area-inset-top,0px)) 16px 11px;position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:8px;overflow:hidden}
     .header-left{display:flex;align-items:center;gap:8px;min-width:0;flex-shrink:1}
     .header-left h1{font-size:15px;font-weight:800;color:var(--gold);white-space:nowrap}
     .header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -1475,12 +1475,13 @@ function drawBgFrame(){
 // corta pela metade o trabalho do fundo e dos cartões com desfoque por cima dele.
 // Com o modo 3D aberto o fundo fica escondido, então nem desenha.
 const _s3d=document.getElementById('s-3d');
-let _bgLast=0;
+let _bgLast=0,_bgScrollAt=0;
+addEventListener('scroll',()=>{_bgScrollAt=performance.now()},{passive:true});
 function animBg(now=performance.now()){
   if(REDUCED_MOTION){drawBgFrame();bgAnimId=1;return} // fundo parado pra quem pediu menos movimento
   bgAnimId = requestAnimationFrame(animBg);
   const dt=now-_bgLast;
-  if(dt<31||_s3d.classList.contains('active'))return;
+  if(dt<31||_s3d.classList.contains('active')||now-_bgScrollAt<150)return;
   _bgLast=now;
   const k=Math.min(4,dt/16.667); // volta de aba em segundo plano não dá "salto"
   bgParticles.forEach(p=>p.update(k));
@@ -1572,9 +1573,15 @@ function animParticles(){
 // fim). O que sai pelo topo fica como está. O gatilho é o IntersectionObserver nativo: não
 // escuta a rolagem quadro a quadro como um scroll listener, então não pesa. O estilo inline é
 // limpo ao aparecer. Com "reduzir movimento" nada é escondido nem animado.
-// A linha do gatilho fica 10% acima da borda de baixo, para o sumiço acontecer à vista.
-const REVEAL_OUT={opacity:0,y:24,scale:.98,filter:'blur(8px)'},REVEAL_IN={opacity:1,y:0,scale:1,filter:'blur(0px)'};
+// A linha do gatilho fica 4% acima da borda de baixo: o sumiço ainda acontece à vista, e o que
+// entra aparece logo (com 10% o conteúdo parecia chegar atrasado).
+// No celular (toque) fica sem o desfoque: o filtro é caro de desenhar e era o que mais pesava
+// na rolagem. Opacidade, deslize e escala a placa de vídeo faz sem esforço.
+const REVEAL_BLUR=matchMedia('(hover: hover) and (pointer: fine)').matches;
+const REVEAL_OUT=REVEAL_BLUR?{opacity:0,y:24,scale:.98,filter:'blur(8px)'}:{opacity:0,y:20,scale:.98};
+const REVEAL_IN=REVEAL_BLUR?{opacity:1,y:0,scale:1,filter:'blur(0px)'}:{opacity:1,y:0,scale:1};
 const REVEAL_CLEAR='opacity,transform,filter,willChange';
+const REVEAL_WILL=REVEAL_BLUR?'opacity,transform,filter':'opacity,transform';
 // true enquanto o app rola a página sozinho (abrir painel): aí quem entra na tela só aparece,
 // sem animar, e ninguém some (o desfoque é pesado no celular e brigava com a rolagem)
 let _autoScroll=false;
@@ -1593,9 +1600,9 @@ const _revealIO=REDUCED_MOTION||!('IntersectionObserver' in window)?null:new Int
     hide.forEach(el=>el.dataset.shown='1'); // não some agora; volta a valer na próxima rolagem
     return;
   }
-  if(show.length)gsap.to(show,{...REVEAL_IN,duration:.75,ease:'expo.out',stagger:.08,overwrite:'auto',clearProps:REVEAL_CLEAR});
-  if(hide.length)gsap.to(hide,{...REVEAL_OUT,duration:.4,ease:'power2.in',overwrite:'auto'});
-},{rootMargin:'0px 0px -10% 0px',threshold:0});
+  if(show.length)gsap.to(show,{...REVEAL_IN,duration:.5,ease:'expo.out',stagger:.05,overwrite:'auto',clearProps:REVEAL_CLEAR});
+  if(hide.length)gsap.to(hide,{...REVEAL_OUT,duration:.3,ease:'power2.in',overwrite:'auto'});
+},{rootMargin:'0px 0px -4% 0px',threshold:0});
 function inView(el){const r=el.getBoundingClientRect();return r.height>0&&r.top<innerHeight&&r.bottom>0}
 // Passa a acompanhar um elemento que já está visível (pra ele sumir se sair por baixo)
 function trackShown(el){if(!_revealIO)return;el.dataset.revealed='1';el.dataset.shown='1';_revealIO.observe(el)}
@@ -1605,7 +1612,7 @@ function reveal(els){
     if(el.dataset.revealed)continue;
     if(inView(el)){trackShown(el);continue} // já na tela: fica como está
     el.dataset.revealed='1';
-    gsap.set(el,{...REVEAL_OUT,willChange:'opacity,transform,filter'});
+    gsap.set(el,{...REVEAL_OUT,willChange:REVEAL_WILL});
     _revealIO.observe(el);
   }
 }
@@ -2282,27 +2289,10 @@ tpToggle.onclick=function(){
   document.getElementById('tp-chevron').style.transform=this.getAttribute('aria-expanded')==='true'?'rotate(180deg)':'';
 };
 tpToggle.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tpToggle.click()}};
-// Rola suave até o elemento caber inteiro na tela (abaixo do cabeçalho fixo); se já cabe, não mexe
-function scrollIntoViewSmooth(el){
-  const hh=document.querySelector('header')?.offsetHeight||0,r=el.getBoundingClientRect(),vh=window.visualViewport?.height||innerHeight;
-  let dy=0;
-  if(r.bottom>vh-16)dy=r.bottom-(vh-16);
-  if(r.top-dy<hh+8)dy=r.top-hh-8; // card maior que a tela: prioriza o topo dele
-  if(Math.abs(dy)>1)scrollTo({top:scrollY+dy,behavior:REDUCED_MOTION?'auto':'smooth'});
-}
-const TOUCH=matchMedia('(pointer: coarse)').matches;
 function addDisc(){
   if(!semId)return;const id='disc_'+Date.now();
   sems[semId].discs[id]={nome:'',ac:'',ap1:'',ap2:'',faltas:0,as:false,sub:false,orig:true};
-  renderDiscs();updateTpSelect();queueSave();
-  const input=document.getElementById('n_'+id),card=input?.closest('.subj-card');
-  if(!input)return;
-  // Celular: foca já, dentro do toque (o iOS só abre o teclado assim). O próprio navegador rola
-  // o campo pra cima do teclado, do jeito nativo; o app não rola junto pra não brigar com ele.
-  if(TOUCH){input.focus();return}
-  // Computador: desce suave até o card novo e só então foca, sem rolar de novo (senão dá tranco)
-  requestAnimationFrame(()=>scrollIntoViewSmooth(card));
-  setTimeout(()=>input.focus({preventScroll:true}),REDUCED_MOTION?0:350);
+  renderDiscs();updateTpSelect();queueSave();setTimeout(()=>document.getElementById('n_'+id)?.focus(),50);
 }
 async function removeDisc(id,cardEl){
   if(!semId)return;
