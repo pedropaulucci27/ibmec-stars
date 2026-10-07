@@ -160,15 +160,13 @@
     .summary-badge.progress{background:var(--blue-bg);color:var(--blue);border-color:rgba(56,189,248,.3)}
     .summary-msg{font-size:13px;color:var(--text2);line-height:1.7}
     /* Meta do Stars: a média que falta tirar somando TODAS as matérias (o Stars é pelo CR) */
-    .stars-goal{margin-top:12px;padding:11px 14px;border-radius:14px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.24);display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:3px;align-items:center}
+    .stars-goal{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.24)}
     .stg-k{font-size:13px;font-weight:700;color:var(--gold)}
-    .stg-v{grid-row:span 2;font-family:system-ui,-apple-system,sans-serif;font-size:28px;font-weight:900;line-height:1;color:var(--text1);font-variant-numeric:tabular-nums;letter-spacing:-.5px}
-    .stg-d{font-size:11.5px;line-height:1.5;color:var(--text2)}
-    .stg-d strong{color:var(--text1)}
-    .stars-goal.ok .stg-v,.stars-goal.bad .stg-v{font-family:inherit;font-size:13px;font-weight:800;letter-spacing:0}
-    .stars-goal.ok .stg-v{color:var(--green)}
+    .stg-say{margin-top:5px;font-size:13px;line-height:1.55;color:var(--text2)}
+    .stg-say strong{color:var(--text1);font-family:system-ui,-apple-system,sans-serif;font-size:14.5px;font-weight:800;font-variant-numeric:tabular-nums}
+    .stg-say .stg-ok{color:var(--green);font-weight:600}
+    .stg-say .stg-bad{color:var(--red);font-weight:600}
     .stars-goal.bad{background:var(--red-bg);border-color:rgba(242,139,139,.3)}
-    .stars-goal.bad .stg-v{color:var(--red)}
     .summary-msg strong{color:var(--text1)}
     .proj-row{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
     .proj-label{font-size:11px;color:var(--text2);flex:1}
@@ -2463,18 +2461,28 @@ function starsNeed(sid=semId){
   const r=solve(list);
   // Cenário "AC cheia" só faz sentido se falta alguma AC e ainda sobra AP pra tirar
   if(r.type==='warn'&&missAC&&missAP)r.fullAC=solve(full);
-  return{...r,miss,missAC};
+  return{...r,miss,missAC,missAP};
 }
+// Bloco do Stars no cartão do CR, em frases diretas: o que é (CR 9,00), quanto tirar em cada
+// tipo de prova que falta (AC vai até 20, APs até 10) e o caminho "AC cheia".
 function renderStarsGoal(c){
   const box=document.getElementById('stars-goal'),g=c.disq?null:starsNeed();
   box.hidden=!g;if(!g)return;
-  const n=g.miss===1?'na nota que falta':`nas <strong>${g.miss} notas</strong> que faltam`;
+  const B=v=>`<strong>${v}</strong>`;
+  let body;
+  if(g.type==='ok')body='<p class="stg-ok">✓ Garantido: mesmo tirando 0 no que falta, seu CR fica em 9,00 ou mais.</p>';
+  else if(g.type==='bad')body='<p class="stg-bad">Não dá mais neste semestre: mesmo tirando a nota máxima em tudo, o CR não chega a 9,00.</p>';
+  else{
+    const ac=fmtI(Math.min(20,Math.round(g.x*20)/10)),ap=fmtI(g.x);
+    body=g.missAC&&g.missAP?`<p>Tire em média ${B(ac)} nas AC e ${B(ap)} nas APs que faltam.</p>`
+      :g.missAC?`<p>Tire em média ${B(ac)} nas AC que faltam.</p>`
+      :`<p>Tire em média ${B(ap)} nas APs que faltam.</p>`;
+    if(g.fullAC)body+=g.fullAC.type==='ok'?`<p>Com ${B(20)} em todas as AC, você já chega lá.</p>`
+      :`<p>Com ${B(20)} em todas as AC, basta ${B(fmtI(g.fullAC.x))} nas APs.</p>`;
+  }
   box.className='stars-goal '+g.type;
-  box.innerHTML=g.type==='ok'
-    ?`<div class="stg-k">⭐ Para o Stars</div><div class="stg-v">CR garantido</div><div class="stg-d">Mesmo tirando 0 ${n}, seu CR fica em 9,00 ou mais.</div>`
-    :g.type==='bad'
-    ?`<div class="stg-k">⭐ Para o Stars</div><div class="stg-v">impossível</div><div class="stg-d">Mesmo tirando 10 ${n}, o CR não chega a 9,00.</div>`
-    :`<div class="stg-k">⭐ Para o Stars</div><div class="stg-v">${fmtI(g.x)}</div><div class="stg-d">Média ${n}, em todas as matérias, para o CR chegar a 9,00.${g.missAC&&g.x>0?` Na AC (até 20): <strong>${fmtI(Math.min(20,Math.round(g.x*20)/10))}</strong>.`:''}${g.fullAC?`<br>Com 20 em todas as AC: ${g.fullAC.type==='ok'?'<strong>já chega a 9,00</strong>.':`<strong>${fmtI(g.fullAC.x)}</strong> de média nas APs.`}`:''}</div>`;
+  box.innerHTML=`<div class="stg-k">⭐ Para entrar no Ibmec Stars</div>`
+    +`<div class="stg-say">${body}</div>`;
 }
 function fmtI(n){return Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',')}
 
